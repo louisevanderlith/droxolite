@@ -10,4 +10,5 @@ type Contexer interface {
 	WriteResponse(data []byte) (int, error)      //WriteResponse writes the data to the ResponseWriter
 	RequestURI() string                          //RequestURI returns the full URL Requested
 	GetCookie(name string) (*http.Cookie, error) //GetCookie returns the value of a cookie
+	Body(container interface{}) error            //Body returns an error when it is unable populate the container
 }

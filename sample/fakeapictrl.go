@@ -1,7 +1,7 @@
 package sample
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/louisevanderlith/droxolite/xontrols"
 )
@@ -12,16 +12,27 @@ type FakeAPICtrl struct {
 
 // /
 func (c *FakeAPICtrl) Get() {
-	log.Println("Get Called")
+	c.Ctx.WriteResponse([]byte("Fake GET Working"))
 }
 
 //:id
 func (c *FakeAPICtrl) GetId() {
 	param := c.Ctx.FindParam("id")
-
-	log.Println(param)
+	result := fmt.Sprintf("We Found %v", param)
+	c.Ctx.WriteResponse([]byte(result))
 }
 
+// :id {string}
 func (c *FakeAPICtrl) Post() {
+	param := c.Ctx.FindParam("id")
+	body := struct{ Act string }{}
+	err := c.Ctx.Body(&body)
 
+	if err != nil {
+		panic(err)
+	}
+
+	result := fmt.Sprintf("#%v: %s", param, body.Act)
+
+	c.Ctx.WriteResponse([]byte(result))
 }

@@ -1,12 +1,17 @@
 package context
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/gorilla/mux"
+)
 
 //Ctx provides context around Requests and Responses
 type Ctx struct {
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
-	Body           []byte
+	//Body           []byte
 }
 
 func New(response http.ResponseWriter, request *http.Request) Contexer {
@@ -26,7 +31,7 @@ func (ctx *Ctx) SetStatus(code int) {
 	ctx.ResponseWriter.WriteHeader(code)
 }
 
-func (ctx *Ctx) FindParam(name string) string {
+func (ctx *Ctx) FindQueryParam(name string) string {
 	results, ok := ctx.Request.URL.Query()[name]
 
 	if !ok {
@@ -34,6 +39,18 @@ func (ctx *Ctx) FindParam(name string) string {
 	}
 
 	return results[0]
+}
+
+func (ctx *Ctx) FindParam(name string) string {
+	vars := mux.Vars(ctx.Request)
+
+	result, ok := vars[name]
+
+	if !ok {
+		return ""
+	}
+
+	return result
 }
 
 func (ctx *Ctx) WriteResponse(data []byte) (int, error) {
@@ -46,4 +63,10 @@ func (ctx *Ctx) RequestURI() string {
 
 func (ctx *Ctx) GetCookie(name string) (*http.Cookie, error) {
 	return ctx.Request.Cookie(name)
+}
+
+func (ctx *Ctx) Body(container interface{}) error {
+	decoder := json.NewDecoder(ctx.Request.Body)
+
+	return decoder.Decode(container)
 }
