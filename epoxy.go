@@ -11,8 +11,8 @@ import (
 	"github.com/louisevanderlith/droxolite/context"
 
 	"github.com/gorilla/mux"
-	"github.com/louisevanderlith/droxolite/controllers"
 	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/droxolite/xontrols"
 )
 
 const (
@@ -29,11 +29,11 @@ type Route struct {
 
 type RouteGroup struct {
 	Name       string
-	Controller controllers.Controller
+	Controller xontrols.Controller
 	Routes     []*Route
 }
 
-func NewRouteGroup(name string, ctrl controllers.Controller) *RouteGroup {
+func NewRouteGroup(name string, ctrl xontrols.Controller) *RouteGroup {
 	return &RouteGroup{
 		Name:       name,
 		Controller: ctrl,
@@ -80,7 +80,7 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 	}
 }
 
-func (e *Epoxy) Handle(ctrl controllers.Controller, call func()) http.HandlerFunc {
+func (e *Epoxy) Handle(ctrl xontrols.Controller, call func()) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctrl.CreateInstance(context.New(resp, req))
 
