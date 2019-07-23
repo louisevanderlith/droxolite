@@ -17,7 +17,7 @@ func TestMain_API(t *testing.T) {
 	poxy := droxolite.NewEpoxy(srvc)
 	apiRoutes(poxy)
 
-	req, err := http.NewRequest("GET", "/fake/poes", nil)
+	req, err := http.NewRequest("GET", "/fake/", nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -48,7 +48,6 @@ func apiRoutes(poxy *droxolite.Epoxy) {
 
 	fkgroup := droxolite.NewRouteGroup("Fake", fakeCtrl)
 	fkgroup.AddRoute("/", "GET", roletype.Admin, fakeCtrl.Get)
-	fkgroup.AddRoute("/poes", "GET", roletype.Admin, fakeCtrl.GetPOEs)
 	fkgroup.AddRoute("/{id:[0-9]+}", "GET", roletype.Admin, fakeCtrl.GetId)
 	poxy.AddGroup(fkgroup)
 }
