@@ -76,7 +76,7 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 	sub := e.router.PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
 
 	for _, v := range routeGroup.Routes {
-		sub.Handle(v.Path, e.Handle(routeGroup.Controller, v.Function))
+		sub.Handle(v.Path, e.Handle(routeGroup.Controller, v.Function)).Methods(v.Method)
 	}
 }
 
