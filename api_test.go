@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/louisevanderlith/droxolite/context"
-	"github.com/louisevanderlith/droxolite/controllers"
+	"github.com/louisevanderlith/droxolite/xontrols"
 )
 
 func TestPrepare_MustHaveHeader_StrictTransportSecurity(t *testing.T) {
@@ -18,7 +18,7 @@ func TestPrepare_MustHaveHeader_StrictTransportSecurity(t *testing.T) {
 
 	resp := httptest.NewRecorder()
 
-	ctrl := new(controllers.APICtrl)
+	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
 	ctrl.CreateInstance(ctx)
 	ctrl.Prepare()
