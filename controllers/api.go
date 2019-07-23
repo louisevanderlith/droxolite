@@ -69,3 +69,7 @@ func (ctrl *APICtrl) Serve(statuscode int, err error, result interface{}) error 
 
 	return err
 }
+
+func (ctrl *APICtrl) Filter() bool {
+	return true
+}

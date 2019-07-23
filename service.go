@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
@@ -21,24 +22,26 @@ type Service struct {
 	AllowedCallers map[servicetype.Enum]struct{}
 	Type           servicetype.Enum
 	PublicKey      string
+	Port           int
 }
 
 //NewService returns a new instance of a Services' information
 //publicKey refers to the location of the public key file (.pub)
-func NewService(name, publicKey string, serviceType servicetype.Enum) *Service {
+func NewService(name, publicKey string, port int, serviceType servicetype.Enum) *Service {
 	result := &Service{
 		Name:           name,
 		Type:           serviceType,
 		PublicKey:      publicKey,
 		AllowedCallers: make(map[servicetype.Enum]struct{}),
+		Port:           port,
 	}
 
 	return result
 }
 
 // Register is used to register an application with the router service
-func (s *Service) Register(port string) error {
-	err := s.setURL(port)
+func (s *Service) Register() error {
+	err := s.setURL(strconv.Itoa(s.Port))
 
 	if err != nil {
 		return err
