@@ -3,11 +3,11 @@ package sample
 import (
 	"log"
 
-	"github.com/louisevanderlith/droxolite/controllers"
+	"github.com/louisevanderlith/droxolite/xontrols"
 )
 
 type FakeAPICtrl struct {
-	controllers.APICtrl
+	xontrols.APICtrl
 }
 
 // /
