@@ -7,6 +7,7 @@ import (
 	"github.com/louisevanderlith/droxolite/bodies"
 )
 
+//UICtrl is the base for all APP Controllers
 type UICtrl struct {
 	APICtrl
 	Layout     string
@@ -65,6 +66,10 @@ func (ctrl *UICtrl) Serve(data interface{}, err error) {
 
 	ctrl.Data["Error"] = err
 	ctrl.Data["Data"] = data
+}
+
+func (ctrl *UICtrl) Filter() bool {
+	return true
 }
 
 //ServeJSON enables JSON Responses on UI Controllers

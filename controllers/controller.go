@@ -1,9 +1,12 @@
 package controllers
 
-import "github.com/louisevanderlith/droxolite/context"
+import (
+	"github.com/louisevanderlith/droxolite/context"
+)
 
 //Controller provides the interface for all controllers in droxolite
 type Controller interface {
+	Filter() bool
 	CreateInstance(ctx context.Contexer)
 	Prepare()
 }
