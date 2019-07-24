@@ -13,14 +13,13 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/husk"
-	secure "github.com/louisevanderlith/secure/core"
 )
 
 //Cookies is our Cookie object.
 type Cookies struct {
 	UserKey    husk.Key
 	Username   string
-	UserRoles  secure.ActionMap
+	UserRoles  map[string]int
 	IP         string
 	Location   string
 	Issuer     string    `json:"iss"`
@@ -30,7 +29,7 @@ type Cookies struct {
 }
 
 //NewCookies returns some new Cookies.
-func NewCookies(userkey husk.Key, username, ip, location string, roles secure.ActionMap) *Cookies {
+func NewCookies(userkey husk.Key, username, ip, location string, roles map[string]int) *Cookies {
 	return &Cookies{
 		UserKey:    userkey,
 		Username:   username,
@@ -110,14 +109,14 @@ func GetAvoCookie(sessionID, publickeyPath string) (*Cookies, error) {
 	return result, nil
 }
 
-func IsAllowed(appName string, usrRoles secure.ActionMap, required roletype.Enum) (bool, error) {
+func IsAllowed(appName string, usrRoles map[string]int, required roletype.Enum) (bool, error) {
 	if required == roletype.Unknown {
 		return true, nil
 	}
 	return hasRole(appName, usrRoles, required)
 }
 
-func hasRole(appName string, usrRoles secure.ActionMap, required roletype.Enum) (bool, error) {
+func hasRole(appName string, usrRoles map[string]int, required roletype.Enum) (bool, error) {
 	role, err := getRole(appName, usrRoles)
 
 	if err != nil {
@@ -127,7 +126,7 @@ func hasRole(appName string, usrRoles secure.ActionMap, required roletype.Enum) 
 	return role <= required, nil
 }
 
-func getRole(appName string, usrRoles secure.ActionMap) (roletype.Enum, error) {
+func getRole(appName string, usrRoles map[string]int) (roletype.Enum, error) {
 	role, ok := usrRoles[appName]
 
 	if !ok {

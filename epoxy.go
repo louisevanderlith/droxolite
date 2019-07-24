@@ -181,7 +181,7 @@ func (e *Epoxy) Plak() {
 
 /*
 //Add is used to specify the permissions required for a controller's actions.
-func (m *Epoxy) Add(path string, actionMap secure.ActionMap) {
+func (m *Epoxy) Add(path string, actionMap map[string]int) {
 	m.mapping[path] = actionMap
 }
 
