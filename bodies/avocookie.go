@@ -8,13 +8,61 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	secure "github.com/louisevanderlith/secure/core"
 	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/husk"
 )
 
-func GetAvoCookie(sessionID, publickeyPath string) (*secure.Cookies, error) {
+//Cookies is our Cookie object.
+type Cookies struct {
+	UserKey    husk.Key
+	Username   string
+	UserRoles  map[string]int
+	IP         string
+	Location   string
+	Issuer     string    `json:"iss"`
+	Audience   string    `json:"aud"`
+	Expiration time.Time `json:"exp"`
+	IssuedAt   time.Time `json:"iat"`
+}
+
+//NewCookies returns some new Cookies.
+func NewCookies(userkey husk.Key, username, ip, location string, roles map[string]int) *Cookies {
+	return &Cookies{
+		UserKey:    userkey,
+		Username:   username,
+		IP:         ip,
+		Location:   location,
+		UserRoles:  roles,
+		IssuedAt:   time.Now(),
+		Expiration: time.Now().Add(time.Hour * 6),
+		Issuer:     "https://secure.localhost/oauth/",
+		Audience:   "https://localhost",
+	}
+}
+
+//GetClaims return the JWT Claims from the Cookies Object
+func (c Cookies) GetClaims() jwt.MapClaims {
+	result := make(jwt.MapClaims)
+
+	data, err := json.Marshal(c)
+
+	if err != nil {
+		return nil
+	}
+
+	err = json.Unmarshal(data, &result)
+
+	if err != nil {
+		return nil
+	}
+
+	return result
+}
+
+func GetAvoCookie(sessionID, publickeyPath string) (*Cookies, error) {
 	if len(sessionID) == 0 {
 		return nil, errors.New("SessionID empty")
 	}
@@ -51,7 +99,7 @@ func GetAvoCookie(sessionID, publickeyPath string) (*secure.Cookies, error) {
 		return nil, err
 	}
 
-	result := &secure.Cookies{}
+	result := &Cookies{}
 	err = json.Unmarshal(jClaim, result)
 
 	if err != nil {
@@ -61,14 +109,14 @@ func GetAvoCookie(sessionID, publickeyPath string) (*secure.Cookies, error) {
 	return result, nil
 }
 
-func IsAllowed(appName string, usrRoles secure.ActionMap, required roletype.Enum) (bool, error) {
+func IsAllowed(appName string, usrRoles map[string]int, required roletype.Enum) (bool, error) {
 	if required == roletype.Unknown {
 		return true, nil
 	}
 	return hasRole(appName, usrRoles, required)
 }
 
-func hasRole(appName string, usrRoles secure.ActionMap, required roletype.Enum) (bool, error) {
+func hasRole(appName string, usrRoles map[string]int, required roletype.Enum) (bool, error) {
 	role, err := getRole(appName, usrRoles)
 
 	if err != nil {
@@ -78,7 +126,7 @@ func hasRole(appName string, usrRoles secure.ActionMap, required roletype.Enum) 
 	return role <= required, nil
 }
 
-func getRole(appName string, usrRoles secure.ActionMap) (roletype.Enum, error) {
+func getRole(appName string, usrRoles map[string]int) (roletype.Enum, error) {
 	role, ok := usrRoles[appName]
 
 	if !ok {
