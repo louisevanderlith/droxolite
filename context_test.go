@@ -9,7 +9,13 @@ import (
 )
 
 func TestSetHeader_ResponseMustHaveValue(t *testing.T) {
-	
+	req, err := http.NewRequest("GET", "/", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := httptest.NewRecorder()
 	ctx := context.New(resp, req)
 
 	ctx.SetHeader("Must", "Persist")

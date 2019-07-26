@@ -8,20 +8,24 @@ import (
 	"strconv"
 
 	"github.com/louisevanderlith/droxolite/bodies"
-	folio "github.com/louisevanderlith/folio/core"
+	"github.com/louisevanderlith/husk"
 )
 
+//GetDefaultTheme will attempt to contact the Theme.API for the profile's site
 func GetDefaultTheme(host, instanceID, siteName string) (bodies.ThemeSetting, error) {
-	prof := folio.Profile{}
-	_, err := DoGET("", &prof, instanceID, "Folio.API", "profile", siteName)
+	prof := bodies.ThemeSetting{}
+	_, err := DoGET("", &prof, instanceID, "Folio.API", "theme", siteName)
 
 	if err != nil {
 		return bodies.ThemeSetting{}, err
 	}
 
-	result := bodies.NewThemeSetting(prof.Title, host, prof.ImageKey, instanceID, prof.GTag)
+	return prof, nil
+}
 
-	return result, nil
+//GetNoTheme returns an empty Theme. This should be used for when you don't need a full theme.
+func GetNoTheme(host, instanceID, siteName string) bodies.ThemeSetting {
+	return bodies.NewThemeSetting(siteName, host, husk.CrazyKey(), instanceID, "UA-000000000-0")
 }
 
 //UpdateTheme downloads the latest master templates from Theme.API
@@ -61,7 +65,7 @@ func findTemplates(instanceID string) ([]string, error) {
 }
 
 func downloadTemplate(instanceID, template, themeURL string) error {
-	fullURL := fmt.Sprintf("%sv1/%s/%s/%s", themeURL, "asset", "html", template)
+	fullURL := fmt.Sprintf("%sasset/html/%s", themeURL, template)
 	resp, err := http.Get(fullURL)
 
 	if err != nil {

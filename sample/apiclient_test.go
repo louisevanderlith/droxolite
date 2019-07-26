@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/louisevanderlith/droxolite"
+	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/droxolite/servicetype"
 )
@@ -36,15 +37,21 @@ func TestMain_API_DefaultPath_OK(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Fatalf("wrong status code: got %v want %v",
-			status, http.StatusOK)
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
 	}
 
 	expected := "Fake GET Working"
-	if rr.Body.String() != expected {
+	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+			result, expected)
 	}
 }
 
@@ -60,15 +67,21 @@ func TestMain_API_IdParam_OK(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Fatalf("wrong status code: got %v want %v",
-			status, http.StatusOK)
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
 	}
 
 	expected := "We Found 73"
-	if rr.Body.String() != expected {
+	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+			result, expected)
 	}
 }
 
@@ -84,15 +97,20 @@ func TestMain_API_NameAndIdParam_OK(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Fatalf("wrong status code: got %v want %v",
-			status, http.StatusOK)
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
 	}
 
 	expected := "Jimmy is 73"
-	if rr.Body.String() != expected {
-		t.Errorf("unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v", result, expected)
 	}
 }
 
@@ -108,15 +126,51 @@ func TestMain_API_HuskKey_OK(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Fatalf("wrong status code: got %v want %v",
-			status, http.StatusOK)
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
 	}
 
 	expected := "Got a Key 1563985947336`12"
-	if rr.Body.String() != expected {
+	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+			result, expected)
+	}
+}
+
+func TestMain_API_PageSize_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fake/all/C78", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
+	}
+
+	expected := "Page 3, Size 78"
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			result, expected)
 	}
 }
 
@@ -132,15 +186,21 @@ func TestMain_API_BooleanParam_OK(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Fatalf("wrong status code: got %v want %v",
-			status, http.StatusOK)
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
 	}
 
 	expected := "Thanks for Nothing!"
-	if rr.Body.String() != expected {
+	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+			result, expected)
 	}
 }
 
@@ -163,15 +223,21 @@ func TestMain_API_POST_OK(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Fatalf("wrong status code: got %v want %v",
-			status, http.StatusOK)
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
 	}
 
 	expected := "#73: Jump"
-	if rr.Body.String() != expected {
+	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
-			rr.Body.String(), expected)
+			result, expected)
 	}
 }
 
@@ -185,5 +251,6 @@ func apiRoutes(poxy *droxolite.Epoxy) {
 	fkgroup.AddRoute("/{id:[0-9]+}", "GET", roletype.Admin, fakeCtrl.GetId)
 	fkgroup.AddRoute("/question/{yes:true|false}", "GET", roletype.Admin, fakeCtrl.GetAnswer)
 	fkgroup.AddRoute("/{name:[a-zA-Z]+}/{id:[0-9]+}", "GET", roletype.Admin, fakeCtrl.GetName)
+	fkgroup.AddRoute("/all/{pagesize:[A-Z][0-9]+}", "GET", roletype.Admin, fakeCtrl.GetPage)
 	poxy.AddGroup(fkgroup)
 }
