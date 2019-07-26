@@ -2,6 +2,7 @@ package sample
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/louisevanderlith/husk"
@@ -15,58 +16,65 @@ type FakeAPICtrl struct {
 
 // /
 func (c *FakeAPICtrl) Get() {
-	c.Ctx.WriteResponse([]byte("Fake GET Working"))
+	c.Serve(http.StatusOK, nil, "Fake GET Working")
 }
 
 func (c *FakeAPICtrl) GetKey() {
-	param := c.Ctx.FindParam("key")
+	param := c.FindParam("key")
 	result, err := husk.ParseKey(param)
 
 	if err != nil {
-		c.Ctx.WriteResponse([]byte(err.Error()))
+		c.Serve(http.StatusInternalServerError, err, nil)
 		return
 	}
-	c.Ctx.WriteResponse([]byte(fmt.Sprintf("Got a Key %s", result)))
+
+	c.Serve(http.StatusOK, nil, fmt.Sprintf("Got a Key %s", result))
+}
+
+func (c *FakeAPICtrl) GetPage() {
+	page, size := c.GetPageData()
+
+	c.Serve(http.StatusOK, nil, fmt.Sprintf("Page %v, Size %v", page, size))
 }
 
 //:id
 func (c *FakeAPICtrl) GetId() {
-	param := c.Ctx.FindParam("id")
+	param := c.FindParam("id")
 	result := fmt.Sprintf("We Found %v", param)
-	c.Ctx.WriteResponse([]byte(result))
+	c.Serve(http.StatusOK, nil, result)
 }
 
 //name:/id:
 func (c *FakeAPICtrl) GetName() {
-	param := c.Ctx.FindParam("id")
-	name := c.Ctx.FindParam("name")
+	param := c.FindParam("id")
+	name := c.FindParam("name")
 	result := fmt.Sprintf("%s is %v", name, param)
-	c.Ctx.WriteResponse([]byte(result))
+	c.Serve(http.StatusOK, nil, result)
 }
 
 //yes:
 func (c *FakeAPICtrl) GetAnswer() {
-	param := c.Ctx.FindParam("yes")
+	param := c.FindParam("yes")
 	yes, err := strconv.ParseBool(param)
 
 	if err != nil {
-		c.Ctx.WriteResponse([]byte(err.Error()))
+		c.Serve(http.StatusInternalServerError, err, nil)
 		return
 	}
 
 	if !yes {
-		c.Ctx.WriteResponse([]byte("Thanks for Nothing!"))
+		c.Serve(http.StatusOK, nil, "Thanks for Nothing!")
 		return
 	}
 
-	c.Ctx.WriteResponse([]byte("That's Nice"))
+	c.Serve(http.StatusOK, nil, "That's Nice")
 }
 
 // :id {string}
 func (c *FakeAPICtrl) Post() {
-	param := c.Ctx.FindParam("id")
+	param := c.FindParam("id")
 	body := struct{ Act string }{}
-	err := c.Ctx.Body(&body)
+	err := c.Body(&body)
 
 	if err != nil {
 		panic(err)
@@ -74,5 +82,5 @@ func (c *FakeAPICtrl) Post() {
 
 	result := fmt.Sprintf("#%v: %s", param, body.Act)
 
-	c.Ctx.WriteResponse([]byte(result))
+	c.Serve(http.StatusOK, nil, result)
 }

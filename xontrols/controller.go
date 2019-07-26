@@ -1,6 +1,7 @@
 package xontrols
 
 import (
+	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
 )
 
@@ -9,6 +10,7 @@ type Controller interface {
 	Filter() bool
 	CreateInstance(ctx context.Contexer)
 	Prepare()
+	Serve(int, error, interface{}) error
 }
 
 type APIController interface {
@@ -17,5 +19,5 @@ type APIController interface {
 
 type UIController interface {
 	APIController
-	Render()
+	SetTheme(settings bodies.ThemeSetting)
 }

@@ -4,10 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
 
 	"github.com/gorilla/mux"
@@ -55,23 +57,40 @@ func (g *RouteGroup) AddRoute(path, method string, requiredRole roletype.Enum, f
 
 //Epoxy puts everything together
 type Epoxy struct {
-	service *Service
-	router  *mux.Router
-	groups  map[string]*RouteGroup
-	server  *http.Server
+	service  *Service
+	router   *mux.Router
+	server   *http.Server
+	settings *bodies.ThemeSetting
 }
 
 //NewExpoxy returns a new Instance of the Epoxy
 func NewEpoxy(service *Service) *Epoxy {
 	return &Epoxy{
-		service: service,
-		groups:  make(map[string]*RouteGroup),
-		router:  mux.NewRouter(),
+		service:  service,
+		router:   mux.NewRouter(),
+		settings: nil,
+	}
+}
+
+//NewExpoxy returns a new Instance of the Epoxy with a Theme
+func NewColourEpoxy(service *Service, settings bodies.ThemeSetting) *Epoxy {
+	return &Epoxy{
+		service:  service,
+		router:   mux.NewRouter(),
+		settings: &settings,
 	}
 }
 
 func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
-	e.groups[routeGroup.Name] = routeGroup
+	uiCtrl, isUI := routeGroup.Controller.(xontrols.UIController)
+
+	if isUI {
+		if e.settings == nil {
+			log.Fatalf("Use the Colour Epoxy!")
+		}
+
+		uiCtrl.SetTheme(*e.settings)
+	}
 
 	sub := e.router.PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
 
@@ -83,7 +102,6 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 func (e *Epoxy) Handle(ctrl xontrols.Controller, call func()) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctrl.CreateInstance(context.New(resp, req))
-
 		ctrl.Prepare()
 		call()
 	}
