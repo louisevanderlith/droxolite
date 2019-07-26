@@ -43,7 +43,7 @@ func TestPrepare_MustHaveHeader_AccessControlAllowCredentialls(t *testing.T) {
 
 	resp := httptest.NewRecorder()
 
-	ctrl := new(controllers.APICtrl)
+	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
 	ctrl.CreateInstance(ctx)
 	ctrl.Prepare()
@@ -68,7 +68,7 @@ func TestPrepare_MustHaveHeader_Server(t *testing.T) {
 
 	resp := httptest.NewRecorder()
 
-	ctrl := new(controllers.APICtrl)
+	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
 	ctrl.CreateInstance(ctx)
 	ctrl.Prepare()
@@ -93,7 +93,7 @@ func TestPrepare_MustHaveHeader_XContentTypeOptions(t *testing.T) {
 
 	resp := httptest.NewRecorder()
 
-	ctrl := new(controllers.APICtrl)
+	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
 	ctrl.CreateInstance(ctx)
 	ctrl.Prepare()

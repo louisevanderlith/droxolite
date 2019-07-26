@@ -65,6 +65,10 @@ func (ctx *Ctx) GetCookie(name string) (*http.Cookie, error) {
 	return ctx.Request.Cookie(name)
 }
 
+func (ctx *Ctx) Host() string {
+	return ctx.Request.URL.Hostname()
+}
+
 func (ctx *Ctx) Body(container interface{}) error {
 	decoder := json.NewDecoder(ctx.Request.Body)
 
