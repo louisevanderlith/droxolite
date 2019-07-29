@@ -45,7 +45,7 @@ func TestFindParam_GetValueParamFromRequest(t *testing.T) {
 	resp := httptest.NewRecorder()
 	ctx := context.New(resp, req)
 
-	val := ctx.FindParam("find")
+	val := ctx.FindQueryParam("find")
 
 	if len(val) == 0 {
 		t.Fatal("Param not found")

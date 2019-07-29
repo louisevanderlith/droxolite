@@ -6,7 +6,8 @@ import "net/http"
 type Contexer interface {
 	SetHeader(key string, val string)            //SetHeader sets a value on the Response Header
 	SetStatus(code int)                          //SetStatus set the final Response Status
-	FindParam(name string) string                //FindParam returns the value of a query string parameter
+	FindParam(name string) string                //FindParam returns the value of a path parameter
+	FindQueryParam(name string) string           //FindParam returns the value of a query string parameter
 	WriteResponse(data []byte) (int, error)      //WriteResponse writes the data to the ResponseWriter
 	RequestURI() string                          //RequestURI returns the full URL Requested
 	GetCookie(name string) (*http.Cookie, error) //GetCookie returns the value of a cookie
