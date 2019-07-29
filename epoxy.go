@@ -289,7 +289,7 @@ func readBlocks(filePath string) []byte {
 	file, err := ioutil.ReadFile(filePath)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	return file
