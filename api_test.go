@@ -20,7 +20,7 @@ func TestPrepare_MustHaveHeader_StrictTransportSecurity(t *testing.T) {
 
 	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
-	ctrl.CreateInstance(ctx)
+	ctrl.CreateInstance(ctx, "Test")
 	ctrl.Prepare()
 
 	val, ok := resp.HeaderMap["Strict-Transport-Security"]
@@ -45,7 +45,7 @@ func TestPrepare_MustHaveHeader_AccessControlAllowCredentialls(t *testing.T) {
 
 	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
-	ctrl.CreateInstance(ctx)
+	ctrl.CreateInstance(ctx, "Test")
 	ctrl.Prepare()
 
 	val, ok := resp.HeaderMap["Access-Control-Allow-Credentials"]
@@ -70,7 +70,7 @@ func TestPrepare_MustHaveHeader_Server(t *testing.T) {
 
 	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
-	ctrl.CreateInstance(ctx)
+	ctrl.CreateInstance(ctx, "Test")
 	ctrl.Prepare()
 
 	val, ok := resp.HeaderMap["Server"]
@@ -95,7 +95,7 @@ func TestPrepare_MustHaveHeader_XContentTypeOptions(t *testing.T) {
 
 	ctrl := new(xontrols.APICtrl)
 	ctx := context.New(resp, req)
-	ctrl.CreateInstance(ctx)
+	ctrl.CreateInstance(ctx, "Test")
 	ctrl.Prepare()
 
 	val, ok := resp.HeaderMap["X-Content-Type-Options"]

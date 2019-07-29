@@ -8,7 +8,8 @@ import (
 //Controller provides the interface for all controllers in droxolite
 type Controller interface {
 	Filter() bool
-	CreateInstance(ctx context.Contexer)
+	CreateInstance(ctx context.Contexer, instanceID string)
+	GetInstanceID() string
 	Prepare()
 	Serve(int, error, interface{}) error
 }
