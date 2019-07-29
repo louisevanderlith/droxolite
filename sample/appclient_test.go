@@ -75,13 +75,35 @@ func TestAPP_Error_OK(t *testing.T) {
 	}
 }
 
+func TestAPP_Menu_Paths(t *testing.T) {
+	req, err := http.NewRequest("GET", "/", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := appEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Not OK: %v", rr.Code)
+	}
+
+	expected := "<h1>MasterPage</h1><p>This is the Home Page</p><p>Welcome</p><ul><li>Home</li><li>Broken</li></ul>"
+	if rr.Body.String() != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+}
+
 func appRoutes(poxy *droxolite.Epoxy) {
 	fakeCtrl := &FakeAPPCtrl{}
 	fkgroup := droxolite.NewRouteGroup("", fakeCtrl)
 	fkgroup.AddRoute("/", "GET", roletype.Admin, fakeCtrl.GetHome)
 	fkgroup.AddRoute("/broken", "GET", roletype.Admin, fakeCtrl.GetBroken)
 	poxy.AddGroup(fkgroup)
-
 }
 
 /*

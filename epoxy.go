@@ -2,10 +2,12 @@ package droxolite
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -61,6 +63,7 @@ type Epoxy struct {
 	router   *mux.Router
 	server   *http.Server
 	settings *bodies.ThemeSetting
+	sideMenu *bodies.Menu
 }
 
 //NewExpoxy returns a new Instance of the Epoxy
@@ -78,6 +81,7 @@ func NewColourEpoxy(service *Service, settings bodies.ThemeSetting) *Epoxy {
 		service:  service,
 		router:   mux.NewRouter(),
 		settings: &settings,
+		sideMenu: bodies.NewMenu(),
 	}
 }
 
@@ -90,6 +94,15 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 		}
 
 		uiCtrl.SetTheme(*e.settings)
+
+		children := bodies.NewMenu()
+		for _, v := range routeGroup.Routes {
+			if v.Method == "GET" {
+				children.AddItem(v.Path, reflect.TypeOf(v.Function).Name(), "fa-ban", nil)
+			}
+		}
+
+		e.sideMenu.AddItem("#", routeGroup.Name, "fa-home", children)
 	}
 
 	sub := e.router.PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
@@ -99,11 +112,43 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 	}
 }
 
+/*
+r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+        t, err := route.GetPathTemplate()
+        if err != nil {
+            return err
+        }
+        // p will contain regular expression is compatible with regular expression in Perl, Python, and other languages.
+        // for instance the regular expression for path '/articles/{id}' will be '^/articles/(?P<v0>[^/]+)$'
+        p, err := route.GetPathRegexp()
+        if err != nil {
+            return err
+        }
+        m, err := route.GetMethods()
+        if err != nil {
+            return err
+        }
+        fmt.Println(strings.Join(m, ","), t, p)
+        return nil
+    })
+*/
+
 func (e *Epoxy) Handle(ctrl xontrols.Controller, call func()) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctrl.CreateInstance(context.New(resp, req))
 		ctrl.Prepare()
-		call()
+
+		uiCtrl, isUI := ctrl.(xontrols.UIController)
+
+		if isUI {
+			uiCtrl.CreateSideMenu(e.sideMenu)
+		}
+
+		if ctrl.Filter() {
+			call()
+		} else {
+			ctrl.Serve(http.StatusUnauthorized, errors.New("Not allowed"), nil)
+		}
 	}
 }
 

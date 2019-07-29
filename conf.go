@@ -14,7 +14,6 @@ type Conf struct {
 	Appname   string
 	HTTPPort  int
 	HTTPSPort int
-	Profile   string
 	UnitValue int
 }
 

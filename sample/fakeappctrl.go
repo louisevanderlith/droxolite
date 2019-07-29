@@ -2,6 +2,7 @@ package sample
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/louisevanderlith/droxolite/xontrols"
@@ -14,7 +15,11 @@ type FakeAPPCtrl struct {
 func (c *FakeAPPCtrl) GetHome() {
 	c.Setup("home", "Fake Home", false)
 	data := "Welcome"
-	c.Serve(http.StatusOK, nil, data)
+	err := c.Serve(http.StatusOK, nil, data)
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (c *FakeAPPCtrl) GetBroken() {

@@ -4,14 +4,9 @@ import "strings"
 
 type Menu map[string][]menuItem
 
-var _activeLink string
-
-func NewMenu(activeLink string) *Menu {
-	_activeLink = activeLink
-
+func NewMenu() *Menu {
 	menu := make(Menu)
 	result := &menu
-	result.SetActive(activeLink)
 
 	return result
 }
@@ -80,7 +75,7 @@ func newItem(id, link, text, iconClass string, children *Menu) (shortName string
 	if children != nil {
 		result.Children = children
 	} else {
-		result.Children = NewMenu(link)
+		result.Children = NewMenu()
 	}
 
 	return shortName, result
