@@ -59,11 +59,12 @@ func (g *RouteGroup) AddRoute(path, method string, requiredRole roletype.Enum, f
 
 //Epoxy puts everything together
 type Epoxy struct {
-	service  *Service
-	router   *mux.Router
-	server   *http.Server
-	settings *bodies.ThemeSetting
-	sideMenu *bodies.Menu
+	service    *Service
+	router     *mux.Router
+	server     *http.Server
+	settings   *bodies.ThemeSetting
+	sideMenu   *bodies.Menu
+	masterpage string
 }
 
 //NewExpoxy returns a new Instance of the Epoxy
@@ -76,12 +77,13 @@ func NewEpoxy(service *Service) *Epoxy {
 }
 
 //NewExpoxy returns a new Instance of the Epoxy with a Theme
-func NewColourEpoxy(service *Service, settings bodies.ThemeSetting) *Epoxy {
+func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage string) *Epoxy {
 	return &Epoxy{
-		service:  service,
-		router:   mux.NewRouter(),
-		settings: &settings,
-		sideMenu: bodies.NewMenu(),
+		service:    service,
+		router:     mux.NewRouter(),
+		settings:   &settings,
+		sideMenu:   bodies.NewMenu(),
+		masterpage: masterpage,
 	}
 }
 
@@ -93,7 +95,7 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 			log.Fatalf("Use the Colour Epoxy!")
 		}
 
-		uiCtrl.SetTheme(*e.settings)
+		uiCtrl.SetTheme(*e.settings, e.masterpage)
 
 		children := bodies.NewMenu()
 		for _, v := range routeGroup.Routes {
