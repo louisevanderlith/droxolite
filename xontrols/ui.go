@@ -93,10 +93,6 @@ func (ctrl *UICtrl) Serve(statuscode int, err error, result interface{}) error {
 
 func renderTemplate(masterpage string, data interface{}) ([]byte, error) {
 	mastr := template.New(masterpage)
-	/*mastr, err := mastrPage.ParseFiles(path.Join("views", masterpage))
-	if err != nil {
-		return nil, err
-	}*/
 
 	tmpl, err := mastr.ParseGlob(path.Join("views", "*.html"))
 
