@@ -2,6 +2,7 @@ package sample
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -58,6 +59,7 @@ func (c *FakeAPICtrl) GetAnswer() {
 	yes, err := strconv.ParseBool(param)
 
 	if err != nil {
+		log.Println(err)
 		c.Serve(http.StatusInternalServerError, err, nil)
 		return
 	}
@@ -77,7 +79,7 @@ func (c *FakeAPICtrl) Post() {
 	err := c.Body(&body)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	result := fmt.Sprintf("#%v: %s", param, body.Act)
