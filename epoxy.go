@@ -165,7 +165,7 @@ func (e *Epoxy) Boot() error {
 }
 
 //Boot starts the Epoxy Objects to securely serve a configured service
-func (e *Epoxy) BootSecure(privKeyPath string) error {
+func (e *Epoxy) BootSecure(privKeyPath string, fromPort int) error {
 	publicKeyPem := readBlocks(e.service.PublicKey)
 	privateKeyPem := readBlocks(privKeyPath)
 	cert, err := tls.X509KeyPair(publicKeyPem, privateKeyPem)
@@ -180,7 +180,13 @@ func (e *Epoxy) BootSecure(privKeyPath string) error {
 	e.server.TLSConfig = cfg
 	e.server.Handler = e.router
 
-	return e.server.ListenAndServeTLS("", "")
+	err = e.server.ListenAndServeTLS("", "")
+
+	if err != nil {
+		return err
+	}
+
+	return http.ListenAndServe(fmt.Sprintf(":%v", fromPort), http.HandlerFunc(redirectTLS))
 }
 
 func (e *Epoxy) Shutdown() {
@@ -193,6 +199,11 @@ func newServer(port int) *http.Server {
 		WriteTimeout: writeTimeout,
 		Addr:         fmt.Sprintf(":%v", port),
 	}
+}
+
+func redirectTLS(w http.ResponseWriter, r *http.Request) {
+	moveURL := fmt.Sprintf("https://%s%s", r.Host, r.RequestURI)
+	http.Redirect(w, r, moveURL, http.StatusPermanentRedirect)
 }
 
 /*
