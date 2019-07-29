@@ -20,6 +20,6 @@ type APIController interface {
 
 type UIController interface {
 	APIController
-	SetTheme(settings bodies.ThemeSetting)
+	SetTheme(settings bodies.ThemeSetting, masterpage string)
 	CreateSideMenu(menu *bodies.Menu)
 }

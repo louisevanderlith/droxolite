@@ -19,7 +19,7 @@ func init() {
 	srvc := droxolite.NewService("Test.APP", "/certs/none.pem", 8091, servicetype.APP)
 	srvc.ID = "Tester2"
 	theme := droxolite.GetNoTheme(".localhost/", srvc.ID, "none")
-	appEpoxy = droxolite.NewColourEpoxy(srvc, theme)
+	appEpoxy = droxolite.NewColourEpoxy(srvc, theme, "master.html")
 	appRoutes(appEpoxy)
 }
 
