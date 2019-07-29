@@ -28,7 +28,7 @@ func DoGET(token string, container interface{}, instanceID, serviceName, control
 		return http.StatusInternalServerError, err
 	}
 
-	fullURL := fmt.Sprintf("%sv1/%s/%s", url, controller, strings.Join(params, "/"))
+	fullURL := fmt.Sprintf("%s%s/%s", url, controller, strings.Join(params, "/"))
 
 	req, err := http.NewRequest("GET", fullURL, nil)
 
@@ -90,7 +90,7 @@ func DoSEND(method, token string, container interface{}, instanceID, serviceName
 		return http.StatusInternalServerError, err
 	}
 
-	fullURL := fmt.Sprintf("%sv1/%s/%s", url, controller, strings.Join(params, "/"))
+	fullURL := fmt.Sprintf("%s%s/%s", url, controller, strings.Join(params, "/"))
 
 	bits, err := json.Marshal(data)
 
