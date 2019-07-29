@@ -75,7 +75,7 @@ func sendRegistration(s *Service) (*bodies.RESTResult, error) {
 		return nil, err
 	}
 
-	disco := fmt.Sprintf("%sv1/discovery/", routrURL)
+	disco := fmt.Sprintf("%sdiscovery/", routrURL)
 	resp, err := http.Post(disco, "application/json", bytes.NewBuffer(bits))
 
 	if err != nil {
