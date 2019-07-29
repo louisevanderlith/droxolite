@@ -19,8 +19,8 @@ type UICtrl struct {
 	Settings    bodies.ThemeSetting
 }
 
-func (ctrl *UICtrl) SetTheme(settings bodies.ThemeSetting) {
-	ctrl.MasterPage = "master.html"
+func (ctrl *UICtrl) SetTheme(settings bodies.ThemeSetting, masterpage string) {
+	ctrl.MasterPage = masterpage
 	ctrl.Settings = settings
 }
 
