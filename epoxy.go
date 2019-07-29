@@ -135,7 +135,7 @@ r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error 
 
 func (e *Epoxy) Handle(ctrl xontrols.Controller, call func()) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		ctrl.CreateInstance(context.New(resp, req))
+		ctrl.CreateInstance(context.New(resp, req), e.service.ID)
 		ctrl.Prepare()
 
 		uiCtrl, isUI := ctrl.(xontrols.UIController)

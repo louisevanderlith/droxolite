@@ -8,13 +8,15 @@ import (
 //InstanceCtrl is simply a base Controller that 'almost' implements a Controller.
 //It should be inherited by the implenting Controller. API or UI, etc.
 type InstanceCtrl struct {
-	ctx       context.Contexer
-	AvoCookie *bodies.Cookies
+	ctx        context.Contexer
+	AvoCookie  *bodies.Cookies
+	instanceID string
 }
 
 //CreateInstance is used to setup Context on controllers.
-func (ctrl *InstanceCtrl) CreateInstance(ctx context.Contexer) {
+func (ctrl *InstanceCtrl) CreateInstance(ctx context.Contexer, instanceID string) {
 	ctrl.ctx = ctx
+	ctrl.instanceID = instanceID
 }
 
 //FindParam returns path variables /{var}
@@ -35,4 +37,9 @@ func (ctrl *InstanceCtrl) Body(container interface{}) error {
 //Ctx returns the Context object.
 func (ctrl *InstanceCtrl) Ctx() context.Contexer {
 	return ctrl.ctx
+}
+
+//GetInstanceID returns the services's ID
+func (ctrl *InstanceCtrl) GetInstanceID() string {
+	return ctrl.instanceID
 }
