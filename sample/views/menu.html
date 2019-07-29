@@ -1,0 +1,28 @@
+{{if .SideMenu}}
+    {{range $key, $menu := .SideMenu}}
+        <p class="menu-label is-hidden-touch">
+            {{$key}}
+        </p>
+        <ul class="menu-list">
+            {{range $_, $val := $menu}}
+            <li id="{{$val.ID}}"><a class="{{if $val.IsActive}}is-active{{end}}" href="{{$val.Link}}">
+                    <span class="icon"><i class="fa {{$val.Class}}"></i></span>
+                    {{$val.Name}}
+                </a>
+                <ul>
+                    {{range $ckey, $cmenu := $val.Children}}
+                        <li><a>{{$ckey}}</a></li>
+                        {{range $_, $cval := $cmenu}}
+                        <li id="{{$cval.ID}}"><a class="{{if $cval.IsActive}}is-active{{end}}" href="{{$cval.Link}}">
+                                <span class="icon"><i class="fa {{$cval.Class}}"></i></span>
+                                {{$cval.Name}}
+                            </a>
+                        </li>
+                        {{end}}
+                    {{end}}
+                </ul>
+            </li>
+            {{end}}
+        </ul>
+    {{end}}
+{{end}}
