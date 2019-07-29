@@ -2,6 +2,7 @@ package context
 
 import (
 	"encoding/json"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,7 +12,6 @@ import (
 type Ctx struct {
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
-	//Body           []byte
 }
 
 func New(response http.ResponseWriter, request *http.Request) Contexer {
@@ -29,6 +29,10 @@ func (ctx *Ctx) SetHeader(key string, val string) {
 //SetStatus set the final Response Status
 func (ctx *Ctx) SetStatus(code int) {
 	ctx.ResponseWriter.WriteHeader(code)
+}
+
+func (ctx *Ctx) File(name string) (multipart.File, *multipart.FileHeader, error) {
+	return ctx.Request.FormFile(name)
 }
 
 func (ctx *Ctx) FindQueryParam(name string) string {
