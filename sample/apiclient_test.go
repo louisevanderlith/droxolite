@@ -114,6 +114,36 @@ func TestMain_API_NameAndIdParam_OK(t *testing.T) {
 	}
 }
 
+func TestMain_API_HuskKey_Escaped_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fake/1560674025%601", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
+	}
+
+	expected := "Got a Key 1560674025`1"
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			result, expected)
+	}
+}
+
 func TestMain_API_HuskKey_OK(t *testing.T) {
 	req, err := http.NewRequest("GET", "/fake/1563985947336`12", nil)
 
