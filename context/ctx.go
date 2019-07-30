@@ -74,6 +74,10 @@ func (ctx *Ctx) FindParam(name string) string {
 	return result
 }
 
+func (ctx *Ctx) Redirect(status int, url string) {
+	http.Redirect(ctx.ResponseWriter, ctx.Request, url, status)
+}
+
 func (ctx *Ctx) WriteResponse(data []byte) (int, error) {
 	return ctx.ResponseWriter.Write(data)
 }
@@ -84,6 +88,10 @@ func (ctx *Ctx) RequestURI() string {
 
 func (ctx *Ctx) GetCookie(name string) (*http.Cookie, error) {
 	return ctx.Request.Cookie(name)
+}
+
+func (ctx *Ctx) Scheme() string {
+	return ctx.Request.URL.Scheme
 }
 
 func (ctx *Ctx) Host() string {

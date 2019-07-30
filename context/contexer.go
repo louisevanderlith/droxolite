@@ -7,6 +7,8 @@ import (
 
 //Contexer provides context around Requests and Responses
 type Contexer interface {
+	Redirect(status int, url string)                                 //Redirects to the given URL with status code
+	Scheme() string                                                  //Scheme returns the Input Scheme
 	Method() string                                                  //Method returns the Method associated with the Request
 	GetHeader(key string) (string, error)                            //GetHeader returns the value of the Request Header
 	SetHeader(key string, val string)                                //SetHeader sets a value on the Response Header
