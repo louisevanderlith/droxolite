@@ -45,6 +45,12 @@ func (c *FakeAPICtrl) GetId() {
 	c.Serve(http.StatusOK, nil, result)
 }
 
+func (c *FakeAPICtrl) GetQueryStr() {
+	param := c.Ctx().FindQueryParam("name")
+	result := fmt.Sprintf("Fake Query %s", param)
+	c.Serve(http.StatusOK, nil, result)
+}
+
 //name:/id:
 func (c *FakeAPICtrl) GetName() {
 	param := c.FindParam("id")

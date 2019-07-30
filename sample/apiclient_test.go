@@ -55,6 +55,36 @@ func TestMain_API_DefaultPath_OK(t *testing.T) {
 	}
 }
 
+func TestMain_API_QueryPath_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fake/query?name=%60", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
+	}
+
+	expected := "Fake Query `"
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			result, expected)
+	}
+}
+
 func TestMain_API_IdParam_OK(t *testing.T) {
 	req, err := http.NewRequest("GET", "/fake/73", nil)
 
@@ -275,12 +305,16 @@ func apiRoutes(poxy *droxolite.Epoxy) {
 	fakeCtrl := &FakeAPICtrl{}
 
 	fkgroup := droxolite.NewRouteGroup("Fake", fakeCtrl)
-	fkgroup.AddRoute("/", "GET", roletype.Admin, fakeCtrl.Get)
-	fkgroup.AddRoute("/{key:[0-9]+\x60[0-9]+}", "GET", roletype.Admin, fakeCtrl.GetKey)
-	fkgroup.AddRoute("/{id:[0-9]+}", "POST", roletype.Admin, fakeCtrl.Post)
-	fkgroup.AddRoute("/{id:[0-9]+}", "GET", roletype.Admin, fakeCtrl.GetId)
-	fkgroup.AddRoute("/question/{yes:true|false}", "GET", roletype.Admin, fakeCtrl.GetAnswer)
-	fkgroup.AddRoute("/{name:[a-zA-Z]+}/{id:[0-9]+}", "GET", roletype.Admin, fakeCtrl.GetName)
-	fkgroup.AddRoute("/all/{pagesize:[A-Z][0-9]+}", "GET", roletype.Admin, fakeCtrl.GetPage)
+	fkgroup.AddRoute("/", "GET", roletype.Unknown, fakeCtrl.Get)
+
+	q := make(map[string]string)
+	q["name"] = "{name}"
+	fkgroup.AddRouteWithQueries("/query", "GET", roletype.Unknown, q, fakeCtrl.GetQueryStr)
+	fkgroup.AddRoute("/{key:[0-9]+\x60[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetKey)
+	fkgroup.AddRoute("/{id:[0-9]+}", "POST", roletype.Unknown, fakeCtrl.Post)
+	fkgroup.AddRoute("/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetId)
+	fkgroup.AddRoute("/question/{yes:true|false}", "GET", roletype.Unknown, fakeCtrl.GetAnswer)
+	fkgroup.AddRoute("/{name:[a-zA-Z]+}/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetName)
+	fkgroup.AddRoute("/all/{pagesize:[A-Z][0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetPage)
 	poxy.AddGroup(fkgroup)
 }

@@ -29,6 +29,7 @@ type Route struct {
 	Path         string
 	Method       string
 	RequiredRole roletype.Enum
+	Queries      map[string]string
 	Function     func()
 }
 
@@ -51,6 +52,21 @@ func (g *RouteGroup) AddRoute(path, method string, requiredRole roletype.Enum, f
 		Method:       method,
 		RequiredRole: requiredRole,
 		Function:     function,
+		Queries:      make(map[string]string),
+	}
+
+	g.Routes = append(g.Routes, result)
+
+	return result
+}
+
+func (g *RouteGroup) AddRouteWithQueries(path, method string, requiredRole roletype.Enum, queries map[string]string, function func()) *Route {
+	result := &Route{
+		Path:         path,
+		Method:       method,
+		RequiredRole: requiredRole,
+		Function:     function,
+		Queries:      queries,
 	}
 
 	g.Routes = append(g.Routes, result)
@@ -120,7 +136,11 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 	sub := e.router.PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
 
 	for _, v := range routeGroup.Routes {
-		sub.Handle(v.Path, e.Handle(routeGroup.Controller, v.RequiredRole, v.Function)).Methods(v.Method)
+		r := sub.Handle(v.Path, e.Handle(routeGroup.Controller, v.RequiredRole, v.Function)).Methods(v.Method)
+
+		for qkey, qval := range v.Queries {
+			r.Queries(qkey, qval)
+		}
 	}
 }
 
