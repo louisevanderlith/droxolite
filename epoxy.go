@@ -14,6 +14,7 @@ import (
 
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/servicetype"
 
 	"github.com/gorilla/mux"
 	"github.com/louisevanderlith/droxolite/roletype"
@@ -103,6 +104,22 @@ func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage s
 	fs := http.FileServer(distPath)
 	routr.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
 
+	if service.Type == servicetype.API {
+		allowed := fmt.Sprintf("https://*%s", strings.TrimSuffix(settings.Host, "/"))
+
+		/*beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
+			AllowOrigins: []string{allowed},
+			AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
+		}), false)*/
+
+		routr.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", allowed)
+			w.Header().Set("Access-Control-Max-Age", "86400")
+		}).Methods(http.MethodOptions)
+
+		routr.Use(mux.CORSMethodMiddleware(routr))
+	}
+
 	e := &Epoxy{
 		service:    service,
 		router:     routr,
@@ -132,7 +149,7 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 
 		children := bodies.NewMenu()
 		for _, v := range routeGroup.Routes {
-			if v.Method == "GET" {
+			if v.Method == http.MethodGet {
 				children.AddItem(v.Path, reflect.TypeOf(v.Function).Name(), "fa-ban", nil)
 			}
 		}
@@ -150,27 +167,6 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 		}
 	}
 }
-
-/*
-r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-        t, err := route.GetPathTemplate()
-        if err != nil {
-            return err
-        }
-        // p will contain regular expression is compatible with regular expression in Perl, Python, and other languages.
-        // for instance the regular expression for path '/articles/{id}' will be '^/articles/(?P<v0>[^/]+)$'
-        p, err := route.GetPathRegexp()
-        if err != nil {
-            return err
-        }
-        m, err := route.GetMethods()
-        if err != nil {
-            return err
-        }
-        fmt.Println(strings.Join(m, ","), t, p)
-        return nil
-    })
-*/
 
 func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, call func()) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
@@ -194,6 +190,7 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 			uiCtrl.CreateSideMenu(e.sideMenu)
 		}
 
+		//Calls the Controller Function
 		call()
 	}
 }
