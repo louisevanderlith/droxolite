@@ -73,11 +73,6 @@ func (ctrl *UICtrl) Serve(statuscode int, err error, result interface{}) error {
 		ctrl.Data["Data"] = result
 	}
 
-	/*if ctrl.Settings.Templates.Tree != nil {
-		return errors.New("tree is empty")
-	}*/
-
-	//page, err := renderTemplate(renderPage, ctrl.Data)
 	page := ctrl.Settings.Templates.Lookup(renderPage)
 	var buffPage bytes.Buffer
 	err = page.ExecuteTemplate(&buffPage, renderPage, ctrl.Data)
@@ -86,7 +81,6 @@ func (ctrl *UICtrl) Serve(statuscode int, err error, result interface{}) error {
 		return err
 	}
 
-	//masterPage, err := renderTemplate(ctrl.MasterPage, ctrl.Data)
 	ctrl.Data["LayoutContent"] = template.HTML(buffPage.String())
 	masterPage := ctrl.Settings.Templates.Lookup(ctrl.MasterPage)
 	var buffMaster bytes.Buffer
@@ -103,7 +97,6 @@ func (ctrl *UICtrl) Serve(statuscode int, err error, result interface{}) error {
 
 func (ctrl *UICtrl) Filter(requiredRole roletype.Enum, publicKeyPath, serviceName string) bool {
 	path := ctrl.ctx.RequestURI()
-	//action := ctrl.ctx.Method()
 
 	if strings.HasPrefix(path, "/static") || strings.HasPrefix(path, "/favicon") {
 		return true

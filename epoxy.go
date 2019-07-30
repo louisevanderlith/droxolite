@@ -2,11 +2,11 @@ package droxolite
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"text/template"
@@ -151,48 +151,45 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 		ctrl.CreateInstance(ctx, e.service.ID)
 		ctrl.Prepare()
 
+		if !ctrl.Filter(requiredRole, e.service.ID, e.service.Name) {
+			err := sendToLogin(ctx, e.service.ID)
+
+			if err != nil {
+				ctrl.Serve(http.StatusInternalServerError, err, nil)
+			}
+
+			return
+		}
+
 		uiCtrl, isUI := ctrl.(xontrols.UIController)
 
 		if isUI {
 			uiCtrl.CreateSideMenu(e.sideMenu)
 		}
 
-		if ctrl.Filter(requiredRole, e.service.ID, e.service.Name) {
-			call()
-		} else {
-			ctrl.Serve(http.StatusUnauthorized, errors.New("Not allowed"), nil)
-		}
+		call()
 	}
 }
 
-/*
-
-func sendToLogin(ctx *context.Context, instanceID string) {
-	securityURL, err := mango.GetServiceURL(instanceID, "Auth.APP", true)
+func sendToLogin(ctx context.Contexer, instanceID string) error {
+	securityURL, err := GetServiceURL(instanceID, "Auth.APP", true)
 
 	if err != nil {
-		ctx.RenderMethodResult(err)
-		return
+		return err
 	}
 
-	req := ctx.Request
-	moveURL := fmt.Sprintf("%s://%s%s", ctx.Input.Scheme(), req.Host, req.RequestURI)
+	scheme := ctx.Scheme()
+
+	if len(scheme) == 0 {
+		scheme = "https"
+	}
+
+	moveURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Host(), ctx.RequestURI())
 	loginURL := buildLoginURL(securityURL, moveURL)
 
 	ctx.Redirect(http.StatusTemporaryRedirect, loginURL)
-}
 
-func sendToSubscription(ctx *context.Context, instanceID string) {
-	securityURL, err := mango.GetServiceURL(instanceID, "Auth.APP", true)
-
-	if err != nil {
-		ctx.RenderMethodResult(err)
-		return
-	}
-
-	subcribeURL := buildSubscribeURL(securityURL)
-
-	ctx.Redirect(http.StatusTemporaryRedirect, subcribeURL)
+	return nil
 }
 
 func buildLoginURL(securityURL, returnURL string) string {
@@ -201,10 +198,19 @@ func buildLoginURL(securityURL, returnURL string) string {
 	return fmt.Sprintf("%slogin?return=%s", securityURL, escURL)
 }
 
+func removeQueries(url string) string {
+	idxOfQuery := strings.Index(url, "?")
+
+	if idxOfQuery != -1 {
+		url = url[:idxOfQuery]
+	}
+
+	return url
+}
+
 func buildSubscribeURL(securityURL string) string {
 	return fmt.Sprintf("%ssubscribe", securityURL)
 }
-*/
 
 func (e *Epoxy) GetRouter() *mux.Router {
 	return e.router
@@ -259,78 +265,6 @@ func redirectTLS(w http.ResponseWriter, r *http.Request) {
 	moveURL := fmt.Sprintf("https://%s%s", r.Host, r.RequestURI)
 	http.Redirect(w, r, moveURL, http.StatusPermanentRedirect)
 }
-
-/*
-func serveHTTP2(router *mux.Router, httpsPort int, certPath, publicKey, privateKey string) {
-	publicKeyPem := readBlocks(path.Join(certPath, publicKey))
-	privateKeyPem := readBlocks(path.Join(certPath, privateKey))
-	cert, err := tls.X509KeyPair(publicKeyPem, privateKeyPem)
-
-	if err != nil {
-		panic(err)
-	}
-
-	cfg := &tls.Config{Certificates: []tls.Certificate{cert}}
-
-	srv := &http.Server{
-		TLSConfig:    cfg,
-		ReadTimeout:  time.Second * 15,
-		WriteTimeout: time.Second * 15,
-		Addr:         fmt.Sprintf(":%v", httpsPort),
-		Handler:      router,
-	}
-
-	log.Println("Listening...")
-
-	err = srv.ListenAndServeTLS("", "")
-
-	if err != nil {
-		panic(err)
-	}
-}
-
-*/
-
-/*
-hosts := routers.SetupRouter(instanceID, certPath)
-	//subs := domains.RegisterSubdomains(instanceID, certPath)
-
-	go serveHTTP2(hosts, httpsPort, certPath, publicKey, privateKey)
-
-	err := http.ListenAndServe(fmt.Sprintf(":%v", httpPort), http.HandlerFunc(redirectTLS))
-
-*/
-
-//Add is used to specify the permissions required for a controller's actions.
-/*func (m *Epoxy) Add(path string, actionMap map[string]int) {
-	m.mapping[path] = actionMap
-}*/
-
-//GetRequiredRole will return the RoleType required to access the 'path' and 'action'
-/*func (m *Epoxy) GetRequiredRole(path, action string) (roletype.Enum, error) {
-	actionMap, hasCtrl := m.mapping[path]
-
-	if !hasCtrl {
-		for actPath, actMap := range m.mapping {
-			if strings.Contains(path, actPath) {
-				actionMap = actMap
-				break
-			}
-		}
-	}
-
-	if actionMap == nil {
-		return roletype.Unknown, fmt.Errorf("missing mapping for %s on %s", action, path)
-	}
-
-	roleType, hasAction := actionMap[strings.ToUpper(action)]
-
-	if !hasAction {
-		return roletype.Unknown, nil
-	}
-
-	return roleType, nil
-}*/
 
 func readBlocks(filePath string) []byte {
 	file, err := ioutil.ReadFile(filePath)
