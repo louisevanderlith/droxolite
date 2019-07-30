@@ -120,7 +120,7 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 	sub := e.router.PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
 
 	for _, v := range routeGroup.Routes {
-		sub.Handle(v.Path, e.Handle(routeGroup.Controller, v.Function)).Methods(v.Method)
+		sub.Handle(v.Path, e.Handle(routeGroup.Controller, v.RequiredRole, v.Function)).Methods(v.Method)
 	}
 }
 
@@ -145,9 +145,10 @@ r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error 
     })
 */
 
-func (e *Epoxy) Handle(ctrl xontrols.Controller, call func()) http.HandlerFunc {
+func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, call func()) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		ctrl.CreateInstance(context.New(resp, req), e.service.ID)
+		ctx := context.New(resp, req)
+		ctrl.CreateInstance(ctx, e.service.ID)
 		ctrl.Prepare()
 
 		uiCtrl, isUI := ctrl.(xontrols.UIController)
@@ -156,13 +157,54 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, call func()) http.HandlerFunc {
 			uiCtrl.CreateSideMenu(e.sideMenu)
 		}
 
-		if ctrl.Filter() {
+		if ctrl.Filter(requiredRole, e.service.ID, e.service.Name) {
 			call()
 		} else {
 			ctrl.Serve(http.StatusUnauthorized, errors.New("Not allowed"), nil)
 		}
 	}
 }
+
+/*
+
+func sendToLogin(ctx *context.Context, instanceID string) {
+	securityURL, err := mango.GetServiceURL(instanceID, "Auth.APP", true)
+
+	if err != nil {
+		ctx.RenderMethodResult(err)
+		return
+	}
+
+	req := ctx.Request
+	moveURL := fmt.Sprintf("%s://%s%s", ctx.Input.Scheme(), req.Host, req.RequestURI)
+	loginURL := buildLoginURL(securityURL, moveURL)
+
+	ctx.Redirect(http.StatusTemporaryRedirect, loginURL)
+}
+
+func sendToSubscription(ctx *context.Context, instanceID string) {
+	securityURL, err := mango.GetServiceURL(instanceID, "Auth.APP", true)
+
+	if err != nil {
+		ctx.RenderMethodResult(err)
+		return
+	}
+
+	subcribeURL := buildSubscribeURL(securityURL)
+
+	ctx.Redirect(http.StatusTemporaryRedirect, subcribeURL)
+}
+
+func buildLoginURL(securityURL, returnURL string) string {
+	cleanReturn := removeQueries(returnURL)
+	escURL := url.QueryEscape(cleanReturn)
+	return fmt.Sprintf("%slogin?return=%s", securityURL, escURL)
+}
+
+func buildSubscribeURL(securityURL string) string {
+	return fmt.Sprintf("%ssubscribe", securityURL)
+}
+*/
 
 func (e *Epoxy) GetRouter() *mux.Router {
 	return e.router
@@ -259,20 +301,13 @@ hosts := routers.SetupRouter(instanceID, certPath)
 
 */
 
-func (e *Epoxy) Plak() {
-	//avoc, err := bodies.GetAvoCookie(ctrl.GetMyToken(), ctrl.ctrlMap.GetPublicKeyPath())
-
-	//Add Ctx
-}
-
-/*
 //Add is used to specify the permissions required for a controller's actions.
-func (m *Epoxy) Add(path string, actionMap map[string]int) {
+/*func (m *Epoxy) Add(path string, actionMap map[string]int) {
 	m.mapping[path] = actionMap
-}
+}*/
 
 //GetRequiredRole will return the RoleType required to access the 'path' and 'action'
-func (m *Epoxy) GetRequiredRole(path, action string) (roletype.Enum, error) {
+/*func (m *Epoxy) GetRequiredRole(path, action string) (roletype.Enum, error) {
 	actionMap, hasCtrl := m.mapping[path]
 
 	if !hasCtrl {
@@ -295,8 +330,8 @@ func (m *Epoxy) GetRequiredRole(path, action string) (roletype.Enum, error) {
 	}
 
 	return roleType, nil
-}
-*/
+}*/
+
 func readBlocks(filePath string) []byte {
 	file, err := ioutil.ReadFile(filePath)
 

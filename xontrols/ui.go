@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
+	"github.com/louisevanderlith/droxolite/roletype"
 )
 
 //UICtrl is the base for all APP Controllers
@@ -100,8 +101,62 @@ func (ctrl *UICtrl) Serve(statuscode int, err error, result interface{}) error {
 	return err
 }
 
-func (ctrl *UICtrl) Filter() bool {
-	log.Println("Filtering UI")
+func (ctrl *UICtrl) Filter(requiredRole roletype.Enum, publicKeyPath, serviceName string) bool {
+	path := ctrl.ctx.RequestURI()
+	//action := ctrl.ctx.Method()
+
+	if strings.HasPrefix(path, "/static") || strings.HasPrefix(path, "/favicon") {
+		return true
+	}
+
+	//requiredRole, err := ctrl..GetRequiredRole(path, action)
+
+	//if err != nil {
+	//	log.Println(err)
+	//Missing Mapping, the user doesn't have access to the application, and must request it.
+	//	sendToSubscription(ctx, m.GetInstanceID())
+	//	return
+	//}
+
+	if requiredRole == roletype.Unknown {
+		return true
+	}
+
+	token := ctrl.ctx.FindQueryParam("access_token")
+	//_, token := removeToken(path)
+
+	if token == "" {
+		cookie, err := ctrl.ctx.GetCookie("avosession")
+
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+
+		token = cookie.Value
+
+		if len(token) == 0 {
+			//sendToLogin(ctx, ctrl.GetInstanceID())
+			return false
+		}
+	}
+
+	avoc, err := bodies.GetAvoCookie(token, publicKeyPath)
+
+	if err != nil {
+		log.Println(err)
+		//sendToLogin(ctx, ctrl.GetInstanceID())
+		return false
+	}
+
+	allowed, err := bodies.IsAllowed(ctrl.Settings.Name, avoc.UserRoles, requiredRole)
+
+	if err != nil || !allowed {
+		log.Println(err)
+		//sendToLogin(ctx, ctrl.GetInstanceID())
+		return false
+	}
+
 	return true
 }
 
@@ -110,6 +165,7 @@ func (ctrl *UICtrl) ServeJSON(statuscode int, err error, data interface{}) {
 	ctrl.APICtrl.Serve(statuscode, err, data)
 }
 
+//CreateTopMenu sets the content of the Top menu bar
 func (ctrl *UICtrl) CreateTopMenu(menu *bodies.Menu) {
 	ctrl.Data["TopMenu"] = menu
 }

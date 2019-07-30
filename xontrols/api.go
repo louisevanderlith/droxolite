@@ -2,10 +2,15 @@ package xontrols
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
+	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/husk"
 )
 
@@ -69,17 +74,59 @@ func (ctrl *APICtrl) Serve(statuscode int, err error, result interface{}) error 
 		ctrl.ctx.SetStatus(http.StatusInternalServerError)
 		_, err = ctrl.ctx.WriteResponse([]byte((err.Error())))
 		return err
-	} else {
-		ctrl.ctx.SetStatus(resp.Code)
 	}
 
+	ctrl.ctx.SetStatus(resp.Code)
 	_, err = ctrl.ctx.WriteResponse(content)
 
 	return err
 }
 
-func (ctrl *APICtrl) Filter() bool {
-	return true
+func (ctrl *APICtrl) Filter(requiredRole roletype.Enum, publicKeyPath, serviceName string) bool {
+	path := ctrl.ctx.RequestURI()
+	//action := ctrl.ctx.Method()
+
+	if strings.HasPrefix(path, "/favicon") {
+		return true
+	}
+
+	//requiredRole, err := m.GetRequiredRole(path, action)
+
+	//if err != nil {
+	//Missing Mapping, the user doesn't have access to the application
+	//	ctx.RenderMethodResult(RenderUnauthorized(err))
+	//	return
+	//}
+
+	if requiredRole == roletype.Unknown {
+		return true
+	}
+
+	token, err := getAuthorizationToken(ctrl.ctx)
+
+	if err != nil {
+		log.Println(err)
+		//ctx.RenderMethodResult(RenderUnauthorized(err))
+		return false
+	}
+
+	avoc, err := bodies.GetAvoCookie(token, publicKeyPath)
+
+	if err != nil {
+		//ctx.RenderMethodResult(RenderUnauthorized(err))
+		log.Println(err)
+		return false
+	}
+
+	allowed, err := bodies.IsAllowed(serviceName, avoc.UserRoles, requiredRole)
+
+	if err != nil {
+		//ctx.RenderMethodResult(RenderUnauthorized(err))
+		log.Println(err)
+		return false
+	}
+
+	return allowed
 }
 
 //GetKeyedRequest will return the Key and update the Target when Requests are sent for updates.
@@ -126,4 +173,21 @@ func getPageData(pageData string) (int, int) {
 	}
 
 	return page, pageSize
+}
+
+//Returns the [TOKEN] in 'Bearer [TOKEN]'
+func getAuthorizationToken(ctx context.Contexer) (string, error) {
+	authHead, err := ctx.GetHeader("Authorization")
+
+	if err != nil {
+		return "", err
+	}
+
+	parts := strings.Split(authHead, " ")
+	tokenType := parts[0]
+	if strings.Trim(tokenType, " ") != "Bearer" {
+		return "", errors.New("Bearer Authentication only")
+	}
+
+	return parts[1], nil
 }
