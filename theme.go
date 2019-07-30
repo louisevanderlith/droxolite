@@ -14,6 +14,7 @@ func GetDefaultTheme(host, instanceID, siteName string) (bodies.ThemeSetting, er
 		return bodies.ThemeSetting{}, err
 	}
 
+	prof.Host = host
 	return prof, nil
 }
 
