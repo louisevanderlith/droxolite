@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/louisevanderlith/droxolite/bodies"
@@ -65,6 +66,7 @@ type Epoxy struct {
 	settings   *bodies.ThemeSetting
 	sideMenu   *bodies.Menu
 	masterpage string
+	templates  *template.Template
 }
 
 //NewExpoxy returns a new Instance of the Epoxy
@@ -78,13 +80,21 @@ func NewEpoxy(service *Service) *Epoxy {
 
 //NewExpoxy returns a new Instance of the Epoxy with a Theme
 func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage string) *Epoxy {
-	return &Epoxy{
+	e := &Epoxy{
 		service:    service,
 		router:     mux.NewRouter(),
 		settings:   &settings,
 		sideMenu:   bodies.NewMenu(),
 		masterpage: masterpage,
 	}
+
+	err := e.settings.LoadTemplate("./views", masterpage)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return e
 }
 
 func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
