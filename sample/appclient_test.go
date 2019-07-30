@@ -101,7 +101,7 @@ func TestAPP_Menu_Paths(t *testing.T) {
 func appRoutes(poxy *droxolite.Epoxy) {
 	fakeCtrl := &FakeAPPCtrl{}
 	fkgroup := droxolite.NewRouteGroup("", fakeCtrl)
-	fkgroup.AddRoute("/", "GET", roletype.Admin, fakeCtrl.GetHome)
-	fkgroup.AddRoute("/broken", "GET", roletype.Admin, fakeCtrl.GetBroken)
+	fkgroup.AddRoute("/", "GET", roletype.Unknown, fakeCtrl.GetHome)
+	fkgroup.AddRoute("/broken", "GET", roletype.Unknown, fakeCtrl.GetBroken)
 	poxy.AddGroup(fkgroup)
 }
