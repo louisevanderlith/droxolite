@@ -88,9 +88,11 @@ type Epoxy struct {
 
 //NewExpoxy returns a new Instance of the Epoxy
 func NewEpoxy(service *Service) *Epoxy {
+	routr := mux.NewRouter()
+
 	return &Epoxy{
 		service:  service,
-		router:   mux.NewRouter(),
+		router:   routr,
 		settings: nil,
 	}
 }
@@ -103,22 +105,6 @@ func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage s
 	distPath := http.FileSystem(http.Dir("dist/"))
 	fs := http.FileServer(distPath)
 	routr.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
-
-	if service.Type == servicetype.API {
-		allowed := fmt.Sprintf("https://*%s", strings.TrimSuffix(settings.Host, "/"))
-
-		/*beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
-			AllowOrigins: []string{allowed},
-			AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
-		}), false)*/
-
-		routr.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", allowed)
-			w.Header().Set("Access-Control-Max-Age", "86400")
-		}).Methods(http.MethodOptions)
-
-		routr.Use(mux.CORSMethodMiddleware(routr))
-	}
 
 	e := &Epoxy{
 		service:    service,
@@ -135,6 +121,21 @@ func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage s
 	}
 
 	return e
+}
+
+//EnableCORS enables host 'https://*{.localhost/}'
+func (e *Epoxy) EnableCORS(host string) {
+	if e.service.Type == servicetype.API {
+		allowed := fmt.Sprintf("https://*%s", strings.TrimSuffix(host, "/"))
+
+		routr := e.GetRouter()
+		routr.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", allowed)
+			w.Header().Set("Access-Control-Max-Age", "86400")
+		}).Methods(http.MethodOptions)
+
+		routr.Use(mux.CORSMethodMiddleware(routr))
+	}
 }
 
 func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
