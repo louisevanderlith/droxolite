@@ -61,8 +61,6 @@ func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string)
 func (ctrl *APICtrl) Serve(statuscode int, err error, result interface{}) error {
 	resp := bodies.NewRESTResult(statuscode, err, result)
 
-	ctrl.ctx.SetStatus(resp.Code)
-
 	ctrl.SetHeader("Content-Type", "application/json; charset=utf-8")
 
 	content, err := json.Marshal(*resp)
@@ -71,6 +69,8 @@ func (ctrl *APICtrl) Serve(statuscode int, err error, result interface{}) error 
 		ctrl.ctx.SetStatus(http.StatusInternalServerError)
 		_, err = ctrl.ctx.WriteResponse([]byte((err.Error())))
 		return err
+	} else {
+		ctrl.ctx.SetStatus(resp.Code)
 	}
 
 	_, err = ctrl.ctx.WriteResponse(content)
