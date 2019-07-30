@@ -23,6 +23,29 @@ func init() {
 	appRoutes(appEpoxy)
 }
 
+func TestAPP_DistAsset_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", "/dist/site.css", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := appEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("Not OK: %v", rr.Code)
+	}
+
+	expected := "h1{margin: auto;}"
+	if rr.Body.String() != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+}
+
 func TestAPP_Home_OK(t *testing.T) {
 	req, err := http.NewRequest("GET", "/", nil)
 
