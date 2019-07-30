@@ -2,6 +2,7 @@ package context
 
 import (
 	"encoding/json"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 
@@ -19,6 +20,22 @@ func New(response http.ResponseWriter, request *http.Request) Contexer {
 		ResponseWriter: response,
 		Request:        request,
 	}
+}
+
+//Method returns the Requests' Method
+func (ctx *Ctx) Method() string {
+	return ctx.Request.Method
+}
+
+//GetHeader returns a Request Header
+func (ctx *Ctx) GetHeader(key string) (string, error) {
+	headers := ctx.Request.Header[key]
+
+	if len(headers) == 0 {
+		return "", fmt.Errorf("no header '%s' found", key)
+	}
+
+	return headers[0], nil
 }
 
 //SetHeader sets a value on the Response Header
