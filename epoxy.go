@@ -96,9 +96,14 @@ func NewEpoxy(service *Service) *Epoxy {
 
 //NewExpoxy returns a new Instance of the Epoxy with a Theme
 func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage string) *Epoxy {
+	routr := mux.NewRouter()
+	distPath := http.FileSystem(http.Dir("dist"))
+	fs := http.FileServer(distPath)
+	routr.Handle("/dist", fs)
+
 	e := &Epoxy{
 		service:    service,
-		router:     mux.NewRouter(),
+		router:     routr,
 		settings:   &settings,
 		sideMenu:   bodies.NewMenu(),
 		masterpage: masterpage,
