@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"path"
 	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
@@ -73,41 +72,32 @@ func (ctrl *UICtrl) Serve(statuscode int, err error, result interface{}) error {
 		ctrl.Data["Data"] = result
 	}
 
-	page, err := renderTemplate(renderPage, ctrl.Data)
+	/*if ctrl.Settings.Templates.Tree != nil {
+		return errors.New("tree is empty")
+	}*/
+
+	//page, err := renderTemplate(renderPage, ctrl.Data)
+	page := ctrl.Settings.Templates.Lookup(renderPage)
+	var buffPage bytes.Buffer
+	err = page.ExecuteTemplate(&buffPage, renderPage, ctrl.Data)
 
 	if err != nil {
 		return err
 	}
 
-	ctrl.Data["LayoutContent"] = template.HTML(string(page))
-	masterPage, err := renderTemplate(ctrl.MasterPage, ctrl.Data)
+	//masterPage, err := renderTemplate(ctrl.MasterPage, ctrl.Data)
+	ctrl.Data["LayoutContent"] = template.HTML(buffPage.String())
+	masterPage := ctrl.Settings.Templates.Lookup(ctrl.MasterPage)
+	var buffMaster bytes.Buffer
+	err = masterPage.ExecuteTemplate(&buffMaster, ctrl.MasterPage, ctrl.Data)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = ctrl.ctx.WriteResponse(masterPage)
+	_, err = ctrl.ctx.WriteResponse(buffMaster.Bytes())
 
 	return err
-}
-
-func renderTemplate(masterpage string, data interface{}) ([]byte, error) {
-	mastr := template.New(masterpage)
-
-	tmpl, err := mastr.ParseGlob(path.Join("views", "*.html"))
-
-	if err != nil {
-		return nil, err
-	}
-
-	var buffBuild bytes.Buffer
-	err = tmpl.Execute(&buffBuild, data)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return buffBuild.Bytes(), nil
 }
 
 func (ctrl *UICtrl) Filter() bool {
