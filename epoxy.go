@@ -184,7 +184,7 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 		ctrl.Prepare()
 
 		if !ctrl.Filter(requiredRole, e.service.ID, e.service.Name) {
-			err := sendToLogin(ctx, e.service.ID)
+			err := sendToLogin(ctrl.Ctx(), e.service.ID)
 
 			if err != nil {
 				ctrl.Serve(http.StatusInternalServerError, err, nil)
