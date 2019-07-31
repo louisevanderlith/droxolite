@@ -59,6 +59,7 @@ func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string)
 	ctrl.SetHeader("Cache-Control", "must-revalidate")
 	ctrl.SetHeader("Pragma", "public")
 
+	ctrl.ctx.SetStatus(http.StatusOK)
 	ctrl.ctx.WriteResponse(data)
 }
 
