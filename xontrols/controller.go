@@ -13,6 +13,7 @@ type Controller interface {
 	GetInstanceID() string
 	Prepare()
 	Serve(int, error, interface{}) error
+	Ctx() context.Contexer
 }
 
 type APIController interface {
