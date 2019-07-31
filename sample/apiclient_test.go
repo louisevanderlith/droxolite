@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/louisevanderlith/droxolite/sample/sub"
+
 	"github.com/louisevanderlith/droxolite"
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/roletype"
@@ -77,6 +79,69 @@ func TestMain_API_DefaultPath_OK(t *testing.T) {
 	}
 
 	expected := "Fake GET Working"
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			result, expected)
+	}
+}
+
+func TestMain_API_SubPath_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", "/sub/", nil)
+	req.Host = "localhost"
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
+	}
+
+	expected := "I am a Sub Controller"
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			result, expected)
+	}
+}
+
+func TestMain_API_SubComplexPath_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", "/sub/complex/", nil)
+	req.Host = "localhost"
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	result := ""
+	log.Println(rr.Body.String())
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
+	}
+
+	expected := "This is complex!"
 	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
 			result, expected)
@@ -333,16 +398,27 @@ func apiRoutes(poxy *droxolite.Epoxy) {
 	fakeCtrl := &FakeAPICtrl{}
 
 	fkgroup := droxolite.NewRouteGroup("Fake", fakeCtrl)
-	fkgroup.AddRoute("/", "GET", roletype.Unknown, fakeCtrl.Get)
+	fkgroup.AddRoute("Home", "/", "GET", roletype.Unknown, fakeCtrl.Get)
 
 	q := make(map[string]string)
 	q["name"] = "{name}"
-	fkgroup.AddRouteWithQueries("/query", "GET", roletype.Unknown, q, fakeCtrl.GetQueryStr)
-	fkgroup.AddRoute("/{key:[0-9]+\x60[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetKey)
-	fkgroup.AddRoute("/{id:[0-9]+}", "POST", roletype.Unknown, fakeCtrl.Post)
-	fkgroup.AddRoute("/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetId)
-	fkgroup.AddRoute("/question/{yes:true|false}", "GET", roletype.Unknown, fakeCtrl.GetAnswer)
-	fkgroup.AddRoute("/{name:[a-zA-Z]+}/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetName)
-	fkgroup.AddRoute("/all/{pagesize:[A-Z][0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetPage)
+	fkgroup.AddRouteWithQueries("Query String", "/query", "GET", roletype.Unknown, q, fakeCtrl.GetQueryStr)
+	fkgroup.AddRoute("Key", "/{key:[0-9]+\x60[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetKey)
+	fkgroup.AddRoute("Id POST", "/{id:[0-9]+}", "POST", roletype.Unknown, fakeCtrl.Post)
+	fkgroup.AddRoute("Id", "/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetId)
+	fkgroup.AddRoute("Question Answer", "/question/{yes:true|false}", "GET", roletype.Unknown, fakeCtrl.GetAnswer)
+	fkgroup.AddRoute("Name", "/{name:[a-zA-Z]+}/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetName)
+	fkgroup.AddRoute("Page", "/all/{pagesize:[A-Z][0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetPage)
 	poxy.AddGroup(fkgroup)
+
+	subCtrl := &sub.SubAPICtrl{}
+	subGroup := droxolite.NewRouteGroup("Sub", subCtrl)
+	subGroup.AddRoute("Sub Home", "/", http.MethodGet, roletype.Unknown, subCtrl.Get)
+
+	complxCtrl := &sub.ComplexAPICtrl{}
+	complxGroup := droxolite.NewRouteGroup("Complex", complxCtrl)
+	complxGroup.AddRoute("Sub Complex Home", "/", http.MethodGet, roletype.Unknown, complxCtrl.Get)
+
+	subGroup.AddSubGroup(complxGroup)
+	poxy.AddGroup(subGroup)
 }

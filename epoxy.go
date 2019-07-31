@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 	"text/template"
 	"time"
@@ -27,6 +26,7 @@ const (
 )
 
 type Route struct {
+	Name         string //Name will be used to display links.
 	Path         string
 	Method       string
 	RequiredRole roletype.Enum
@@ -38,6 +38,7 @@ type RouteGroup struct {
 	Name       string
 	Controller xontrols.Controller
 	Routes     []*Route
+	SubGroups  []*RouteGroup
 }
 
 func NewRouteGroup(name string, ctrl xontrols.Controller) *RouteGroup {
@@ -47,8 +48,13 @@ func NewRouteGroup(name string, ctrl xontrols.Controller) *RouteGroup {
 	}
 }
 
-func (g *RouteGroup) AddRoute(path, method string, requiredRole roletype.Enum, function func()) *Route {
+func (g *RouteGroup) AddSubGroup(subgrp *RouteGroup) {
+	g.SubGroups = append(g.SubGroups, subgrp)
+}
+
+func (g *RouteGroup) AddRoute(name, path, method string, requiredRole roletype.Enum, function func()) *Route {
 	result := &Route{
+		Name:         name,
 		Path:         path,
 		Method:       method,
 		RequiredRole: requiredRole,
@@ -61,8 +67,9 @@ func (g *RouteGroup) AddRoute(path, method string, requiredRole roletype.Enum, f
 	return result
 }
 
-func (g *RouteGroup) AddRouteWithQueries(path, method string, requiredRole roletype.Enum, queries map[string]string, function func()) *Route {
+func (g *RouteGroup) AddRouteWithQueries(name, path, method string, requiredRole roletype.Enum, queries map[string]string, function func()) *Route {
 	result := &Route{
+		Name:         name,
 		Path:         path,
 		Method:       method,
 		RequiredRole: requiredRole,
@@ -94,6 +101,7 @@ func NewEpoxy(service *Service) *Epoxy {
 		service:  service,
 		router:   routr,
 		settings: nil,
+		sideMenu: bodies.NewMenu(),
 	}
 }
 
@@ -110,8 +118,8 @@ func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage s
 		service:    service,
 		router:     routr,
 		settings:   &settings,
-		sideMenu:   bodies.NewMenu(),
 		masterpage: masterpage,
+		sideMenu:   bodies.NewMenu(),
 	}
 
 	err := e.settings.LoadTemplate("./views", masterpage)
@@ -146,7 +154,7 @@ func (e *Epoxy) EnableCORS(host string) {
 	e.router = corsOpts.Handler(e.router)
 }
 
-func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
+func (e *Epoxy) AddNamedGroup(name string, routeGroup *RouteGroup) {
 	uiCtrl, isUI := routeGroup.Controller.(xontrols.UIController)
 
 	if isUI {
@@ -156,14 +164,31 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 
 		uiCtrl.SetTheme(*e.settings, e.masterpage)
 
-		children := bodies.NewMenu()
-		for _, v := range routeGroup.Routes {
+		var menuGroup []bodies.MenuItem
+		for k, v := range routeGroup.Routes {
 			if v.Method == http.MethodGet {
-				children.AddItem(v.Path, reflect.TypeOf(v.Function).Name(), "fa-ban", nil)
+				menuGroup = append(menuGroup, bodies.NewItem(fmt.Sprintf("r%v", k), v.Path, v.Name, nil))
+				//menuGroup.AddItem(v.Path, v.Name, nil)
 			}
 		}
 
-		e.sideMenu.AddItem("#", routeGroup.Name, "fa-home", children)
+		for _, sgroup := range routeGroup.SubGroups {
+
+			var menuChildren []bodies.MenuItem
+
+			for k, v := range sgroup.Routes {
+				if v.Method == http.MethodGet {
+					menuChildren = append(menuChildren, bodies.NewItem(fmt.Sprintf("c%v", k), v.Path, v.Name, nil))
+					//menuGroup.AddItem(v.Path, v.Name, nil)
+				}
+			}
+
+			menuGroup = append(menuChildren)
+		}
+
+		//item := .AddItem("#", routeGroup.Name, children)
+
+		e.sideMenu.AddGroup(name, menuGroup)
 	}
 
 	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
@@ -175,6 +200,23 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 			r.Queries(qkey, qval)
 		}
 	}
+
+	//add sub groups
+	for _, sgroup := range routeGroup.SubGroups {
+		xsub := sub.PathPrefix("/" + strings.ToLower(sgroup.Name)).Subrouter()
+
+		for _, v := range sgroup.Routes {
+			r := xsub.Handle(v.Path, e.Handle(sgroup.Controller, v.RequiredRole, v.Function)).Methods(v.Method)
+
+			for qkey, qval := range v.Queries {
+				r.Queries(qkey, qval)
+			}
+		}
+	}
+}
+
+func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
+	e.AddNamedGroup("", routeGroup)
 }
 
 func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, call func()) http.HandlerFunc {
