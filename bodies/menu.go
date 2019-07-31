@@ -1,47 +1,62 @@
 package bodies
 
-import "strings"
+import (
+	"strings"
+)
 
-type Menu map[string][]menuItem
+type Menu struct {
+	menu map[string][]MenuItem
+}
+
+/*
+type MenuGroup struct {
+	Label string
+	Items []menuItem
+}*/
 
 func NewMenu() *Menu {
-	menu := make(Menu)
-	result := &menu
-
-	return result
+	return &Menu{make(map[string][]MenuItem)}
 }
 
-func (m *Menu) AddItem(link, text, iconClass string, children *Menu) {
-	shortName, item := newItem("", link, text, iconClass, children)
-
-	menu := *m
-	menu[shortName] = append(menu[shortName], item)
-	m = &menu
+func (m *Menu) AddGroup(label string, items []MenuItem) {
+	m.menu[label] = append(m.menu[label], items...)
 }
 
-func (m *Menu) AddItemWithID(id, link, text, iconClass string, children *Menu) {
-	shortName, item := newItem(id, link, text, iconClass, children)
-
-	menu := *m
-	menu[shortName] = append(menu[shortName], item)
-	m = &menu
+func (m *Menu) Len() int {
+	return len(m.menu)
 }
 
+func (m *Menu) Items() map[string][]MenuItem {
+	return m.menu
+}
+
+/*
+func (m *MenuGroup) AddItem(link, text string, children []menuItem) {
+	id := fmt.Sprintf("m%v", m.Len())
+	item := newItem(id, link, text, children)
+
+	m.Items = append(m.Items, item)
+}
+
+func (m *MenuGroup) AddItemWithID(id, link, text string, children []menuItem) {
+	item := newItem(id, link, text, children)
+
+	m.Items = append(m.Items, item)
+}
+*/
 func (m *Menu) SetActive(link string) bool {
 	foundActive := false
 
-	for _, v := range *m {
-		for _, item := range v {
+	for _, items := range m.menu {
+		for _, item := range items {
 			item.IsActive = item.Link == link
 
 			if !foundActive && item.IsActive {
 				foundActive = true
 			}
 
-			foundActiveChild := item.Children.SetActive(link)
-
-			if foundActiveChild {
-				item.IsActive = true
+			for _, child := range item.Children {
+				child.IsActive = child.Link == link
 			}
 		}
 	}
@@ -49,22 +64,24 @@ func (m *Menu) SetActive(link string) bool {
 	return foundActive
 }
 
-type menuItem struct {
+type MenuItem struct {
 	ID       string
-	Name     string
-	Class    string
+	Text     string
+	Enabled  bool
+	Hidden   bool
 	Link     string
 	IsActive bool
-	Children *Menu `json:",omitempty"`
+	Children []MenuItem `json:",omitempty"`
 }
 
-func newItem(id, link, text, iconClass string, children *Menu) (shortName string, result menuItem) {
-	shortName = getUniqueName(text)
-	result = menuItem{
+func NewItem(id, link, text string, children []MenuItem) MenuItem {
+	shortName := getUniqueName(text)
+	result := MenuItem{
 		ID:       id,
-		Name:     text,
+		Text:     text,
+		Enabled:  true,
+		Hidden:   false,
 		Link:     link,
-		Class:    iconClass,
 		IsActive: false,
 	}
 
@@ -74,13 +91,15 @@ func newItem(id, link, text, iconClass string, children *Menu) (shortName string
 
 	if children != nil {
 		result.Children = children
-	} else {
-		result.Children = NewMenu()
 	}
 
-	return shortName, result
+	return result
 }
 
 func getUniqueName(raw string) string {
+	if len(raw) == 0 {
+		return "Home"
+	}
+
 	return strings.ToLower(strings.Replace(raw, " ", "", -1))
 }
