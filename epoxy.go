@@ -183,7 +183,7 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 		ctrl.CreateInstance(ctx, e.service.ID)
 		ctrl.Prepare()
 
-		if !ctrl.Filter(requiredRole, e.service.ID, e.service.Name) {
+		if !ctrl.Filter(requiredRole, e.service.PublicKey, e.service.Name) {
 			err := sendToLogin(ctrl.Ctx(), e.service.ID)
 
 			if err != nil {
@@ -269,12 +269,6 @@ func (e *Epoxy) BootSecure(privKeyPath string, fromPort int) error {
 
 	e.server = newServer(e.service.Port)
 	e.server.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cert}}
-	/*e.server.Handler = handlers.CORS(
-		handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
-		handlers.AllowedOrigins([]string{allowed}),
-		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
-	)(e.router))*/
-
 	e.server.Handler = e.router
 
 	err = e.server.ListenAndServeTLS("", "")
