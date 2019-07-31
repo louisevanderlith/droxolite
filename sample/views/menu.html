@@ -1,28 +1,39 @@
 {{if .SideMenu}}
-    {{range $key, $menu := .SideMenu}}
-        <p class="menu-label is-hidden-touch">
-            {{$key}}
-        </p>
-        <ul class="menu-list">
-            {{range $_, $val := $menu}}
-            <li id="{{$val.ID}}"><a class="{{if $val.IsActive}}is-active{{end}}" href="{{$val.Link}}">
-                    <span class="icon"><i class="fa {{$val.Class}}"></i></span>
-                    {{$val.Name}}
+{{range $lbl, $items := .SideMenu}}
+<p class="menu-label is-hidden-touch">
+    {{$lbl}}
+</p>
+<ul class="menu-list">
+    {{range $_, $val := $items}}
+    <li id="{{$val.ID}}"><a {{if $val.IsActive}}class="is-active"{{end}} href="{{$val.Link}}">
+            <span class="icon"><i class="fa fa-angle-double-arrow"></i></span>
+            {{$val.Text}}
+        </a>
+        {{if $val.Children}}
+        <ul>
+            {{range $_, $cval := $val.Children}}
+            <li id="{{$cval.ID}}"><a {{if $cval.IsActive}}class="is-active"{{end}} href="{{$cval.Link}}">
+                    <span class="icon"><i class="fa fa-angle-double-arrow"></i></span>
+                    {{$cval.Text}}
                 </a>
+                
+                {{if $cval.Children}}
                 <ul>
-                    {{range $ckey, $cmenu := $val.Children}}
-                        <li><a>{{$ckey}}</a></li>
-                        {{range $_, $cval := $cmenu}}
-                        <li id="{{$cval.ID}}"><a class="{{if $cval.IsActive}}is-active{{end}}" href="{{$cval.Link}}">
-                                <span class="icon"><i class="fa {{$cval.Class}}"></i></span>
-                                {{$cval.Name}}
-                            </a>
-                        </li>
-                        {{end}}
+                    {{range $_, $ccval := $cval.Children}}
+                    <li id="{{$ccval.ID}}"><a {{if $ccval.IsActive}}class="is-active"{{end}} href="{{$ccval.Link}}">
+                            <span class="icon"><i class="fa fa-angle-arrow"></i></span>
+                            {{$ccval.Text}}
+                        </a>
+                    </li>
                     {{end}}
                 </ul>
+                {{end}}
             </li>
             {{end}}
         </ul>
+        {{end}}
+    </li>
     {{end}}
+</ul>
+{{end}}
 {{end}}

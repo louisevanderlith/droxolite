@@ -146,12 +146,12 @@ func (ctrl *UICtrl) ServeJSON(statuscode int, err error, data interface{}) {
 }
 
 //CreateTopMenu sets the content of the Top menu bar
-func (ctrl *UICtrl) CreateTopMenu(menu *bodies.Menu) {
-	ctrl.Data["TopMenu"] = menu
+func (ctrl *UICtrl) CreateTopMenu(menu bodies.Menu) {
+	ctrl.Data["TopMenu"] = menu.Items()
 }
 
 func (ctrl *UICtrl) CreateSideMenu(menu *bodies.Menu) {
-	ctrl.Data["SideMenu"] = menu
+	ctrl.Data["SideMenu"] = menu.Items()
 }
 
 func (ctrl *UICtrl) GetMyToken() string {
