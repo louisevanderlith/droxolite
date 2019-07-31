@@ -102,21 +102,11 @@ func (ctrl *UICtrl) Filter(requiredRole roletype.Enum, publicKeyPath, serviceNam
 		return true
 	}
 
-	//requiredRole, err := ctrl..GetRequiredRole(path, action)
-
-	//if err != nil {
-	//	log.Println(err)
-	//Missing Mapping, the user doesn't have access to the application, and must request it.
-	//	sendToSubscription(ctx, m.GetInstanceID())
-	//	return
-	//}
-
 	if requiredRole == roletype.Unknown {
 		return true
 	}
 
 	token := ctrl.ctx.FindQueryParam("access_token")
-	//_, token := removeToken(path)
 
 	if token == "" {
 		cookie, err := ctrl.ctx.GetCookie("avosession")
@@ -129,7 +119,6 @@ func (ctrl *UICtrl) Filter(requiredRole roletype.Enum, publicKeyPath, serviceNam
 		token = cookie.Value
 
 		if len(token) == 0 {
-			//sendToLogin(ctx, ctrl.GetInstanceID())
 			return false
 		}
 	}
@@ -138,15 +127,13 @@ func (ctrl *UICtrl) Filter(requiredRole roletype.Enum, publicKeyPath, serviceNam
 
 	if err != nil {
 		log.Println(err)
-		//sendToLogin(ctx, ctrl.GetInstanceID())
 		return false
 	}
 
-	allowed, err := bodies.IsAllowed(ctrl.Settings.Name, avoc.UserRoles, requiredRole)
+	allowed, err := bodies.IsAllowed(serviceName, avoc.UserRoles, requiredRole)
 
 	if err != nil || !allowed {
 		log.Println(err)
-		//sendToLogin(ctx, ctrl.GetInstanceID())
 		return false
 	}
 
