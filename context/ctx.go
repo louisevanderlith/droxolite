@@ -95,7 +95,7 @@ func (ctx *Ctx) Scheme() string {
 }
 
 func (ctx *Ctx) Host() string {
-	return ctx.Request.URL.Hostname()
+	return ctx.Request.Host
 }
 
 func (ctx *Ctx) Body(container interface{}) error {
