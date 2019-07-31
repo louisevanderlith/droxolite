@@ -54,6 +54,7 @@ func TestAPI_OPTIONS_CORS(t *testing.T) {
 
 func TestMain_API_DefaultPath_OK(t *testing.T) {
 	req, err := http.NewRequest("GET", "/fake/", nil)
+	req.Host = "localhost"
 
 	if err != nil {
 		t.Fatal(err)
