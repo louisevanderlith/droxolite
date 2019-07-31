@@ -14,11 +14,11 @@ import (
 
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
-	"github.com/louisevanderlith/droxolite/servicetype"
 
 	"github.com/gorilla/mux"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
+	"github.com/rs/cors"
 )
 
 const (
@@ -78,7 +78,7 @@ func (g *RouteGroup) AddRouteWithQueries(path, method string, requiredRole rolet
 //Epoxy puts everything together
 type Epoxy struct {
 	service    *Service
-	router     *mux.Router
+	router     http.Handler //*mux.Router
 	server     *http.Server
 	settings   *bodies.ThemeSetting
 	sideMenu   *bodies.Menu
@@ -125,17 +125,25 @@ func NewColourEpoxy(service *Service, settings bodies.ThemeSetting, masterpage s
 
 //EnableCORS enables host 'https://*{.localhost/}'
 func (e *Epoxy) EnableCORS(host string) {
-	if e.service.Type == servicetype.API {
-		allowed := fmt.Sprintf("https://*%s", strings.TrimSuffix(host, "/"))
+	allowed := fmt.Sprintf("https://*%s", strings.TrimSuffix(host, "/"))
 
-		routr := e.GetRouter()
-		routr.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", allowed)
-			w.Header().Set("Access-Control-Max-Age", "86400")
-		}).Methods(http.MethodOptions)
+	corsOpts := cors.New(cors.Options{
+		AllowedOrigins: []string{allowed}, //you service is available and allowed for this base url
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+			http.MethodHead,
+		},
+		AllowCredentials: true,
+		AllowedHeaders: []string{
+			"*", //or you can your header key values which you are using in your application
+		},
+	})
 
-		routr.Use(mux.CORSMethodMiddleware(routr))
-	}
+	e.router = corsOpts.Handler(e.router)
 }
 
 func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
@@ -158,7 +166,7 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 		e.sideMenu.AddItem("#", routeGroup.Name, "fa-home", children)
 	}
 
-	sub := e.router.PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
+	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
 
 	for _, v := range routeGroup.Routes {
 		r := sub.Handle(v.Path, e.Handle(routeGroup.Controller, v.RequiredRole, v.Function)).Methods(v.Method)
@@ -237,7 +245,7 @@ func buildSubscribeURL(securityURL string) string {
 	return fmt.Sprintf("%ssubscribe", securityURL)
 }
 
-func (e *Epoxy) GetRouter() *mux.Router {
+func (e *Epoxy) GetRouter() http.Handler {
 	return e.router
 }
 
@@ -259,10 +267,14 @@ func (e *Epoxy) BootSecure(privKeyPath string, fromPort int) error {
 		return err
 	}
 
-	cfg := &tls.Config{Certificates: []tls.Certificate{cert}}
-
 	e.server = newServer(e.service.Port)
-	e.server.TLSConfig = cfg
+	e.server.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cert}}
+	/*e.server.Handler = handlers.CORS(
+		handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
+		handlers.AllowedOrigins([]string{allowed}),
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+	)(e.router))*/
+
 	e.server.Handler = e.router
 
 	err = e.server.ListenAndServeTLS("", "")

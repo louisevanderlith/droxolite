@@ -3,6 +3,7 @@ package sample
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,6 +24,32 @@ func init() {
 
 	apiEpoxy = droxolite.NewEpoxy(srvc)
 	apiRoutes(apiEpoxy)
+	apiEpoxy.EnableCORS(".localhost/")
+}
+
+func TestAPI_OPTIONS_CORS(t *testing.T) {
+	req, err := http.NewRequest("OPTIONS", "/fake/", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req.Header.Set("Access-Control-Request-Method", "POST")           // needs to be non-empty
+	req.Header.Set("Access-Control-Request-Headers", "Authorization") // needs to be non-empty
+	req.Header.Set("Origin", "https://tester.localhost/")             // needs to be non-empty
+
+	handle := apiEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+	log.Println(rr.Header())
+	if len(rr.Header().Get("Access-Control-Allow-Methods")) == 0 {
+		t.Fatal("Allow Methods not Found")
+	}
+
+	if len(rr.Header().Get("Access-Control-Allow-Origin")) == 0 {
+		t.Fatal("Allow Origin not Found")
+	}
 }
 
 func TestMain_API_DefaultPath_OK(t *testing.T) {
