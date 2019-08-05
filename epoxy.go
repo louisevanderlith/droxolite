@@ -108,25 +108,26 @@ func (e *Epoxy) AddNamedGroup(name string, routeGroup *RouteGroup) {
 		uiCtrl.SetTheme(*e.settings, e.masterpage)
 
 		var menuGroup []bodies.MenuItem
-		for k, v := range routeGroup.Routes {
+		for _, v := range routeGroup.Routes {
 			if v.Method == http.MethodGet {
-				menuGroup = append(menuGroup, bodies.NewItem(fmt.Sprintf("r%v", k), v.Path, v.Name, nil))
+				//menuGroup = append(menuGroup, bodies.NewItem(, v.Path, v.Name, nil))
 				//menuGroup.AddItem(v.Path, v.Name, nil)
-			}
-		}
+				baseURL := v.Path
 
-		for _, sgroup := range routeGroup.SubGroups {
+				for k, sgroup := range routeGroup.SubGroups {
+					subPath := baseURL + "/" + strings.ToLower(sgroup.Name)
+					var subChildren []bodies.MenuItem
 
-			var menuChildren []bodies.MenuItem
+					for sk, sv := range sgroup.Routes {
+						if sv.Method == http.MethodGet && !strings.HasPrefix(sv.Path, "/{") {
+							subChildren = append(subChildren, bodies.NewItem(fmt.Sprintf("c%v", sk), subPath+sv.Path, sv.Name, nil))
+						}
+					}
 
-			for k, v := range sgroup.Routes {
-				if v.Method == http.MethodGet {
-					menuChildren = append(menuChildren, bodies.NewItem(fmt.Sprintf("c%v", k), v.Path, v.Name, nil))
-					//menuGroup.AddItem(v.Path, v.Name, nil)
+					subMenu := bodies.NewItem(fmt.Sprintf("r%v", k), subPath, sgroup.Name, subChildren)
+					menuGroup = append(menuGroup, subMenu)
 				}
 			}
-
-			menuGroup = append(menuChildren)
 		}
 
 		//item := .AddItem("#", routeGroup.Name, children)

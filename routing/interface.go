@@ -1,7 +1,7 @@
 package routing
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
@@ -12,18 +12,22 @@ import (
 )
 
 //NewInterfaceBundle returns a new RouteGroup that has been setup for UI purposes. The first will be used as the default
-func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.InterfaceXontroller) (*droxolite.RouteGroup, error) {
+func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.InterfaceXontroller) *droxolite.RouteGroup {
 	if len(ctrls) == 0 {
-		return nil, errors.New("ctrls must have at least one controller")
+		panic("ctrls must have at least one controller")
 	}
 
 	rg := droxolite.NewRouteGroup(name, ctrls[0].(xontrols.Controller))
 
 	//Default Page
-	rg.AddRoute("Default", "/", http.MethodGet, required, ctrls[0].Default)
+	deftName := fmt.Sprintf("Default %s", name)
+	deftPath := fmt.Sprintf("/%s", strings.ToLower(name))
+	rg.AddRoute(deftName, deftPath, http.MethodGet, required, ctrls[0].Default)
 
 	for _, ctrl := range ctrls {
-		sub := droxolite.NewRouteGroup(getControllerName(ctrl), ctrl.(xontrols.Controller))
+		ctrlName := getControllerName(ctrl)
+		sub := droxolite.NewRouteGroup(ctrlName, ctrl.(xontrols.Controller))
+
 		searchCtrl, searchable := ctrl.(xontrols.SearchableXontroller)
 
 		if !searchable {
@@ -45,10 +49,9 @@ func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.I
 		}
 
 		rg.AddSubGroup(sub)
-
 	}
 
-	return rg, nil
+	return rg
 }
 
 func getControllerName(ctrl xontrols.InterfaceXontroller) string {
