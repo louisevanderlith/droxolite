@@ -8,6 +8,7 @@ import (
 
 	"github.com/louisevanderlith/droxolite"
 	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/droxolite/routing"
 	"github.com/louisevanderlith/droxolite/servicetype"
 )
 
@@ -123,8 +124,15 @@ func TestAPP_Menu_Paths(t *testing.T) {
 
 func appRoutes(poxy *droxolite.Epoxy) {
 	fakeCtrl := &FakeAPPCtrl{}
-	fkgroup := droxolite.NewRouteGroup("", fakeCtrl)
+	grp, err := routing.NewInterfaceBundle("", roletype.Unknown, fakeCtrl)
+	if err != nil {
+		panic(err)
+	}
+
+	grp.AddRoute("Broken Home", "/broken", "GET", roletype.Unknown, fakeCtrl.GetBroken)
+	poxy.AddNamedGroup("Home", grp)
+
+	/*fkgroup := droxolite.NewRouteGroup("", fakeCtrl)
 	fkgroup.AddRoute("Default", "/", "GET", roletype.Unknown, fakeCtrl.GetHome)
-	fkgroup.AddRoute("Broken Home", "/broken", "GET", roletype.Unknown, fakeCtrl.GetBroken)
-	poxy.AddNamedGroup("Home", fkgroup)
+	fkgroup.AddRoute("Broken Home", "/broken", "GET", roletype.Unknown, fakeCtrl.GetBroken)*/
 }

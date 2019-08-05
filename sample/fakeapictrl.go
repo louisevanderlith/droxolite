@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,6 +19,19 @@ type FakeAPICtrl struct {
 // /
 func (c *FakeAPICtrl) Get() {
 	c.Serve(http.StatusOK, nil, "Fake GET Working")
+}
+
+func (c *FakeAPICtrl) GetHash() {
+	hsh := c.FindParam("hash")
+
+	decoded, err := base64.StdEncoding.DecodeString(hsh)
+
+	if err != nil {
+		c.Serve(http.StatusInternalServerError, err, nil)
+		return
+	}
+
+	c.Serve(http.StatusOK, nil, string(decoded))
 }
 
 func (c *FakeAPICtrl) GetKey() {
