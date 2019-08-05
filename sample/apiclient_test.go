@@ -357,6 +357,44 @@ func TestMain_API_BooleanParam_OK(t *testing.T) {
 	}
 }
 
+/*
+
+ */
+
+func TestMain_API_HashParam_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", `/fake/base/eyJuYW1lIjogIkppbW15IiwiYWdlOiB7ICJtb250aCI6IDIsICJkYXRlIjogOCwgInllYXIiOiAxOTkxfSwiYWxpdmUiOiB0cnVlfQ==`, nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
+	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest.Code != http.StatusOK {
+		t.Fatalf(rest.Reason)
+	}
+
+	expected := `{"name": "Jimmy","age: { "month": 2, "date": 8, "year": 1991},"alive": true}`
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			result, expected)
+	}
+}
+
 func TestMain_API_POST_OK(t *testing.T) {
 	body, err := json.Marshal(struct{ Act string }{"Jump"})
 
@@ -409,6 +447,7 @@ func apiRoutes(poxy *droxolite.Epoxy) {
 	fkgroup.AddRoute("Question Answer", "/question/{yes:true|false}", "GET", roletype.Unknown, fakeCtrl.GetAnswer)
 	fkgroup.AddRoute("Name", "/{name:[a-zA-Z]+}/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetName)
 	fkgroup.AddRoute("Page", "/all/{pagesize:[A-Z][0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetPage)
+	fkgroup.AddRoute("base", "/base/{hash:[a-zA-Z0-9]+={0,2}}", "GET", roletype.Unknown, fakeCtrl.GetHash)
 	poxy.AddGroup(fkgroup)
 
 	subCtrl := &sub.SubAPICtrl{}

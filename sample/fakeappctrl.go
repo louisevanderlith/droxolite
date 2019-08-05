@@ -12,7 +12,7 @@ type FakeAPPCtrl struct {
 	xontrols.UICtrl
 }
 
-func (c *FakeAPPCtrl) GetHome() {
+func (c *FakeAPPCtrl) Default() {
 	c.Setup("home", "Fake Home", false)
 	data := "Welcome"
 	err := c.Serve(http.StatusOK, nil, data)
