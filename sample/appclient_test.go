@@ -70,6 +70,29 @@ func TestAPP_Home_OK(t *testing.T) {
 	}
 }
 
+func TestAPP_SubDefault_OK(t *testing.T) {
+	req, err := http.NewRequest("GET", "/stock/parts", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := appEpoxy.GetRouter()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("Not OK: %v", rr.Code)
+	}
+
+	expected := "<h1>MasterPage</h1><h1>Stock</h1>"
+	if rr.Body.String() != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+}
+
 func TestAPP_Error_OK(t *testing.T) {
 	req, err := http.NewRequest("GET", "/broken", nil)
 
