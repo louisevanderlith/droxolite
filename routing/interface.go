@@ -26,7 +26,11 @@ func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.I
 
 	for _, ctrl := range ctrls {
 		ctrlName := getControllerName(ctrl)
+
 		sub := droxolite.NewRouteGroup(ctrlName, ctrl.(xontrols.Controller))
+
+		//Default
+		sub.AddRoute("Default", "", http.MethodGet, required, ctrl.Default)
 
 		searchCtrl, searchable := ctrl.(xontrols.SearchableXontroller)
 
