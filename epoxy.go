@@ -119,7 +119,7 @@ func (e *Epoxy) AddNamedGroup(name string, routeGroup *RouteGroup) {
 					var subChildren []bodies.MenuItem
 
 					for sk, sv := range sgroup.Routes {
-						if sv.Method == http.MethodGet && !strings.HasPrefix(sv.Path, "/{") {
+						if sv.Method == http.MethodGet && !strings.HasPrefix(sv.Path, "/{") && sv.Name != "Default" {
 							subChildren = append(subChildren, bodies.NewItem(fmt.Sprintf("c%v", sk), subPath+sv.Path, sv.Name, nil))
 						}
 					}
