@@ -167,6 +167,7 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req)
 		ctrl.CreateInstance(ctx, e.service.ID)
+		ctrl.Prepare()
 
 		if !ctrl.Filter(requiredRole, e.service.PublicKey, e.service.Name) {
 			err := sendToLogin(ctrl.Ctx(), e.service.ID)
@@ -177,8 +178,6 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 
 			return
 		}
-
-		ctrl.Prepare()
 
 		uiCtrl, isUI := ctrl.(xontrols.UIController)
 
