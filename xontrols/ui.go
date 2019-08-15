@@ -25,10 +25,9 @@ func (ctrl *UICtrl) SetTheme(settings bodies.ThemeSetting, masterpage string) {
 }
 
 func (ctrl *UICtrl) Prepare() {
-	defer ctrl.APICtrl.Prepare()
-
 	ctrl.SetHeader("X-Frame-Options", "SAMEORIGIN")
 	ctrl.SetHeader("X-XSS-Protection", "1; mode=block")
+	ctrl.APICtrl.Prepare()
 }
 
 func (ctrl *UICtrl) Setup(name, title string, hasScript bool) {
@@ -49,9 +48,8 @@ func (ctrl *UICtrl) applySettings(title string) {
 	ctrl.Data["LogoKey"] = ctrl.Settings.LogoKey
 	ctrl.Data["InstanceID"] = ctrl.Settings.InstanceID
 	ctrl.Data["Host"] = ctrl.Settings.Host
-	ctrl.Data["Crumbs"] = decipherURL(ctrl.ctx.RequestURI())
 	ctrl.Data["GTag"] = ctrl.Settings.GTag
-
+	ctrl.Data["Footer"] = ctrl.Settings.Footer
 	//User Details
 	loggedIn := ctrl.AvoCookie != nil
 	ctrl.Data["LoggedIn"] = loggedIn
@@ -162,23 +160,4 @@ func (ctrl *UICtrl) GetMyToken() string {
 	}
 
 	return cooki.Value
-}
-
-func decipherURL(url string) []string {
-	var result []string
-	qryIndx := strings.Index(url, "?")
-
-	if qryIndx != -1 {
-		url = url[:qryIndx]
-	}
-
-	parts := strings.Split(url, "/")
-
-	for _, v := range parts {
-		if len(v) > 0 {
-			result = append(result, v)
-		}
-	}
-
-	return result
 }
