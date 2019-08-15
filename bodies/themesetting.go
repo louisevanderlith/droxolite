@@ -17,8 +17,14 @@ type ThemeSetting struct {
 	Host       string
 	InstanceID string
 	GTag       string
+	Footer     Footer
 	//MasterTemplate *template.Template //only has access to _shared
 	Templates *template.Template //has access to _shared and views
+}
+
+type Footer struct {
+	SocialLinks map[string]string //fa-[facebook] = 'www.facebook.com/companyx'
+	OtherLinks  map[string]string //fa-[same]
 }
 
 func NewThemeSetting(name, host string, logoKey husk.Key, instanceID, gtag string) ThemeSetting {
