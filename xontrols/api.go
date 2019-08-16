@@ -52,12 +52,13 @@ func (ctrl *APICtrl) ServeBinary(data []byte, filename string) {
 //ServeBinaryWithMIME is used to serve files such as images and documents. You must specify the MIME Type
 func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string) {
 	ctrl.SetHeader("Content-Description", "File Transfer")
-	//ctrl.SetHeader("Content-Type", mimetype)
 	ctrl.SetHeader("Content-Disposition", "attachment; filename="+filename)
 	ctrl.SetHeader("Content-Transfer-Encoding", "binary")
 	ctrl.SetHeader("Expires", "0")
 	ctrl.SetHeader("Cache-Control", "must-revalidate")
 	ctrl.SetHeader("Pragma", "public")
+
+	ctrl.SetHeader("Content-Type", mimetype)
 
 	ctrl.ctx.WriteResponse(data)
 }
