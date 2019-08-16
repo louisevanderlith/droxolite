@@ -52,14 +52,13 @@ func (ctrl *APICtrl) ServeBinary(data []byte, filename string) {
 //ServeBinaryWithMIME is used to serve files such as images and documents. You must specify the MIME Type
 func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string) {
 	ctrl.SetHeader("Content-Description", "File Transfer")
-	ctrl.SetHeader("Content-Type", mimetype)
+	//ctrl.SetHeader("Content-Type", mimetype)
 	ctrl.SetHeader("Content-Disposition", "attachment; filename="+filename)
 	ctrl.SetHeader("Content-Transfer-Encoding", "binary")
 	ctrl.SetHeader("Expires", "0")
 	ctrl.SetHeader("Cache-Control", "must-revalidate")
 	ctrl.SetHeader("Pragma", "public")
 
-	ctrl.ctx.SetStatus(http.StatusOK)
 	ctrl.ctx.WriteResponse(data)
 }
 
@@ -67,7 +66,7 @@ func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string)
 func (ctrl *APICtrl) Serve(statuscode int, err error, result interface{}) error {
 	resp := bodies.NewRESTResult(statuscode, err, result)
 
-	ctrl.SetHeader("Content-Type", "application/json; charset=utf-8")
+	//ctrl.SetHeader("Content-Type", "application/json; charset=utf-8")
 
 	content, err := json.Marshal(*resp)
 
@@ -77,7 +76,10 @@ func (ctrl *APICtrl) Serve(statuscode int, err error, result interface{}) error 
 		return err
 	}
 
-	ctrl.ctx.SetStatus(resp.Code)
+	if resp.Code != http.StatusOK {
+		ctrl.ctx.SetStatus(resp.Code)
+	}
+
 	_, err = ctrl.ctx.WriteResponse(content)
 
 	return err
