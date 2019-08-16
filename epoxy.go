@@ -167,6 +167,7 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req)
 		ctrl.CreateInstance(ctx, e.service.ID)
+		ctrl.Prepare()
 
 		if !ctrl.Filter(requiredRole, e.service.PublicKey, e.service.Name) {
 			err := sendToLogin(ctrl.Ctx(), e.service.ID)
@@ -177,8 +178,6 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 
 			return
 		}
-
-		ctrl.Prepare()
 
 		uiCtrl, isUI := ctrl.(xontrols.UIController)
 
@@ -236,10 +235,29 @@ func (e *Epoxy) GetRouter() http.Handler {
 	return e.router
 }
 
+func limitedClients(h http.Handler, max int) http.Handler {
+	sema := make(chan struct{}, max)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sema <- struct{}{}
+		defer func() { <-sema }()
+
+		h.ServeHTTP(w, r)
+	})
+}
+
 //Boot starts the Epoxy Objects to serve a configured service.
 func (e *Epoxy) Boot() error {
 	e.server = newServer(e.service.Port)
 	e.server.Handler = e.router
+
+	return e.server.ListenAndServe()
+}
+
+//Boot starts the Epoxy Objects to serve a configured service with a max client limit
+func (e *Epoxy) BootLimited(maxClients int) error {
+	e.server = newServer(e.service.Port)
+	e.server.Handler = limitedClients(e.router, maxClients)
 
 	return e.server.ListenAndServe()
 }

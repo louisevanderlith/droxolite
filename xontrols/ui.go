@@ -72,6 +72,11 @@ func (ctrl *UICtrl) Serve(statuscode int, err error, result interface{}) error {
 	}
 
 	page := ctrl.Settings.Templates.Lookup(renderPage)
+
+	if page == nil {
+		return fmt.Errorf("Template not Found: %s", renderPage)
+	}
+
 	var buffPage bytes.Buffer
 	err = page.ExecuteTemplate(&buffPage, renderPage, ctrl.Data)
 
