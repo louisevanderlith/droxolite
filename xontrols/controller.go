@@ -18,8 +18,8 @@ type Controller interface {
 
 type APIController interface {
 	Controller
-	ServeBinary(int, error, interface{}) error
-	ServeBinaryWithMIME(int, error, interface{}) error
+	ServeBinary(data []byte, filename string) error
+	ServeBinaryWithMIME(data []byte, filename, mimetype string) error
 }
 
 type UIController interface {
