@@ -163,7 +163,7 @@ func (e *Epoxy) AddGroup(routeGroup *RouteGroup) {
 	e.AddNamedGroup("", routeGroup)
 }
 
-func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, call func()) http.HandlerFunc {
+func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, call ServeFunc) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req)
 		ctrl.CreateInstance(ctx, e.service.ID)
@@ -186,7 +186,14 @@ func (e *Epoxy) Handle(ctrl xontrols.Controller, requiredRole roletype.Enum, cal
 		}
 
 		//Calls the Controller Function
-		call()
+		err := call()
+
+		if err != nil {
+			log.Println(err)
+			if err != nil {
+				ctrl.Serve(http.StatusInternalServerError, err, nil)
+			}
+		}
 	}
 }
 
