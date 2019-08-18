@@ -11,7 +11,7 @@ type Route struct {
 	Method       string
 	RequiredRole roletype.Enum
 	Queries      map[string]string
-	Function     func()
+	Function     ServeFunc
 }
 
 type RouteGroup struct {
@@ -20,6 +20,8 @@ type RouteGroup struct {
 	Routes     []*Route
 	SubGroups  []*RouteGroup
 }
+
+type ServeFunc func() error
 
 func NewRouteGroup(name string, ctrl xontrols.Controller) *RouteGroup {
 	return &RouteGroup{
@@ -32,7 +34,7 @@ func (g *RouteGroup) AddSubGroup(subgrp *RouteGroup) {
 	g.SubGroups = append(g.SubGroups, subgrp)
 }
 
-func (g *RouteGroup) AddRoute(name, path, method string, requiredRole roletype.Enum, function func()) *Route {
+func (g *RouteGroup) AddRoute(name, path, method string, requiredRole roletype.Enum, function ServeFunc) *Route {
 	result := &Route{
 		Name:         name,
 		Path:         path,
@@ -47,7 +49,7 @@ func (g *RouteGroup) AddRoute(name, path, method string, requiredRole roletype.E
 	return result
 }
 
-func (g *RouteGroup) AddRouteWithQueries(name, path, method string, requiredRole roletype.Enum, queries map[string]string, function func()) *Route {
+func (g *RouteGroup) AddRouteWithQueries(name, path, method string, requiredRole roletype.Enum, queries map[string]string, function ServeFunc) *Route {
 	result := &Route{
 		Name:         name,
 		Path:         path,
