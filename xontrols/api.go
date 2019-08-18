@@ -36,7 +36,7 @@ func (ctrl *APICtrl) Prepare() {
 }
 
 //ServeBinary is used to serve files such as images and documents.
-func (ctrl *APICtrl) ServeBinary(data []byte, filename string) {
+func (ctrl *APICtrl) ServeBinary(data []byte, filename string) error {
 	dataLen := len(data)
 	toTake := 512
 
@@ -46,11 +46,11 @@ func (ctrl *APICtrl) ServeBinary(data []byte, filename string) {
 
 	mimetype := http.DetectContentType(data[:toTake])
 
-	ctrl.ServeBinaryWithMIME(data, filename, mimetype)
+	return ctrl.ServeBinaryWithMIME(data, filename, mimetype)
 }
 
 //ServeBinaryWithMIME is used to serve files such as images and documents. You must specify the MIME Type
-func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string) {
+func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string) error {
 	ctrl.SetHeader("Content-Description", "File Transfer")
 	ctrl.SetHeader("Content-Disposition", "attachment; filename="+filename)
 	ctrl.SetHeader("Content-Transfer-Encoding", "binary")
@@ -60,14 +60,14 @@ func (ctrl *APICtrl) ServeBinaryWithMIME(data []byte, filename, mimetype string)
 
 	ctrl.SetHeader("Content-Type", mimetype)
 
-	ctrl.ctx.WriteResponse(data)
+	_, err := ctrl.ctx.WriteResponse(data)
+
+	return err
 }
 
 //Serve sends data as JSON response.
 func (ctrl *APICtrl) Serve(statuscode int, err error, result interface{}) error {
 	resp := bodies.NewRESTResult(statuscode, err, result)
-
-	//ctrl.SetHeader("Content-Type", "application/json; charset=utf-8")
 
 	content, err := json.Marshal(*resp)
 

@@ -10,64 +10,64 @@ type Stock struct {
 	xontrols.UICtrl
 }
 
-func (req *Stock) Default() {
+func (req *Stock) Default() error {
 	req.Setup("stock", "Stock Home", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
 type Parts struct {
 	xontrols.UICtrl
 }
 
-func (req *Parts) Default() {
+func (req *Parts) Default() error {
 	req.Setup("stock", "Parts Default", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
-func (req *Parts) Search() {
+func (req *Parts) Search() error {
 	req.Setup("stock", "Parts Search", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
-func (req *Parts) View() {
+func (req *Parts) View() error {
 	req.Setup("stock", "Parts View", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
-func (req *Parts) Create() {
+func (req *Parts) Create() error {
 	req.Setup("stock", "Parts Create", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
 type Services struct {
 	xontrols.UICtrl
 }
 
-func (req *Services) Default() {
+func (req *Services) Default() error {
 	req.Setup("stock", "Services Default", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
-func (req *Services) Search() {
+func (req *Services) Search() error {
 	req.Setup("stock", "Services Search", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
-func (req *Services) View() {
+func (req *Services) View() error {
 	req.Setup("stock", "Services View", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
 
-func (req *Services) Create() {
+func (req *Services) Create() error {
 	req.Setup("stock", "Services Create", false)
 
-	req.Serve(http.StatusOK, nil, nil)
+	return req.Serve(http.StatusOK, nil, nil)
 }
