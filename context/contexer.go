@@ -21,4 +21,5 @@ type Contexer interface {
 	Body(container interface{}) error                                //Body returns an error when it is unable populate the containercontrollers
 	Host() string                                                    //Host returns the Hostname of the request
 	File(name string) (multipart.File, *multipart.FileHeader, error) //File returns the Request's FileBody, the key should match name
+	FindFormValue(name string) string                                //FindFormValue is used to read additional information from File Uploads
 }
