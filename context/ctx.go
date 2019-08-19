@@ -56,15 +56,7 @@ func (ctx *Ctx) File(name string) (multipart.File, *multipart.FileHeader, error)
 		return nil, nil, err
 	}
 
-	file, handler, err := ctx.Request.FormFile(name)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	defer file.Close()
-
-	return file, handler, nil
+	return ctx.Request.FormFile(name)
 }
 
 //FindFormValue is used to read additional information from File Uploads
@@ -72,6 +64,7 @@ func (ctx *Ctx) FindFormValue(name string) string {
 	return ctx.Request.FormValue(name)
 }
 
+//FindQueryParam returns the requested querystring parameter
 func (ctx *Ctx) FindQueryParam(name string) string {
 	results, ok := ctx.Request.URL.Query()[name]
 
@@ -82,6 +75,7 @@ func (ctx *Ctx) FindQueryParam(name string) string {
 	return results[0]
 }
 
+//FindParam returns the requested path variable
 func (ctx *Ctx) FindParam(name string) string {
 	vars := mux.Vars(ctx.Request)
 
@@ -118,6 +112,7 @@ func (ctx *Ctx) Host() string {
 	return ctx.Request.Host
 }
 
+//Body returns an error when unable to Decode the JSON request Body
 func (ctx *Ctx) Body(container interface{}) error {
 	decoder := json.NewDecoder(ctx.Request.Body)
 
