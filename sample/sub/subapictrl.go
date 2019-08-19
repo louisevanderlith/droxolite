@@ -10,6 +10,6 @@ type SubAPICtrl struct {
 	xontrols.APICtrl
 }
 
-func (c *SubAPICtrl) Get() {
-	c.Serve(http.StatusOK, nil, "I am a sub controller")
+func (c *SubAPICtrl) Get() error {
+	return c.Serve(http.StatusOK, nil, "I am a sub controller")
 }
