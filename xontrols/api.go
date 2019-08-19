@@ -3,6 +3,7 @@ package xontrols
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -33,6 +34,22 @@ func (ctrl *APICtrl) Prepare() {
 	ctrl.SetHeader("Access-Control-Allow-Credentials", "true")
 	ctrl.SetHeader("Server", "kettle")
 	ctrl.SetHeader("X-Content-Type-Options", "nosniff")
+}
+
+//ServeBinaryWithMIME is used to serve files such as images and documents. You must specify the MIME Type
+func (ctrl *APICtrl) ServeBinaryStream(data io.Reader, filename, mimetype string) error {
+	ctrl.SetHeader("Content-Description", "File Transfer")
+	ctrl.SetHeader("Content-Disposition", "attachment; filename="+filename)
+	ctrl.SetHeader("Content-Transfer-Encoding", "binary")
+	ctrl.SetHeader("Expires", "0")
+	ctrl.SetHeader("Cache-Control", "must-revalidate")
+	ctrl.SetHeader("Pragma", "public")
+
+	ctrl.SetHeader("Content-Type", mimetype)
+
+	_, err := ctrl.ctx.WriteStreamResponse(data)
+
+	return err
 }
 
 //ServeBinary is used to serve files such as images and documents.

@@ -1,6 +1,7 @@
 package context
 
 import (
+	"io"
 	"mime/multipart"
 	"net/http"
 )
@@ -16,6 +17,7 @@ type Contexer interface {
 	FindParam(name string) string                                    //FindParam returns the value of a path parameter
 	FindQueryParam(name string) string                               //FindParam returns the value of a query string parameter
 	WriteResponse(data []byte) (int, error)                          //WriteResponse writes the data to the ResponseWriter
+	WriteStreamResponse(data io.Reader) (int64, error)               //WriteStreamResponse reads the data to the ResponseWriter
 	RequestURI() string                                              //RequestURI returns the full URL Requested
 	GetCookie(name string) (*http.Cookie, error)                     //GetCookie returns the value of a cookie
 	Body(container interface{}) error                                //Body returns an error when it is unable populate the containercontrollers
