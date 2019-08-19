@@ -10,6 +10,6 @@ type ComplexAPICtrl struct {
 	xontrols.APICtrl
 }
 
-func (c *ComplexAPICtrl) Get() {
-	c.Serve(http.StatusOK, nil, "This is complex!")
+func (c *ComplexAPICtrl) Get() error {
+	return c.Serve(http.StatusOK, nil, "This is complex!")
 }
