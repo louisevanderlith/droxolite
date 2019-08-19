@@ -1,6 +1,8 @@
 package xontrols
 
 import (
+	"io"
+
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/droxolite/roletype"
@@ -20,6 +22,7 @@ type APIController interface {
 	Controller
 	ServeBinary(data []byte, filename string) error
 	ServeBinaryWithMIME(data []byte, filename, mimetype string) error
+	ServeBinaryStream(data io.Reader, filename, mimetype string) error
 }
 
 type UIController interface {

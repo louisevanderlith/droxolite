@@ -3,6 +3,7 @@ package context
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 
@@ -96,6 +97,10 @@ func (ctx *Ctx) WriteResponse(data []byte) (int, error) {
 	return ctx.ResponseWriter.Write(data)
 }
 
+func (ctx *Ctx) WriteStreamResponse(data io.Reader) (int64, error) {
+	return io.Copy(ctx.ResponseWriter, data)
+}
+
 func (ctx *Ctx) RequestURI() string {
 	return ctx.Request.URL.RequestURI()
 }
@@ -112,7 +117,7 @@ func (ctx *Ctx) Host() string {
 	return ctx.Request.Host
 }
 
-//Body returns an error when unable to Decode the JSON request Body
+//Body returns an error when unable to Decode the JSON request
 func (ctx *Ctx) Body(container interface{}) error {
 	decoder := json.NewDecoder(ctx.Request.Body)
 
