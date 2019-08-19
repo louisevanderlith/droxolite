@@ -2,7 +2,6 @@ package sample
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/louisevanderlith/droxolite/xontrols"
@@ -12,18 +11,14 @@ type FakeAPPCtrl struct {
 	xontrols.UICtrl
 }
 
-func (c *FakeAPPCtrl) Default() {
+func (c *FakeAPPCtrl) Default() error {
 	c.Setup("home", "Fake Home", false)
 	data := "Welcome"
-	err := c.Serve(http.StatusOK, nil, data)
-
-	if err != nil {
-		log.Println(err)
-	}
+	return c.Serve(http.StatusOK, nil, data)
 }
 
-func (c *FakeAPPCtrl) GetBroken() {
+func (c *FakeAPPCtrl) GetBroken() error {
 	c.Setup("home", "Fake Home", false)
 
-	c.Serve(http.StatusInternalServerError, errors.New("this path must break"), nil)
+	return c.Serve(http.StatusInternalServerError, errors.New("this path must break"), nil)
 }

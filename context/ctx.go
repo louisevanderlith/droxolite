@@ -48,8 +48,28 @@ func (ctx *Ctx) SetStatus(code int) {
 	ctx.ResponseWriter.WriteHeader(code)
 }
 
+//File returns the Uploaded file.
 func (ctx *Ctx) File(name string) (multipart.File, *multipart.FileHeader, error) {
-	return ctx.Request.FormFile(name)
+	err := ctx.Request.ParseMultipartForm(32 << 20)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	file, handler, err := ctx.Request.FormFile(name)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer file.Close()
+
+	return file, handler, nil
+}
+
+//FindFormValue is used to read additional information from File Uploads
+func (ctx *Ctx) FindFormValue(name string) string {
+	return ctx.Request.FormValue(name)
 }
 
 func (ctx *Ctx) FindQueryParam(name string) string {
