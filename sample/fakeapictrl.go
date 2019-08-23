@@ -9,100 +9,96 @@ import (
 
 	"github.com/louisevanderlith/husk"
 
-	"github.com/louisevanderlith/droxolite/xontrols"
+	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/mix"
 )
 
-type FakeAPICtrl struct {
-	xontrols.APICtrl
+type FakeAPI struct {
 }
 
-// /
-func (c *FakeAPICtrl) Get() {
-	c.Serve(http.StatusOK, nil, "Fake GET Working")
+func (ctrl *FakeAPI) Get(ctx context.Contexer) (int, interface{}) {
+	return http.StatusOK, "Fake GET Working"
 }
 
-func (c *FakeAPICtrl) GetHash() {
-	hsh := c.FindParam("hash")
+func (c *FakeAPI) GetHash(ctx context.Contexer) (int, interface{}) {
+	hsh := ctx.FindParam("hash")
 
 	decoded, err := base64.StdEncoding.DecodeString(hsh)
 
 	if err != nil {
-		c.Serve(http.StatusInternalServerError, err, nil)
-		return
+		return http.StatusInternalServerError, err
 	}
 
-	c.Serve(http.StatusOK, nil, string(decoded))
+	return http.StatusOK, string(decoded)
 }
 
-func (c *FakeAPICtrl) GetKey() {
-	param := c.FindParam("key")
+func (c *FakeAPI) GetKey(ctx context.Contexer) (int, interface{}) {
+	param := ctx.FindParam("key")
 	result, err := husk.ParseKey(param)
 
 	if err != nil {
-		c.Serve(http.StatusInternalServerError, err, nil)
-		return
+		return http.StatusInternalServerError, err
 	}
 
-	c.Serve(http.StatusOK, nil, fmt.Sprintf("Got a Key %s", result))
+	return http.StatusOK, fmt.Sprintf("Got a Key %s", result)
 }
 
-func (c *FakeAPICtrl) GetPage() {
-	page, size := c.GetPageData()
+func (c *FakeAPI) GetPage(ctx context.Contexer) (int, interface{}) {
+	page, size := ctx.GetPageData()
 
-	c.Serve(http.StatusOK, nil, fmt.Sprintf("Page %v, Size %v", page, size))
+	return http.StatusOK, fmt.Sprintf("Page %v, Size %v", page, size)
 }
 
 //:id
-func (c *FakeAPICtrl) GetId() {
-	param := c.FindParam("id")
+func (c *FakeAPI) GetId(ctx context.Contexer) (int, interface{}) {
+	param := ctx.FindParam("id")
 	result := fmt.Sprintf("We Found %v", param)
-	c.Serve(http.StatusOK, nil, result)
+
+	return http.StatusOK, mix.JSON(result)
 }
 
-func (c *FakeAPICtrl) GetQueryStr() {
-	param := c.Ctx().FindQueryParam("name")
+func (c *FakeAPI) GetQueryStr(ctx context.Contexer) (int, interface{}) {
+	param := ctx.FindQueryParam("name")
 	result := fmt.Sprintf("Fake Query %s", param)
-	c.Serve(http.StatusOK, nil, result)
+	return http.StatusOK, result
 }
 
 //name:/id:
-func (c *FakeAPICtrl) GetName() {
-	param := c.FindParam("id")
-	name := c.FindParam("name")
+func (c *FakeAPI) GetName(ctx context.Contexer) (int, interface{}) {
+	param := ctx.FindParam("id")
+	name := ctx.FindParam("name")
 	result := fmt.Sprintf("%s is %v", name, param)
-	c.Serve(http.StatusOK, nil, result)
+	return http.StatusOK, result
 }
 
 //yes:
-func (c *FakeAPICtrl) GetAnswer() {
-	param := c.FindParam("yes")
+func (c *FakeAPI) GetAnswer(ctx context.Contexer) (int, interface{}) {
+	param := ctx.FindParam("yes")
 	yes, err := strconv.ParseBool(param)
 
 	if err != nil {
 		log.Println(err)
-		c.Serve(http.StatusInternalServerError, err, nil)
-		return
+		return http.StatusInternalServerError, err
 	}
 
 	if !yes {
-		c.Serve(http.StatusOK, nil, "Thanks for Nothing!")
-		return
+		return http.StatusOK, "Thanks for Nothing!"
 	}
 
-	c.Serve(http.StatusOK, nil, "That's Nice")
+	return http.StatusOK, "That's Nice"
 }
 
 // :id {string}
-func (c *FakeAPICtrl) Post() {
-	param := c.FindParam("id")
+func (c *FakeAPI) Post(ctx context.Contexer) (int, interface{}) {
+	param := ctx.FindParam("id")
 	body := struct{ Act string }{}
-	err := c.Body(&body)
+	err := ctx.Body(&body)
 
 	if err != nil {
-		log.Fatal(err)
+		return http.StatusBadRequest, err
 	}
 
 	result := fmt.Sprintf("#%v: %s", param, body.Act)
 
-	c.Serve(http.StatusOK, nil, result)
+	return http.StatusOK, result
 }

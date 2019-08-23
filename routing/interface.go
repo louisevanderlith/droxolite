@@ -6,31 +6,31 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/louisevanderlith/droxolite"
+	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
 )
 
 //NewInterfaceBundle returns a new RouteGroup that has been setup for UI purposes. The first will be used as the default
-func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.InterfaceXontroller) *droxolite.RouteGroup {
+func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.InterfaceXontroller) *RouteGroup {
 	if len(ctrls) == 0 {
 		panic("ctrls must have at least one controller")
 	}
 
-	rg := droxolite.NewRouteGroup(name, ctrls[0].(xontrols.Controller))
+	rg := NewRouteGroup(name, mix.Page)
 
 	//Default Page
-	deftName := fmt.Sprintf("Default %s", name)
+	deftName := fmt.Sprintf("Home %s", name)
 	deftPath := fmt.Sprintf("/%s", strings.ToLower(name))
 	rg.AddRoute(deftName, deftPath, http.MethodGet, required, ctrls[0].Default)
 
 	for _, ctrl := range ctrls {
 		ctrlName := getControllerName(ctrl)
 
-		sub := droxolite.NewRouteGroup(ctrlName, ctrl.(xontrols.Controller))
+		sub := NewRouteGroup(ctrlName, mix.Page)
 
 		//Default
-		sub.AddRoute("Default", "", http.MethodGet, required, ctrl.Default)
+		sub.AddRoute(ctrlName, "", http.MethodGet, required, ctrl.Default)
 
 		searchCtrl, searchable := ctrl.(xontrols.SearchableXontroller)
 

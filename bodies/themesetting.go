@@ -12,14 +12,14 @@ import (
 
 //ThemeSetting is the basic controls variables accessed by the Front-end
 type ThemeSetting struct {
-	LogoKey    husk.Key
-	Name       string
-	Host       string
-	InstanceID string
-	GTag       string
-	Footer     Footer
-	//MasterTemplate *template.Template //only has access to _shared
-	Templates *template.Template //has access to _shared and views
+	LogoKey        husk.Key
+	Name           string
+	Host           string
+	InstanceID     string
+	GTag           string
+	Footer         Footer
+	MasterTemplate *template.Template //only has access to _shared
+	Templates      *template.Template //has access to _shared and views
 }
 
 type Footer struct {
@@ -45,7 +45,7 @@ func (t *ThemeSetting) LoadTemplate(viewPath, masterpage string) error {
 		return err
 	}
 
-	//t.MasterTemplate = template.New("master")
+	t.MasterTemplate = template.New(masterpage)
 	t.Templates = temps
 
 	return nil

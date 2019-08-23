@@ -1,8 +1,9 @@
-package droxolite
+package routing
 
 import (
+	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/roletype"
-	"github.com/louisevanderlith/droxolite/xontrols"
 )
 
 type Route struct {
@@ -15,18 +16,19 @@ type Route struct {
 }
 
 type RouteGroup struct {
-	Name       string
-	Controller xontrols.Controller
-	Routes     []*Route
-	SubGroups  []*RouteGroup
+	Name      string
+	MixFunc   MixerFunc
+	Routes    []*Route
+	SubGroups []*RouteGroup
 }
 
-type ServeFunc func() error
+type MixerFunc func(obj interface{}) mix.Mixer
+type ServeFunc func(context.Contexer) (int, interface{})
 
-func NewRouteGroup(name string, ctrl xontrols.Controller) *RouteGroup {
+func NewRouteGroup(name string, mxFunc MixerFunc) *RouteGroup {
 	return &RouteGroup{
-		Name:       name,
-		Controller: ctrl,
+		Name:    name,
+		MixFunc: mxFunc,
 	}
 }
 
