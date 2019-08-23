@@ -6,20 +6,25 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/louisevanderlith/droxolite/mix"
+	"github.com/louisevanderlith/husk"
 )
 
 //Ctx provides context around Requests and Responses
 type Ctx struct {
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
+	instanceID     string
 }
 
-func New(response http.ResponseWriter, request *http.Request) Contexer {
+func New(response http.ResponseWriter, request *http.Request, instanceID string) Contexer {
 	return &Ctx{
 		ResponseWriter: response,
 		Request:        request,
+		instanceID:     instanceID,
 	}
 }
 
@@ -122,4 +127,87 @@ func (ctx *Ctx) Body(container interface{}) error {
 	decoder := json.NewDecoder(ctx.Request.Body)
 
 	return decoder.Decode(container)
+}
+
+func (ctx *Ctx) GetInstanceID() string {
+	return ctx.instanceID
+}
+
+//Serve is usually sent a Mixer. Serve(mixer.JSON(500, nil))
+func (ctx *Ctx) Serve(status int, mx mix.Mixer) error {
+	for key, head := range mx.Headers() {
+		ctx.SetHeader(key, head)
+	}
+
+	if status != http.StatusOK {
+		ctx.SetStatus(status)
+	}
+
+	readr, err := mx.Reader()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(ctx.ResponseWriter, readr)
+
+	return err
+}
+
+//GetKeyedRequest will return the Key and update the Target when Requests are sent for updates.
+func (ctx *Ctx) GetKeyedRequest(target interface{}) (husk.Key, error) {
+	result := struct {
+		Key  husk.Key
+		Body interface{}
+	}{
+		Body: target,
+	}
+
+	err := ctx.Body(&result)
+
+	if err != nil {
+		return husk.CrazyKey(), err
+	}
+
+	return result.Key, nil
+}
+
+//GetPageData turns /B1 into page 1. size 1
+func (ctx *Ctx) GetPageData() (page, pageSize int) {
+	pageData := ctx.FindParam("pagesize")
+	return getPageData(pageData)
+}
+
+func getPageData(pageData string) (int, int) {
+	defaultPage := 1
+	defaultSize := 10
+
+	if len(pageData) < 2 {
+		return defaultPage, defaultSize
+	}
+
+	pChar := []rune(pageData[:1])
+
+	if len(pChar) != 1 {
+		return defaultPage, defaultSize
+	}
+
+	page := int(pChar[0]) % 32
+	pageSize, err := strconv.Atoi(pageData[1:])
+
+	if err != nil {
+		return defaultPage, defaultSize
+	}
+
+	return page, pageSize
+}
+
+func (ctx *Ctx) GetMyToken() string {
+	cooki, err := ctx.GetCookie("avosession")
+
+	if err != nil {
+		return ""
+	}
+
+	return cooki.Value
 }

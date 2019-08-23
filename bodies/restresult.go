@@ -7,23 +7,22 @@ import (
 
 //RESTResult is the base object of every response.
 type RESTResult struct {
-	Code   int         `json:"Code"`
 	Reason string      `json:"Error"`
 	Data   interface{} `json:"Data"`
 }
 
 var client = &http.Client{}
 
-//NewRESTResult is used to wrap responses in a consistent manner
-func NewRESTResult(code int, reason error, data interface{}) *RESTResult {
-	result := &RESTResult{
-		Code: code,
-		Data: data,
+//NewRESTResult is used to wrap responses in a consistent manner. data will be tested for the 'error' interface{}
+func NewRESTResult(data interface{}) *RESTResult {
+	result := &RESTResult{}
+
+	if err, isErr := data.(error); isErr {
+		result.Reason = err.Error()
+		return result
 	}
 
-	if reason != nil {
-		result.Reason = reason.Error()
-	}
+	result.Data = data
 
 	return result
 }

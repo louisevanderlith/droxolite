@@ -1,4 +1,4 @@
-package droxolite
+package bodies
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/servicetype"
 )
 
@@ -40,20 +39,20 @@ func NewService(name, publicKey string, port int, serviceType servicetype.Enum) 
 }
 
 // Register is used to register an application with the router service
-func (s *Service) Register() error {
+func (s *Service) Register(routerUrl string) error {
 	err := s.setURL(strconv.Itoa(s.Port))
 
 	if err != nil {
 		return err
 	}
 
-	resp, err := sendRegistration(s)
+	resp, err := s.sendRegistration(routerUrl)
 
 	if err != nil {
 		return err
 	}
 
-	if resp.Code != http.StatusOK && len(resp.Reason) != 0 {
+	if len(resp.Reason) > 0 {
 		return resp
 	}
 
@@ -62,20 +61,20 @@ func (s *Service) Register() error {
 	return nil
 }
 
-func sendRegistration(s *Service) (*bodies.RESTResult, error) {
+func (s *Service) sendRegistration(routerUrl string) (*RESTResult, error) {
 	bits, err := json.Marshal(s)
 
 	if err != nil {
 		return nil, err
 	}
 
-	routrURL, err := GetServiceURL(s.ID, "Router.API", false)
+	//routrURL, err := GetServiceURL(s.ID, "Router.API", false)
 
-	if err != nil {
-		return nil, err
-	}
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	disco := fmt.Sprintf("%sdiscovery/", routrURL)
+	disco := fmt.Sprintf("%sdiscovery/", routerUrl)
 	resp, err := http.Post(disco, "application/json", bytes.NewBuffer(bits))
 
 	if err != nil {
@@ -90,7 +89,7 @@ func sendRegistration(s *Service) (*bodies.RESTResult, error) {
 		return nil, err
 	}
 
-	data, err := bodies.MarshalToResult(contents, "")
+	data, err := MarshalToResult(contents, "")
 
 	return data, err
 }

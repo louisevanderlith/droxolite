@@ -4,21 +4,20 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/louisevanderlith/droxolite/xontrols"
+	"github.com/louisevanderlith/droxolite/context"
 )
 
-type FakeAPPCtrl struct {
-	xontrols.UICtrl
+type FakeAPP struct {
 }
 
-func (c *FakeAPPCtrl) Default() error {
-	c.Setup("home", "Fake Home", false)
+func (c *FakeAPP) Default(ctx context.Contexer) (int, interface{}) {
+	//c.Setup("home", "Fake Home", false)
 	data := "Welcome"
-	return c.Serve(http.StatusOK, nil, data)
+	return http.StatusOK, data
 }
 
-func (c *FakeAPPCtrl) GetBroken() error {
-	c.Setup("home", "Fake Home", false)
+func (c *FakeAPP) GetBroken(ctx context.Contexer) (int, interface{}) {
+	//c.Setup("home", "Fake Home", false)
 
-	return c.Serve(http.StatusInternalServerError, errors.New("this path must break"), nil)
+	return http.StatusInternalServerError, errors.New("this path must break")
 }

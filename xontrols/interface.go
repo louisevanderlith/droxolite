@@ -1,21 +1,22 @@
 package xontrols
 
+import "github.com/louisevanderlith/droxolite/context"
+
 //InterfaceXontroller can only handle GET Requests
 //The interface should be used as a guide when creating page groups
 type InterfaceXontroller interface {
-	UIController
-	Default() error
+	Default(context.Contexer) (int, interface{})
 }
 
 //SearchableXontroller handles controls that handle search submissions and view items.
 type SearchableXontroller interface {
 	InterfaceXontroller
-	Search() error
-	View() error
+	Search(context.Contexer) (int, interface{})
+	View(context.Contexer) (int, interface{})
 }
 
 //CreateableXontroller handles controls that create content
 type CreateableXontroller interface {
 	SearchableXontroller
-	Create() error
+	Create(context.Contexer) (int, interface{})
 }

@@ -3,7 +3,6 @@ package droxolite
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -55,8 +54,8 @@ func DoGET(token string, container interface{}, instanceID, serviceName, control
 		return http.StatusInternalServerError, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return resp.StatusCode, errors.New(string(contents))
+	if resp.StatusCode == http.StatusNotFound {
+		return resp.StatusCode, nil
 	}
 
 	rest, err := bodies.MarshalToResult(contents, container)
@@ -67,10 +66,10 @@ func DoGET(token string, container interface{}, instanceID, serviceName, control
 	}
 
 	if len(rest.Reason) > 0 {
-		return rest.Code, rest
+		return resp.StatusCode, rest
 	}
 
-	return rest.Code, nil
+	return resp.StatusCode, nil
 }
 
 //DoSEND is able to do a POST or PUT request and will update the container with the reponse's values.
@@ -123,8 +122,8 @@ func DoSEND(method, token string, container interface{}, instanceID, serviceName
 		return http.StatusInternalServerError, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return resp.StatusCode, errors.New(string(contents))
+	if resp.StatusCode == http.StatusNotFound {
+		return resp.StatusCode, nil
 	}
 
 	rest, err := bodies.MarshalToResult(contents, container)
@@ -135,8 +134,8 @@ func DoSEND(method, token string, container interface{}, instanceID, serviceName
 	}
 
 	if len(rest.Reason) > 0 {
-		return rest.Code, rest
+		return resp.StatusCode, rest
 	}
 
-	return rest.Code, nil
+	return resp.StatusCode, nil
 }
