@@ -3,13 +3,12 @@ package sub
 import (
 	"net/http"
 
-	"github.com/louisevanderlith/droxolite/xontrols"
+	"github.com/louisevanderlith/droxolite/context"
 )
 
 type SubAPICtrl struct {
-	xontrols.APICtrl
 }
 
-func (c *SubAPICtrl) Get() error {
-	return c.Serve(http.StatusOK, nil, "I am a sub controller")
+func (c *SubAPICtrl) Get(ctx context.Contexer) (int, interface{}) {
+	return http.StatusOK, "I am a sub controller"
 }

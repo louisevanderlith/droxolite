@@ -8,25 +8,29 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/louisevanderlith/droxolite/mix"
+
+	"github.com/louisevanderlith/droxolite/resins"
+	"github.com/louisevanderlith/droxolite/routing"
+
 	"github.com/louisevanderlith/droxolite/sample/sub"
 
-	"github.com/louisevanderlith/droxolite"
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/droxolite/servicetype"
 )
 
 var (
-	apiEpoxy *droxolite.Epoxy
+	apiEpoxy resins.Epoxi
 )
 
 func init() {
-	srvc := droxolite.NewService("Test.API", "/certs/none.pem", 8090, servicetype.API)
+	srvc := bodies.NewService("Test.API", "/certs/none.pem", 8090, servicetype.API)
 	srvc.ID = "Tester1"
 
-	apiEpoxy = droxolite.NewEpoxy(srvc)
+	apiEpoxy = resins.NewBasicEpoxy(srvc)
 	apiRoutes(apiEpoxy)
-	apiEpoxy.EnableCORS(".localhost/")
+	//apiEpoxy.EnableCORS(".localhost/")
 }
 
 func TestAPI_OPTIONS_CORS(t *testing.T) {
@@ -40,7 +44,7 @@ func TestAPI_OPTIONS_CORS(t *testing.T) {
 	req.Header.Set("Access-Control-Request-Headers", "Authorization") // needs to be non-empty
 	req.Header.Set("Origin", "https://tester.localhost/")             // needs to be non-empty
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -62,7 +66,7 @@ func TestMain_API_DefaultPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -74,7 +78,7 @@ func TestMain_API_DefaultPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -93,7 +97,7 @@ func TestMain_API_SubPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -105,11 +109,11 @@ func TestMain_API_SubPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
-	expected := "I am a Sub Controller"
+	expected := "I am a sub controller"
 	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
 			result, expected)
@@ -124,7 +128,7 @@ func TestMain_API_SubComplexPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -137,7 +141,7 @@ func TestMain_API_SubComplexPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -155,7 +159,7 @@ func TestMain_API_QueryPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -167,7 +171,7 @@ func TestMain_API_QueryPath_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -185,7 +189,7 @@ func TestMain_API_IdParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -197,7 +201,7 @@ func TestMain_API_IdParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -215,7 +219,7 @@ func TestMain_API_NameAndIdParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -227,7 +231,7 @@ func TestMain_API_NameAndIdParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -244,7 +248,7 @@ func TestMain_API_HuskKey_Escaped_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -256,7 +260,7 @@ func TestMain_API_HuskKey_Escaped_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -274,7 +278,7 @@ func TestMain_API_HuskKey_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -286,7 +290,7 @@ func TestMain_API_HuskKey_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -304,7 +308,7 @@ func TestMain_API_PageSize_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -316,7 +320,7 @@ func TestMain_API_PageSize_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -334,7 +338,7 @@ func TestMain_API_BooleanParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -346,7 +350,7 @@ func TestMain_API_BooleanParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -368,7 +372,7 @@ func TestMain_API_HashParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -384,7 +388,7 @@ func TestMain_API_HashParam_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -409,7 +413,7 @@ func TestMain_API_POST_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := apiEpoxy.GetRouter()
+	handle := apiEpoxy.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -421,7 +425,7 @@ func TestMain_API_POST_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if rest.Code != http.StatusOK {
+	if len(rest.Reason) > 0 {
 		t.Fatalf(rest.Reason)
 	}
 
@@ -432,10 +436,10 @@ func TestMain_API_POST_OK(t *testing.T) {
 	}
 }
 
-func apiRoutes(poxy *droxolite.Epoxy) {
-	fakeCtrl := &FakeAPICtrl{}
+func apiRoutes(poxy resins.Epoxi) {
+	fakeCtrl := &FakeAPI{}
 
-	fkgroup := droxolite.NewRouteGroup("Fake", fakeCtrl)
+	fkgroup := routing.NewRouteGroup("Fake", mix.JSON)
 	fkgroup.AddRoute("Home", "/", "GET", roletype.Unknown, fakeCtrl.Get)
 
 	q := make(map[string]string)
@@ -451,11 +455,11 @@ func apiRoutes(poxy *droxolite.Epoxy) {
 	poxy.AddGroup(fkgroup)
 
 	subCtrl := &sub.SubAPICtrl{}
-	subGroup := droxolite.NewRouteGroup("Sub", subCtrl)
+	subGroup := routing.NewRouteGroup("Sub", mix.JSON)
 	subGroup.AddRoute("Sub Home", "/", http.MethodGet, roletype.Unknown, subCtrl.Get)
 
 	complxCtrl := &sub.ComplexAPICtrl{}
-	complxGroup := droxolite.NewRouteGroup("Complex", complxCtrl)
+	complxGroup := routing.NewRouteGroup("Complex", mix.JSON)
 	complxGroup.AddRoute("Sub Complex Home", "/", http.MethodGet, roletype.Unknown, complxCtrl.Get)
 
 	subGroup.AddSubGroup(complxGroup)
