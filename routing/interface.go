@@ -30,11 +30,18 @@ func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.I
 		sub := NewRouteGroup(ctrlName, mix.Page)
 
 		//Default
-		sub.AddRoute(ctrlName, "", http.MethodGet, required, ctrl.Default)
+		qryCtrl, isQueried := ctrl.(xontrols.QueriesXontrol)
+
+		if isQueried {
+			sub.AddRouteWithQueries(ctrlName, "", http.MethodGet, required, qryCtrl.AcceptsQuery(), ctrl.Default)
+		} else {
+			sub.AddRoute(ctrlName, "", http.MethodGet, required, ctrl.Default)
+		}
 
 		searchCtrl, searchable := ctrl.(xontrols.SearchableXontroller)
 
 		if !searchable {
+			rg.AddSubGroup(sub)
 			continue
 		}
 
