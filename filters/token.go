@@ -10,12 +10,12 @@ import (
 	"github.com/louisevanderlith/droxolite/roletype"
 )
 
-func TokenCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath, serviceName string) bool {
+func TokenCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath, serviceName string) (bool, *bodies.Cookies) {
 	path := ctx.RequestURI()
 	//action := ctrl.ctx.Method()
 
 	if strings.HasPrefix(path, "/favicon") {
-		return true
+		return true, nil
 	}
 
 	//requiredRole, err := m.GetRequiredRole(path, action)
@@ -27,7 +27,8 @@ func TokenCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath,
 	//}
 
 	if requiredRole == roletype.Unknown {
-		return true
+		//When we don't need credentials, we don't load it
+		return true, nil
 	}
 
 	token, err := getAuthorizationToken(ctx)
@@ -35,7 +36,7 @@ func TokenCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath,
 	if err != nil {
 		log.Println(err)
 		//ctx.RenderMethodResult(RenderUnauthorized(err))
-		return false
+		return false, nil
 	}
 
 	avoc, err := bodies.GetAvoCookie(token, publicKeyPath)
@@ -43,7 +44,7 @@ func TokenCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath,
 	if err != nil {
 		log.Println(err)
 		//ctx.RenderMethodResult(RenderUnauthorized(err))
-		return false
+		return false, nil
 	}
 
 	allowed, err := bodies.IsAllowed(serviceName, avoc.UserRoles, requiredRole)
@@ -51,10 +52,10 @@ func TokenCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath,
 	if err != nil {
 		log.Println(err)
 		//ctx.RenderMethodResult(RenderUnauthorized(err))
-		return false
+		return false, nil
 	}
 
-	return allowed
+	return allowed, avoc
 }
 
 //Returns the [TOKEN] in 'Bearer [TOKEN]'

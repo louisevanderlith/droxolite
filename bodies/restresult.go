@@ -17,6 +17,10 @@ var client = &http.Client{}
 func NewRESTResult(data interface{}) *RESTResult {
 	result := &RESTResult{}
 
+	if data == nil {
+		return result
+	}
+
 	if err, isErr := data.(error); isErr {
 		result.Reason = err.Error()
 		return result

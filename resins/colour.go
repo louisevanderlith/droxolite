@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"text/template"
 
@@ -34,11 +35,12 @@ func NewColourEpoxy(service *bodies.Service, settings bodies.ThemeSetting, maste
 	routr.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
 
 	e := &ColourEpoxy{
-		service:    service,
-		router:     routr,
-		settings:   &settings,
-		masterpage: masterpage,
-		sideMenu:   bodies.NewMenu(),
+		service:     service,
+		router:      routr,
+		settings:    &settings,
+		masterpage:  masterpage,
+		sideMenu:    bodies.NewMenu(),
+		securityUrl: securityUrl,
 	}
 
 	err := e.settings.LoadTemplate("./views", masterpage)
@@ -108,12 +110,13 @@ func (e *ColourEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) htt
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req, e.service.ID)
 
-		if !filters.TokenCookieCheck(ctx, route.RequiredRole, e.service.PublicKey, e.service.Name) {
-			//err := sendToLogin(ctrl.Ctx(), e.securityUrl)
+		allow, avoc := filters.TokenCookieCheck(ctx, route.RequiredRole, e.service.PublicKey, e.service.Name)
+		if !allow {
+			err := sendToLogin(ctx, e.securityUrl)
 
-			//if err != nil {
-			//	log.Panicln(err)
-			//}
+			if err != nil {
+				log.Panicln(err)
+			}
 
 			return
 		}
@@ -123,7 +126,7 @@ func (e *ColourEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) htt
 		status, data := route.Function(ctx)
 		mxer := mxFunc(data)
 
-		mxer.ApplySettings(route.Name, *e.settings)
+		mxer.ApplySettings(route.Name, *e.settings, avoc)
 		err := ctx.Serve(status, mxer)
 
 		if err != nil {
@@ -142,4 +145,39 @@ func (e *ColourEpoxy) Service() *bodies.Service {
 
 func (e *ColourEpoxy) EnableCORS(host string) {
 	//No Need.
+}
+
+func sendToLogin(ctx context.Contexer, securityURL string) error {
+	scheme := ctx.Scheme()
+
+	if len(scheme) == 0 {
+		scheme = "https"
+	}
+
+	moveURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Host(), ctx.RequestURI())
+	loginURL := buildLoginURL(securityURL, moveURL)
+
+	ctx.Redirect(http.StatusTemporaryRedirect, loginURL)
+
+	return nil
+}
+
+func buildLoginURL(securityURL, returnURL string) string {
+	cleanReturn := removeQueries(returnURL)
+	escURL := url.QueryEscape(cleanReturn)
+	return fmt.Sprintf("%slogin?return=%s", securityURL, escURL)
+}
+
+func removeQueries(url string) string {
+	idxOfQuery := strings.Index(url, "?")
+
+	if idxOfQuery != -1 {
+		url = url[:idxOfQuery]
+	}
+
+	return url
+}
+
+func buildSubscribeURL(securityURL string) string {
+	return fmt.Sprintf("%ssubscribe", securityURL)
 }
