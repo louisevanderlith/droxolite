@@ -75,7 +75,8 @@ func (e *BasicEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) http
 		//Context should be sent to function, so no controller is needed
 		status, data := route.Function(ctx)
 		mxer := mxFunc(data)
-		mxer.ApplySettings(route.Name, *e.settings, avoc)
+
+		mxer.ApplySettings(ctx.RequestURI(), *e.settings, avoc)
 		err := ctx.Serve(status, mxer)
 		if err != nil {
 			log.Panicln(err)

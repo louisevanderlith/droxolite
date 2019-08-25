@@ -55,7 +55,8 @@ func (r *octet) Reader() (io.Reader, error) {
 }
 
 func (r *octet) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
-	ext := getExt(name)
+	r.filename = name
+	ext := getExt(r.filename)
 
 	mimes := make(map[string]string)
 	mimes["js"] = "text/javascript"
@@ -68,7 +69,11 @@ func (r *octet) ApplySettings(name string, settings bodies.ThemeSetting, avo *bo
 	mimes["png"] = "image/png"
 
 	r.mimetype = mimes[ext]
-	r.filename = name
+}
+
+func getName(path string) string {
+	slashIndex := strings.LastIndex(path, "/")
+	return path[slashIndex+1:]
 }
 
 func getExt(filename string) string {
