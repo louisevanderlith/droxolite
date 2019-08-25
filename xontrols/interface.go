@@ -8,6 +8,11 @@ type InterfaceXontroller interface {
 	Default(context.Contexer) (int, interface{})
 }
 
+type QueriesXontrol interface {
+	InterfaceXontroller
+	AcceptsQuery() map[string]string
+}
+
 //SearchableXontroller handles controls that handle search submissions and view items.
 type SearchableXontroller interface {
 	InterfaceXontroller
