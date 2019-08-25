@@ -146,3 +146,7 @@ func (e *ColourEpoxy) Router() http.Handler {
 func (e *ColourEpoxy) Service() *bodies.Service {
 	return e.service
 }
+
+func (e *ColourEpoxy) EnableCORS(host string) {
+	//No Need.
+}

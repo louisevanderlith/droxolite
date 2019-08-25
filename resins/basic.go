@@ -1,6 +1,7 @@
 package resins
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/droxolite/filters"
 	"github.com/louisevanderlith/droxolite/routing"
+	"github.com/rs/cors"
 )
 
 type BasicEpoxy struct {
@@ -84,4 +86,26 @@ func (e *BasicEpoxy) Router() http.Handler {
 
 func (e *BasicEpoxy) Service() *bodies.Service {
 	return e.service
+}
+
+func (e *BasicEpoxy) EnableCORS(host string) {
+	allowed := fmt.Sprintf("https://*%s", strings.TrimSuffix(host, "/"))
+
+	corsOpts := cors.New(cors.Options{
+		AllowedOrigins: []string{allowed}, //you service is available and allowed for this base url
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+			http.MethodHead,
+		},
+		AllowCredentials: true,
+		AllowedHeaders: []string{
+			"*", //or you can your header key values which you are using in your application
+		},
+	})
+
+	e.router = corsOpts.Handler(e.router)
 }
