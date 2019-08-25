@@ -68,12 +68,6 @@ func (s *Service) sendRegistration(routerUrl string) (*RESTResult, error) {
 		return nil, err
 	}
 
-	//routrURL, err := GetServiceURL(s.ID, "Router.API", false)
-
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	disco := fmt.Sprintf("%sdiscovery/", routerUrl)
 	resp, err := http.Post(disco, "application/json", bytes.NewBuffer(bits))
 

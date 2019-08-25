@@ -1,18 +1,8 @@
 package bodies
 
-import (
-	"strings"
-)
-
 type Menu struct {
 	menu map[string][]MenuItem
 }
-
-/*
-type MenuGroup struct {
-	Label string
-	Items []menuItem
-}*/
 
 func NewMenu() *Menu {
 	return &Menu{make(map[string][]MenuItem)}
@@ -30,20 +20,6 @@ func (m *Menu) Items() map[string][]MenuItem {
 	return m.menu
 }
 
-/*
-func (m *MenuGroup) AddItem(link, text string, children []menuItem) {
-	id := fmt.Sprintf("m%v", m.Len())
-	item := newItem(id, link, text, children)
-
-	m.Items = append(m.Items, item)
-}
-
-func (m *MenuGroup) AddItemWithID(id, link, text string, children []menuItem) {
-	item := newItem(id, link, text, children)
-
-	m.Items = append(m.Items, item)
-}
-*/
 func (m *Menu) SetActive(link string) bool {
 	foundActive := false
 
@@ -62,44 +38,4 @@ func (m *Menu) SetActive(link string) bool {
 	}
 
 	return foundActive
-}
-
-type MenuItem struct {
-	ID       string
-	Text     string
-	Enabled  bool
-	Hidden   bool
-	Link     string
-	IsActive bool
-	Children []MenuItem `json:",omitempty"`
-}
-
-func NewItem(id, link, text string, children []MenuItem) MenuItem {
-	shortName := getUniqueName(text)
-	result := MenuItem{
-		ID:       id,
-		Text:     text,
-		Enabled:  true,
-		Hidden:   false,
-		Link:     link,
-		IsActive: false,
-	}
-
-	if link == "#" {
-		result.Link += shortName
-	}
-
-	if children != nil {
-		result.Children = children
-	}
-
-	return result
-}
-
-func getUniqueName(raw string) string {
-	if len(raw) == 0 {
-		return "Home"
-	}
-
-	return strings.ToLower(strings.Replace(raw, " ", "", -1))
 }

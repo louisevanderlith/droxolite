@@ -70,24 +70,3 @@ func findFiles(templatesPath string) []string {
 
 	return result
 }
-
-/*
-func renderTemplate(masterpage string, data interface{}) ([]byte, error) {
-	mastr := template.New(masterpage)
-	views := collectTemplates("views")
-	tmpl, err := mastr.ParseFiles(views...)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var buffBuild bytes.Buffer
-	err = tmpl.Execute(&buffBuild, data)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return buffBuild.Bytes(), nil
-}
-*/
