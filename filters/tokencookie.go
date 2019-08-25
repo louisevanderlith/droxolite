@@ -10,15 +10,15 @@ import (
 )
 
 //TokenCookieCheck is used to filter incoming UI Requests
-func TokenCookieCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath, serviceName string) bool {
+func TokenCookieCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKeyPath, serviceName string) (bool, *bodies.Cookies) {
 	path := ctx.RequestURI()
 
 	if strings.HasPrefix(path, "/static") || strings.HasPrefix(path, "/favicon") {
-		return true
+		return true, nil
 	}
 
 	if requiredRole == roletype.Unknown {
-		return true
+		return true, nil
 	}
 
 	token := ctx.FindQueryParam("access_token")
@@ -28,13 +28,13 @@ func TokenCookieCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKe
 
 		if err != nil {
 			log.Println(err)
-			return false
+			return false, nil
 		}
 
 		token = cookie.Value
 
 		if len(token) == 0 {
-			return false
+			return false, nil
 		}
 	}
 
@@ -42,15 +42,15 @@ func TokenCookieCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKe
 
 	if err != nil {
 		log.Println(err)
-		return false
+		return false, nil
 	}
 
 	allowed, err := bodies.IsAllowed(serviceName, avoc.UserRoles, requiredRole)
 
 	if err != nil || !allowed {
 		log.Println(err)
-		return false
+		return false, nil
 	}
 
-	return true
+	return true, avoc
 }

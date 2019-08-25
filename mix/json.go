@@ -49,8 +49,8 @@ func (r *js) Reader() (io.Reader, error) {
 	//return err
 }
 
-func (r *js) ApplySettings(name string, settings bodies.ThemeSetting) {
-	
+func (r *js) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
+
 }
 
 /*

@@ -15,9 +15,8 @@ import (
 )
 
 type BasicEpoxy struct {
-	service  *bodies.Service
-	router   http.Handler
-	settings interface{}
+	service *bodies.Service
+	router  http.Handler
 }
 
 //NewBasicExpoxy returns a new Instance of the Epoxy
@@ -59,12 +58,13 @@ func (e *BasicEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) http
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req, e.service.ID)
 
-		if !filters.TokenCheck(ctx, route.RequiredRole, e.service.PublicKey, e.service.Name) {
-			//err := sendToLogin(ctx, e.service.)
+		allow, _ := filters.TokenCheck(ctx, route.RequiredRole, e.service.PublicKey, e.service.Name)
+		if !allow {
+			err := ctx.Serve(http.StatusUnauthorized, mxFunc(nil))
 
-			//if err != nil {
-			//	log.Panicln(err)
-			//}
+			if err != nil {
+				log.Panicln(err)
+			}
 
 			return
 		}
@@ -72,8 +72,8 @@ func (e *BasicEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) http
 		//Calls the Controller Function
 		//Context should be sent to function, so no controller is needed
 		status, data := route.Function(ctx)
-		err := ctx.Serve(status, mxFunc(data))
-
+		mxer := mxFunc(data)
+		err := ctx.Serve(status, mxer)
 		if err != nil {
 			log.Panicln(err)
 		}

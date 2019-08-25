@@ -54,7 +54,7 @@ func (r *octet) Reader() (io.Reader, error) {
 	return bytes.NewBuffer(r.data.([]byte)), nil
 }
 
-func (r *octet) ApplySettings(name string, settings bodies.ThemeSetting) {
+func (r *octet) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
 	ext := getExt(name)
 
 	mimes := make(map[string]string)

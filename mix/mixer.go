@@ -10,7 +10,7 @@ import (
 type Mixer interface {
 	Reader() (io.Reader, error)
 	Headers() map[string]string
-	ApplySettings(name string, settings bodies.ThemeSetting)
+	ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies)
 }
 
 //DefaultHeaders returns a set of Headers that apply to all mixers
