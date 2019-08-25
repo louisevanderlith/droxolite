@@ -12,4 +12,5 @@ type Epoxi interface {
 	Service() *bodies.Service
 	AddGroup(routeGroup *routing.RouteGroup)
 	Handle(mxFunc routing.MixerFunc, route *routing.Route) http.HandlerFunc
+	EnableCORS(host string)
 }

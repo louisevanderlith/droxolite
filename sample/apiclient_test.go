@@ -30,11 +30,103 @@ func init() {
 
 	apiEpoxy = resins.NewBasicEpoxy(srvc)
 	apiRoutes(apiEpoxy)
-	//apiEpoxy.EnableCORS(".localhost/")
+	apiEpoxy.EnableCORS(".localhost/")
+}
+
+func TestPrepare_MustHaveHeader_StrictTransportSecurity(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fake", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.Router()
+	rr := httptest.NewRecorder()
+
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
+	val := rr.Header().Get("Strict-Transport-Security")
+
+	if len(val) == 0 {
+		t.Fatal("No values set")
+	}
+}
+
+func TestPrepare_MustHaveHeader_AccessControlAllowCredentialls(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fake", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.Router()
+	rr := httptest.NewRecorder()
+
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
+	val := rr.Header().Get("Access-Control-Allow-Credentials")
+
+	if len(val) == 0 {
+		t.Fatal("No values set")
+	}
+}
+
+func TestPrepare_MustHaveHeader_Server(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fake", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.Router()
+	rr := httptest.NewRecorder()
+
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
+	val := rr.Header().Get("Server")
+
+	if len(val) == 0 {
+		t.Fatal("No values set")
+	}
+}
+
+func TestPrepare_MustHaveHeader_XContentTypeOptions(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fake", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := apiEpoxy.Router()
+	rr := httptest.NewRecorder()
+
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
+	val := rr.Header().Get("X-Content-Type-Options")
+
+	if len(val) == 0 {
+		t.Fatal("No values set")
+	}
 }
 
 func TestAPI_OPTIONS_CORS(t *testing.T) {
-	req, err := http.NewRequest("OPTIONS", "/fake/", nil)
+	req, err := http.NewRequest("OPTIONS", "/fake", nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -48,7 +140,11 @@ func TestAPI_OPTIONS_CORS(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
-	log.Println(rr.Header())
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
 	if len(rr.Header().Get("Access-Control-Allow-Methods")) == 0 {
 		t.Fatal("Allow Methods not Found")
 	}
@@ -59,7 +155,7 @@ func TestAPI_OPTIONS_CORS(t *testing.T) {
 }
 
 func TestMain_API_DefaultPath_OK(t *testing.T) {
-	req, err := http.NewRequest("GET", "/fake/", nil)
+	req, err := http.NewRequest("GET", "/fake", nil)
 	req.Host = "localhost"
 
 	if err != nil {
@@ -90,7 +186,7 @@ func TestMain_API_DefaultPath_OK(t *testing.T) {
 }
 
 func TestMain_API_SubPath_OK(t *testing.T) {
-	req, err := http.NewRequest("GET", "/sub/", nil)
+	req, err := http.NewRequest("GET", "/sub", nil)
 	req.Host = "localhost"
 
 	if err != nil {
@@ -121,7 +217,7 @@ func TestMain_API_SubPath_OK(t *testing.T) {
 }
 
 func TestMain_API_SubComplexPath_OK(t *testing.T) {
-	req, err := http.NewRequest("GET", "/sub/complex/", nil)
+	req, err := http.NewRequest("GET", "/sub/complex", nil)
 	req.Host = "localhost"
 
 	if err != nil {
@@ -440,7 +536,7 @@ func apiRoutes(poxy resins.Epoxi) {
 	fakeCtrl := &FakeAPI{}
 
 	fkgroup := routing.NewRouteGroup("Fake", mix.JSON)
-	fkgroup.AddRoute("Home", "/", "GET", roletype.Unknown, fakeCtrl.Get)
+	fkgroup.AddRoute("Home", "", "GET", roletype.Unknown, fakeCtrl.Get)
 
 	q := make(map[string]string)
 	q["name"] = "{name}"
@@ -456,11 +552,11 @@ func apiRoutes(poxy resins.Epoxi) {
 
 	subCtrl := &sub.SubAPICtrl{}
 	subGroup := routing.NewRouteGroup("Sub", mix.JSON)
-	subGroup.AddRoute("Sub Home", "/", http.MethodGet, roletype.Unknown, subCtrl.Get)
+	subGroup.AddRoute("Sub Home", "", http.MethodGet, roletype.Unknown, subCtrl.Get)
 
 	complxCtrl := &sub.ComplexAPICtrl{}
 	complxGroup := routing.NewRouteGroup("Complex", mix.JSON)
-	complxGroup.AddRoute("Sub Complex Home", "/", http.MethodGet, roletype.Unknown, complxCtrl.Get)
+	complxGroup.AddRoute("Sub Complex Home", "", http.MethodGet, roletype.Unknown, complxCtrl.Get)
 
 	subGroup.AddSubGroup(complxGroup)
 	poxy.AddGroup(subGroup)
