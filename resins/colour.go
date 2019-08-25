@@ -51,14 +51,9 @@ func NewColourEpoxy(service *bodies.Service, settings bodies.ThemeSetting, maste
 }
 
 func (e *ColourEpoxy) AddGroup(routeGroup *routing.RouteGroup) {
-	//uiCtrl, isUI := routeGroup.Controller.(xontrols.UIController)
-
-	//if isUI {
 	if e.settings == nil {
 		log.Fatalf("Use the Colour Epoxy!")
 	}
-
-	//uiCtrl.SetTheme(*e.settings, e.masterpage)
 
 	var menuGroup []bodies.MenuItem
 	for _, v := range routeGroup.Routes {
@@ -84,7 +79,6 @@ func (e *ColourEpoxy) AddGroup(routeGroup *routing.RouteGroup) {
 	}
 
 	e.sideMenu.AddGroup(routeGroup.Name, menuGroup)
-	//}
 
 	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
 
@@ -129,7 +123,6 @@ func (e *ColourEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) htt
 		status, data := route.Function(ctx)
 		mxer := mxFunc(data)
 
-		//log.Printf("FuncName: %s - %s\n", runtime.FuncForPC(reflect.ValueOf(route.Function).Pointer()).Name(), route.Name)
 		mxer.ApplySettings(route.Name, *e.settings)
 		err := ctx.Serve(status, mxer)
 

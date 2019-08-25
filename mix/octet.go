@@ -13,12 +13,12 @@ type octet struct {
 	filename string
 	mimetype string
 	headers  map[string]string
-	data     []byte
+	data     interface{}
 }
 
 func Octet(data interface{}) Mixer {
 	result := &octet{
-		data: data.([]byte),
+		data: data,
 	}
 
 	return result
@@ -45,9 +45,13 @@ func (r *octet) Headers() map[string]string {
 	return result
 }
 
-//Reader configures the response for reading
+//Reader configures the response for reading files. data can be either io.Reader or []byte
 func (r *octet) Reader() (io.Reader, error) {
-	return bytes.NewBuffer(r.data), nil
+	if readr, canRead := r.data.(io.Reader); canRead {
+		return readr, nil
+	}
+
+	return bytes.NewBuffer(r.data.([]byte)), nil
 }
 
 func (r *octet) ApplySettings(name string, settings bodies.ThemeSetting) {
