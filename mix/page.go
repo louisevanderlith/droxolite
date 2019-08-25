@@ -79,33 +79,41 @@ func (r *tmpl) Reader() (io.Reader, error) {
 	return &buffMaster, nil
 }
 
-func (ctrl *tmpl) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
+func (r *tmpl) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
 	shortName := strings.ToLower(strings.Trim(name, " "))
-	if len(ctrl.contentPage) == 0 {
-		ctrl.contentPage = fmt.Sprintf("%s.html", shortName)
+	if len(r.contentPage) == 0 {
+		r.contentPage = fmt.Sprintf("%s.html", shortName)
 	}
-	ctrl.Settings = settings
+	r.Settings = settings
 
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
-	ctrl.data["HasScript"] = err == nil
-	ctrl.data["ScriptName"] = scriptName
+	r.data["HasScript"] = err == nil
+	r.data["ScriptName"] = scriptName
 
-	//ctrl.Data["ShowSave"] = false
-
-	ctrl.data["Title"] = fmt.Sprintf("%s %s", name, settings.Name)
-	ctrl.data["LogoKey"] = settings.LogoKey
-	ctrl.data["InstanceID"] = settings.InstanceID
-	ctrl.data["Host"] = settings.Host
-	ctrl.data["GTag"] = settings.GTag
-	ctrl.data["Footer"] = settings.Footer
+	r.data["ShowSave"] = false
+	r.data["Title"] = fmt.Sprintf("%s %s", name, settings.Name)
+	r.data["LogoKey"] = settings.LogoKey
+	r.data["InstanceID"] = settings.InstanceID
+	r.data["Host"] = settings.Host
+	r.data["GTag"] = settings.GTag
+	r.data["Footer"] = settings.Footer
 
 	//User Details
 	loggedIn := avo != nil
-	ctrl.data["LoggedIn"] = loggedIn
+	r.data["LoggedIn"] = loggedIn
 
 	if loggedIn {
-		ctrl.data["Username"] = avo.Username
+		r.data["Username"] = avo.Username
 	}
+}
+
+func (r *tmpl) CreateTopMenu(enablesave bool, menu bodies.Menu) {
+	r.data["ShowSave"] = enablesave
+	r.data["TopMenu"] = menu.Items()
+}
+
+func (r *tmpl) CreateSideMenu(menu *bodies.Menu) {
+	r.data["SideMenu"] = menu.Items()
 }

@@ -13,6 +13,12 @@ type Mixer interface {
 	ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies)
 }
 
+type ColourMixer interface {
+	Mixer
+	CreateTopMenu(enablesave bool, menu bodies.Menu)
+	CreateSideMenu(menu *bodies.Menu)
+}
+
 //DefaultHeaders returns a set of Headers that apply to all mixers
 func DefaultHeaders() map[string]string {
 	result := make(map[string]string)

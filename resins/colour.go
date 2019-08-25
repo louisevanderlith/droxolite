@@ -12,6 +12,7 @@ import (
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/droxolite/filters"
+	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/routing"
 )
 
@@ -124,8 +125,10 @@ func (e *ColourEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) htt
 		//Calls the Controller Function
 		//Context should be sent to function, so no controller is needed
 		status, data := route.Function(ctx)
-		mxer := mxFunc(data)
+		mxer := mxFunc(data).(mix.ColourMixer)
 		mxer.ApplySettings(route.Name, *e.settings, avoc)
+
+		mxer.CreateSideMenu(e.sideMenu)
 		err := ctx.Serve(status, mxer)
 
 		if err != nil {
