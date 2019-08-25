@@ -10,7 +10,6 @@ import (
 	"github.com/louisevanderlith/husk"
 
 	"github.com/louisevanderlith/droxolite/context"
-	"github.com/louisevanderlith/droxolite/mix"
 )
 
 type FakeAPI struct {
@@ -54,7 +53,7 @@ func (c *FakeAPI) GetId(ctx context.Contexer) (int, interface{}) {
 	param := ctx.FindParam("id")
 	result := fmt.Sprintf("We Found %v", param)
 
-	return http.StatusOK, mix.JSON(result)
+	return http.StatusOK, result
 }
 
 func (c *FakeAPI) GetQueryStr(ctx context.Contexer) (int, interface{}) {

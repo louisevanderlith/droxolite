@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/louisevanderlith/droxolite"
+
 	"github.com/louisevanderlith/droxolite/mix"
 
 	"github.com/louisevanderlith/droxolite/resins"
@@ -28,7 +30,7 @@ func init() {
 	srvc := bodies.NewService("Test.API", "/certs/none.pem", 8090, servicetype.API)
 	srvc.ID = "Tester1"
 
-	apiEpoxy = resins.NewBasicEpoxy(srvc)
+	apiEpoxy = resins.NewBasicEpoxy(srvc, droxolite.GetNoTheme(".localhost/", srvc.ID, ""))
 	apiRoutes(apiEpoxy)
 	apiEpoxy.EnableCORS(".localhost/")
 }
@@ -289,6 +291,12 @@ func TestMain_API_IdParam_OK(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
+	t.Log(rr.Body.String())
 
 	result := ""
 	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
