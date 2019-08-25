@@ -68,28 +68,3 @@ func getControllerName(ctrl xontrols.InterfaceXontroller) string {
 
 	return tpe
 }
-
-/*
-
-	//Stock
-	stockGroup := routing.NewRouteGroup("Stock", nil)
-	carsCtrl := &stock.CarsController{}
-	carsGroup := routing.NewRouteGroup("Cars", carsCtrl)
-	carsGroup.AddRoute("All Cars", "/{pagesize:[A-Z][0-9]+}", "GET", roletype.Admin, carsCtrl.Get)
-	carsGroup.AddRoute("Edit Car", "/edit/{key:[0-9]+\x60[0-9]+}", "GET", roletype.Admin, carsCtrl.GetEdit)
-	stockGroup.AddSubGroup(carsGroup)
-
-	partsCtrl := &stock.PartsController{}
-	partsGroup := routing.NewRouteGroup("Parts", partsCtrl)
-	partsGroup.AddRoute("All Parts", "/{pagesize:[A-Z][0-9]+}", "GET", roletype.Admin, partsCtrl.Get)
-	partsGroup.AddRoute("Edit Part", "/edit/{key:[0-9]+\x60[0-9]+}", "GET", roletype.Admin, partsCtrl.GetEdit)
-	stockGroup.AddSubGroup(partsGroup)
-
-	srvcCtrl := &stock.ServicesController{}
-	srvcGroup := routing.NewRouteGroup("Services", srvcCtrl)
-	srvcGroup.AddRoute("All Services", "/{pagesize:[A-Z][0-9]+}", "GET", roletype.Admin, srvcCtrl.Get)
-	srvcGroup.AddRoute("Edit Service", "/edit/{key:[0-9]+\x60[0-9]+}", "GET", roletype.Admin, srvcCtrl.GetEdit)
-	stockGroup.AddSubGroup(srvcGroup)
-
-	e.AddNamedGroup("Stock.API", stockGroup)
-*/

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
@@ -66,9 +68,9 @@ func (r *tmpl) Reader() (io.Reader, error) {
 
 	r.data["LayoutContent"] = template.HTML(buffPage.String())
 
-	masterPage := r.Settings.Templates.Lookup("master.html")
+	masterPage := r.Settings.Templates.Lookup(r.Settings.MasterTemplate.Name()) // "master.html")
 	var buffMaster bytes.Buffer
-	err = masterPage.ExecuteTemplate(&buffMaster, "master.html", r.data)
+	err = masterPage.ExecuteTemplate(&buffMaster, r.Settings.MasterTemplate.Name(), r.data)
 
 	if err != nil {
 		return nil, err
@@ -77,50 +79,32 @@ func (r *tmpl) Reader() (io.Reader, error) {
 	return &buffMaster, nil
 }
 
-func (ctrl *tmpl) ApplySettings(name string, settings bodies.ThemeSetting) {
+func (ctrl *tmpl) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
 	if len(ctrl.contentPage) == 0 {
 		ctrl.contentPage = fmt.Sprintf("%s.html", strings.ToLower(strings.Trim(name, " ")))
 	}
 	ctrl.Settings = settings
-}
 
-func (ctrl *tmpl) EnableSave() {
-	ctrl.data["ShowSave"] = true
-}
+	scriptName := fmt.Sprintf("%s.entry.dart.js", name)
+	_, err := os.Stat(path.Join("dist/js", scriptName))
 
-/*
-func (ctrl *HTML) Setup(name, title string, hasScript bool) {
-	ctrl.ContentPage = fmt.Sprintf("%s.html", name)
-	ctrl.applySettings(title)
+	ctrl.data["HasScript"] = err != nil
+	ctrl.data["ScriptName"] = scriptName
 
-	ctrl.Data["HasScript"] = hasScript
-	ctrl.Data["ScriptName"] = fmt.Sprintf("%s.entry.dart.js", name)
-	ctrl.Data["ShowSave"] = false
-}
+	//ctrl.Data["ShowSave"] = false
 
-func (ctrl *HTML) applySettings(title string) {
-	ctrl.Data["Title"] = fmt.Sprintf("%s %s", title, ctrl.Settings.Name)
-	ctrl.Data["LogoKey"] = ctrl.Settings.LogoKey
-	ctrl.Data["InstanceID"] = ctrl.Settings.InstanceID
-	ctrl.Data["Host"] = ctrl.Settings.Host
-	ctrl.Data["GTag"] = ctrl.Settings.GTag
-	ctrl.Data["Footer"] = ctrl.Settings.Footer
+	ctrl.data["Title"] = fmt.Sprintf("%s %s", name, settings.Name)
+	ctrl.data["LogoKey"] = settings.LogoKey
+	ctrl.data["InstanceID"] = settings.InstanceID
+	ctrl.data["Host"] = settings.Host
+	ctrl.data["GTag"] = settings.GTag
+	ctrl.data["Footer"] = settings.Footer
 
 	//User Details
-	loggedIn := ctrl.AvoCookie != nil
-	ctrl.Data["LoggedIn"] = loggedIn
+	loggedIn := avo != nil
+	ctrl.data["LoggedIn"] = loggedIn
 
 	if loggedIn {
-		ctrl.Data["Username"] = ctrl.AvoCookie.Username
+		ctrl.data["Username"] = avo.Username
 	}
 }
-
-//CreateTopMenu sets the content of the Top menu bar
-func (ctrl *HTML) CreateTopMenu(enablesave bool, menu bodies.Menu) {
-	ctrl.Data["TopMenu"] = menu.Items()
-}
-
-func (ctrl *HTML) CreateSideMenu(menu *bodies.Menu) {
-	ctrl.Data["SideMenu"] = menu.Items()
-}
-*/
