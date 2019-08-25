@@ -125,7 +125,6 @@ func (e *ColourEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) htt
 		//Context should be sent to function, so no controller is needed
 		status, data := route.Function(ctx)
 		mxer := mxFunc(data)
-
 		mxer.ApplySettings(route.Name, *e.settings, avoc)
 		err := ctx.Serve(status, mxer)
 

@@ -80,15 +80,16 @@ func (r *tmpl) Reader() (io.Reader, error) {
 }
 
 func (ctrl *tmpl) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
+	shortName := strings.ToLower(strings.Trim(name, " "))
 	if len(ctrl.contentPage) == 0 {
-		ctrl.contentPage = fmt.Sprintf("%s.html", strings.ToLower(strings.Trim(name, " ")))
+		ctrl.contentPage = fmt.Sprintf("%s.html", shortName)
 	}
 	ctrl.Settings = settings
 
-	scriptName := fmt.Sprintf("%s.entry.dart.js", name)
+	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
-	ctrl.data["HasScript"] = err != nil
+	ctrl.data["HasScript"] = err == nil
 	ctrl.data["ScriptName"] = scriptName
 
 	//ctrl.Data["ShowSave"] = false
