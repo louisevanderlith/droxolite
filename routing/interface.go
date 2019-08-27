@@ -46,17 +46,17 @@ func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.I
 		}
 
 		//Search
-		sub.AddRoute("Search", "/{pagesize:[A-Z][0-9]+}", http.MethodGet, required, searchCtrl.Search)
-		sub.AddRoute("Search Query", "/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", http.MethodGet, required, searchCtrl.Search)
+		sub.AddRoute(ctrlName+"Search", "/{pagesize:[A-Z][0-9]+}", http.MethodGet, required, searchCtrl.Search)
+		sub.AddRoute(ctrlName+"Search", "/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", http.MethodGet, required, searchCtrl.Search)
 
 		//View
-		sub.AddRoute("View", "/{key:[0-9]+\x60[0-9]+}", http.MethodGet, required, searchCtrl.View)
+		sub.AddRoute(ctrlName+"View", "/{key:[0-9]+\x60[0-9]+}", http.MethodGet, required, searchCtrl.View)
 
 		//Create
 		createCtrl, createable := searchCtrl.(xontrols.CreateableXontroller)
 
 		if createable {
-			sub.AddRoute("Create", "/create", http.MethodGet, required, createCtrl.Create)
+			sub.AddRoute(ctrlName+"Create", "/create", http.MethodGet, required, createCtrl.Create)
 		}
 
 		rg.AddSubGroup(sub)
