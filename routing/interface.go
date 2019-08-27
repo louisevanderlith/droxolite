@@ -45,9 +45,9 @@ func NewInterfaceBundle(name string, required roletype.Enum, ctrls ...xontrols.I
 			continue
 		}
 
-		//Search
-		sub.AddRoute(ctrlName+"Search", "/{pagesize:[A-Z][0-9]+}", http.MethodGet, required, searchCtrl.Search)
-		sub.AddRoute(ctrlName+"Search", "/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", http.MethodGet, required, searchCtrl.Search)
+		//Search, it uses the default page
+		sub.AddRoute(ctrlName, "/{pagesize:[A-Z][0-9]+}", http.MethodGet, required, searchCtrl.Search)
+		sub.AddRoute(ctrlName, "/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", http.MethodGet, required, searchCtrl.Search)
 
 		//View
 		sub.AddRoute(ctrlName+"View", "/{key:[0-9]+\x60[0-9]+}", http.MethodGet, required, searchCtrl.View)
