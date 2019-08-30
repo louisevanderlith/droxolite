@@ -6,28 +6,27 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"text/template"
 
 	"github.com/gorilla/mux"
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/element"
 	"github.com/louisevanderlith/droxolite/filters"
 	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/routing"
 )
 
 type ColourEpoxy struct {
-	service     *bodies.Service
-	router      http.Handler
-	settings    *bodies.ThemeSetting
-	sideMenu    *bodies.Menu
-	masterpage  string
-	templates   *template.Template
+	service  *bodies.Service
+	router   http.Handler
+	identity *element.Identity
+	sideMenu *bodies.Menu
+	//templates   *template.Template --rather use
 	securityUrl string
 }
 
 //NewColourExpoxy returns a new Instance of the Epoxy with a Theme
-func NewColourEpoxy(service *bodies.Service, settings bodies.ThemeSetting, masterpage, securityUrl string) Epoxi {
+func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl string) Epoxi {
 	routr := mux.NewRouter()
 
 	//Applications have assets in the 'dist' folder
@@ -38,55 +37,21 @@ func NewColourEpoxy(service *bodies.Service, settings bodies.ThemeSetting, maste
 	e := &ColourEpoxy{
 		service:     service,
 		router:      routr,
-		settings:    &settings,
-		masterpage:  masterpage,
-		sideMenu:    bodies.NewMenu(),
+		identity:    d,
 		securityUrl: securityUrl,
-	}
-
-	err := e.settings.LoadTemplate("./views", masterpage)
-
-	if err != nil {
-		panic(err)
+		sideMenu:    bodies.NewMenu(),
 	}
 
 	return e
 }
 
-func (e *ColourEpoxy) AddGroup(routeGroup *routing.RouteGroup) {
-	if e.settings == nil {
-		log.Fatalf("Use the Colour Epoxy!")
-	}
+func (e *ColourEpoxy) AddBundle(b routing.Bundler) {
+	interBun := b.(routing.InterfaceBundle)
 
-	var menuGroup []bodies.MenuItem
-	for _, v := range routeGroup.Routes {
-		if v.Method == http.MethodGet {
-			//menuGroup = append(menuGroup, bodies.NewItem(, v.Path, v.Name, nil))
-			//menuGroup.AddItem(v.Path, v.Name, nil)
-			baseURL := v.Path
-
-			for k, sgroup := range routeGroup.SubGroups {
-				subPath := baseURL + "/" + strings.ToLower(sgroup.Name)
-				var subChildren []bodies.MenuItem
-
-				for sk, sv := range sgroup.Routes {
-					if sv.Method == http.MethodGet && !strings.HasPrefix(sv.Path, "/{") && sv.Name != "Default" {
-						subChildren = append(subChildren, bodies.NewItem(fmt.Sprintf("c%v", sk), subPath+sv.Path, sv.Name, nil))
-					}
-				}
-
-				subMenu := bodies.NewItem(fmt.Sprintf("r%v", k), subPath, sgroup.Name, subChildren)
-				menuGroup = append(menuGroup, subMenu)
-			}
-		}
-	}
-
-	e.sideMenu.AddGroup(routeGroup.Name, menuGroup)
-
-	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(routeGroup.Name)).Subrouter()
-
-	for _, v := range routeGroup.Routes {
-		r := sub.Handle(v.Path, e.Handle(routeGroup.MixFunc, v)).Methods(v.Method)
+	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(b.RouteGroup().Name)).Subrouter()
+	e.sideMenu.AddGroup(b.RouteGroup().Name, interBun.SideMenu)
+	for _, v := range b.RouteGroup().Routes {
+		r := sub.Handle(v.Path, e.Handle(b.RouteGroup().MixFunc, v)).Methods(v.Method)
 
 		for qkey, qval := range v.Queries {
 			r.Queries(qkey, qval)
@@ -94,11 +59,11 @@ func (e *ColourEpoxy) AddGroup(routeGroup *routing.RouteGroup) {
 	}
 
 	//add sub groups
-	for _, sgroup := range routeGroup.SubGroups {
+	for _, sgroup := range b.RouteGroup().SubGroups {
 		xsub := sub.PathPrefix("/" + strings.ToLower(sgroup.Name)).Subrouter()
 
 		for _, v := range sgroup.Routes {
-			r := xsub.Handle(v.Path, e.Handle(routeGroup.MixFunc, v)).Methods(v.Method)
+			r := xsub.Handle(v.Path, e.Handle(b.RouteGroup().MixFunc, v)).Methods(v.Method)
 
 			for qkey, qval := range v.Queries {
 				r.Queries(qkey, qval)
@@ -107,7 +72,7 @@ func (e *ColourEpoxy) AddGroup(routeGroup *routing.RouteGroup) {
 	}
 }
 
-func (e *ColourEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) http.HandlerFunc {
+func (e *ColourEpoxy) Handle(mxFunc mix.InitFunc, route *routing.Route) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req, e.service.ID)
 
@@ -125,8 +90,8 @@ func (e *ColourEpoxy) Handle(mxFunc routing.MixerFunc, route *routing.Route) htt
 		//Calls the Controller Function
 		//Context should be sent to function, so no controller is needed
 		status, data := route.Function(ctx)
-		mxer := mxFunc(data).(mix.ColourMixer)
-		mxer.ApplySettings(route.Name, *e.settings, avoc)
+		mxer := mxFunc(route.Name, data, e.identity, avoc).(mix.ColourMixer)
+		//mxer.ApplySettings(route.Name, *e.settings, avoc)
 
 		mxer.CreateSideMenu(e.sideMenu)
 		err := ctx.Serve(status, mxer)

@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/louisevanderlith/droxolite/bodies"
+	"github.com/louisevanderlith/droxolite/element"
 )
 
 // default paging values
@@ -20,7 +21,8 @@ type js struct {
 	data    interface{}
 }
 
-func JSON(data interface{}) Mixer {
+//JSON is called before every function execution to setup the environment a Handler will expect
+func JSON(name string, data interface{}, d *element.Identity, avoc *bodies.Cookies) Mixer {
 	result := &js{
 		headers: DefaultHeaders(),
 		data:    data,
@@ -44,18 +46,4 @@ func (r *js) Reader() (io.Reader, error) {
 	}
 
 	return bytes.NewBuffer(content), nil
-	//_, err = ctrl.ctx.WriteResponse(content)
-
-	//return err
 }
-
-func (r *js) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
-
-}
-
-/*
-//Serve sends data as JSON response.
-func (ctx *JSON) ServeJSON(statuscode int, err error, result interface{}) error {
-
-}
-*/

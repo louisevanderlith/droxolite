@@ -1,4 +1,4 @@
-package droxolite
+package do
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"github.com/louisevanderlith/droxolite/bodies"
 )
 
-//DoGET does a GET request and will update the container with the reponse's values.
+//GET does a GET request and will update the container with the reponse's values.
 //token: this is the access_token/avosession
 //container: the object that will be populated with the results
 //instanceID: instance of the application making the request
@@ -20,7 +20,7 @@ import (
 //params: additional path variables
 //returns int : httpStatusCode
 //return error: error
-func DoGET(token string, container interface{}, instanceID, serviceName, controller string, params ...string) (int, error) {
+func GET(token string, container interface{}, instanceID, serviceName, controller string, params ...string) (int, error) {
 	url, err := GetServiceURL(instanceID, serviceName, false)
 
 	if err != nil {
@@ -72,7 +72,7 @@ func DoGET(token string, container interface{}, instanceID, serviceName, control
 	return resp.StatusCode, nil
 }
 
-//DoSEND is able to do a POST or PUT request and will update the container with the reponse's values.
+//SEND is able to do a POST or PUT request and will update the container with the reponse's values.
 //token: this is the access_token/avosession
 //container: the object that will be populated with the results
 //instanceID: instance of the application making the request
@@ -82,7 +82,7 @@ func DoGET(token string, container interface{}, instanceID, serviceName, control
 //params: additional path variables
 //returns int : httpStatusCode
 //return error: error
-func DoSEND(method, token string, container interface{}, instanceID, serviceName, controller string, data interface{}, params ...string) (int, error) {
+func SEND(method, token string, container interface{}, instanceID, serviceName, controller string, data interface{}, params ...string) (int, error) {
 	url, err := GetServiceURL(instanceID, serviceName, false)
 
 	if err != nil {

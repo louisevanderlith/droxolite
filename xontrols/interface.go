@@ -5,7 +5,7 @@ import "github.com/louisevanderlith/droxolite/context"
 //InterfaceXontroller can only handle GET Requests
 //The interface should be used as a guide when creating page groups
 type InterfaceXontroller interface {
-	Default(context.Contexer) (int, interface{})
+	Default(context.Requester) (int, interface{})
 }
 
 type QueriesXontrol interface {
@@ -16,12 +16,12 @@ type QueriesXontrol interface {
 //SearchableXontroller handles controls that handle search submissions and view items.
 type SearchableXontroller interface {
 	InterfaceXontroller
-	Search(context.Contexer) (int, interface{})
-	View(context.Contexer) (int, interface{})
+	Search(context.Requester) (int, interface{})
+	View(context.Requester) (int, interface{})
 }
 
 //CreateableXontroller handles controls that create content
 type CreateableXontroller interface {
 	SearchableXontroller
-	Create(context.Contexer) (int, interface{})
+	Create(context.Requester) (int, interface{})
 }

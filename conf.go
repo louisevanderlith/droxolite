@@ -14,7 +14,6 @@ type Conf struct {
 	Appname   string
 	HTTPPort  int
 	HTTPSPort int
-	UnitValue int
 }
 
 //LoadSettings returns the data contained in the 'domains.json' config file.
