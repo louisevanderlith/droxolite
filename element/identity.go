@@ -1,4 +1,4 @@
-package bodies
+package element
 
 import (
 	"html/template"
@@ -10,10 +10,10 @@ import (
 	"github.com/louisevanderlith/husk"
 )
 
-//ThemeSetting is the basic controls variables accessed by the Front-end
-type ThemeSetting struct {
+//Identity is the basic controls variables accessed by any web-function
+type Identity struct {
 	LogoKey        husk.Key
-	Name           string
+	Name           string //Profile Name 
 	Host           string
 	InstanceID     string
 	GTag           string
@@ -27,8 +27,8 @@ type Footer struct {
 	OtherLinks  map[string]string //fa-[same]
 }
 
-func NewThemeSetting(name, host string, logoKey husk.Key, instanceID, gtag string) ThemeSetting {
-	return ThemeSetting{
+func NewIdentity(name, host string, logoKey husk.Key, instanceID, gtag string) *Identity {
+	return &Identity{
 		Name:       name,
 		LogoKey:    logoKey,
 		Host:       host,
@@ -38,7 +38,7 @@ func NewThemeSetting(name, host string, logoKey husk.Key, instanceID, gtag strin
 	}
 }
 
-func (t *ThemeSetting) LoadTemplate(viewPath, masterpage string) error {
+func (t *Identity) LoadTemplate(viewPath, masterpage string) error {
 	temps, err := template.ParseFiles(findFiles(viewPath)...)
 
 	if err != nil {

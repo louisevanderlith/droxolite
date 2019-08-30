@@ -9,6 +9,6 @@ import (
 type ComplexAPICtrl struct {
 }
 
-func (c *ComplexAPICtrl) Get(ctx context.Contexer) (int, interface{}) {
+func (c *ComplexAPICtrl) Get(ctx context.Requester) (int, interface{}) {
 	return http.StatusOK, "This is complex!"
 }

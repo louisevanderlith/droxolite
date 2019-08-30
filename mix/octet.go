@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
+	"github.com/louisevanderlith/droxolite/element"
 )
 
 //Octet provides a io.Reader for serving data (octet-)streams
@@ -16,12 +17,27 @@ type octet struct {
 	data     interface{}
 }
 
-func Octet(data interface{}) Mixer {
-	result := &octet{
+func Octet(name string, data interface{}, d *element.Identity, avoc *bodies.Cookies) Mixer {
+	r := &octet{
 		data: data,
 	}
 
-	return result
+	r.filename = name
+	ext := getExt(r.filename)
+
+	mimes := make(map[string]string)
+	mimes["js"] = "text/javascript"
+	mimes["css"] = "text/css"
+	mimes["html"] = "text/html"
+	mimes["ico"] = "image/x-icon"
+	mimes["font"] = "font/" + ext
+	mimes["jpeg"] = "image/jpeg"
+	mimes["jpg"] = "image/jpeg"
+	mimes["png"] = "image/png"
+
+	r.mimetype = mimes[ext]
+
+	return r
 }
 
 //Instead of assigning headers, returns headers that should be applied.
@@ -52,23 +68,6 @@ func (r *octet) Reader() (io.Reader, error) {
 	}
 
 	return bytes.NewBuffer(r.data.([]byte)), nil
-}
-
-func (r *octet) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
-	r.filename = name
-	ext := getExt(r.filename)
-
-	mimes := make(map[string]string)
-	mimes["js"] = "text/javascript"
-	mimes["css"] = "text/css"
-	mimes["html"] = "text/html"
-	mimes["ico"] = "image/x-icon"
-	mimes["font"] = "font/" + ext
-	mimes["jpeg"] = "image/jpeg"
-	mimes["jpg"] = "image/jpeg"
-	mimes["png"] = "image/png"
-
-	r.mimetype = mimes[ext]
 }
 
 func getName(path string) string {

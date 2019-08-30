@@ -10,30 +10,63 @@ import (
 	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
+	"github.com/louisevanderlith/droxolite/element"
 )
 
 //Page provides a io.Reader for serving html pages
 type tmpl struct {
 	contentPage string
-	Settings    bodies.ThemeSetting
+	Identity    *element.Identity
 	data        map[string]interface{}
 	headers     map[string]string
 }
 
-func Page(data interface{}) Mixer {
-	result := &tmpl{
+func Page(name string, data interface{}, d *element.Identity, avoc *bodies.Cookies) Mixer {
+	r := &tmpl{
 		data:    make(map[string]interface{}),
 		headers: make(map[string]string),
 	}
 
 	if _, isErr := data.(error); isErr {
-		result.data["Error"] = data
-		result.contentPage = "error.html"
+		r.data["Error"] = data
+		r.contentPage = "error.html"
 	} else {
-		result.data["Data"] = data
+		r.data["Data"] = data
 	}
 
-	return result
+	shortName := strings.ToLower(strings.Trim(name, " "))
+
+	if len(r.contentPage) == 0 {
+		r.contentPage = fmt.Sprintf("%s.html", shortName)
+	}
+
+	r.Identity = d
+
+	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
+	_, err := os.Stat(path.Join("dist/js", scriptName))
+
+	r.data["HasScript"] = err == nil
+	r.data["ScriptName"] = scriptName
+
+	r.data["ShowSave"] = false
+	r.data["Name"] = name
+	r.data["Identity"] = d
+	//r.data["Title"] = fmt.Sprintf("%s %s", name, dentity.Name)
+	//r.data["LogoKey"] = dentity.LogoKey
+	//r.data["InstanceID"] = dentity.InstanceID
+	//r.data["Host"] = dentity.Host
+	//r.data["GTag"] = dentity.GTag
+	//r.data["Footer"] = dentity.Footer
+
+	//User Details
+	loggedIn := avoc != nil
+	r.data["LoggedIn"] = loggedIn
+
+	if loggedIn {
+		r.data["Username"] = avoc.Username
+	}
+
+	return r
 }
 
 func (r *tmpl) Headers() map[string]string {
@@ -53,7 +86,7 @@ func (r *tmpl) Headers() map[string]string {
 func (r *tmpl) Reader() (io.Reader, error) {
 	contentpage := r.contentPage
 
-	page := r.Settings.Templates.Lookup(contentpage)
+	page := r.Identity.Templates.Lookup(contentpage)
 
 	if page == nil {
 		return nil, fmt.Errorf("Template not Found: %s", contentpage)
@@ -68,9 +101,9 @@ func (r *tmpl) Reader() (io.Reader, error) {
 
 	r.data["LayoutContent"] = template.HTML(buffPage.String())
 
-	masterPage := r.Settings.Templates.Lookup(r.Settings.MasterTemplate.Name()) // "master.html")
+	masterPage := r.Identity.Templates.Lookup(r.Identity.MasterTemplate.Name()) // "master.html")
 	var buffMaster bytes.Buffer
-	err = masterPage.ExecuteTemplate(&buffMaster, r.Settings.MasterTemplate.Name(), r.data)
+	err = masterPage.ExecuteTemplate(&buffMaster, r.Identity.MasterTemplate.Name(), r.data)
 
 	if err != nil {
 		return nil, err
@@ -79,34 +112,8 @@ func (r *tmpl) Reader() (io.Reader, error) {
 	return &buffMaster, nil
 }
 
-func (r *tmpl) ApplySettings(name string, settings bodies.ThemeSetting, avo *bodies.Cookies) {
-	shortName := strings.ToLower(strings.Trim(name, " "))
-	if len(r.contentPage) == 0 {
-		r.contentPage = fmt.Sprintf("%s.html", shortName)
-	}
-	r.Settings = settings
+func (r *tmpl) ApplySettings(name string, dentity *element.Identity, avo *bodies.Cookies) {
 
-	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
-	_, err := os.Stat(path.Join("dist/js", scriptName))
-
-	r.data["HasScript"] = err == nil
-	r.data["ScriptName"] = scriptName
-
-	r.data["ShowSave"] = false
-	r.data["Title"] = fmt.Sprintf("%s %s", name, settings.Name)
-	r.data["LogoKey"] = settings.LogoKey
-	r.data["InstanceID"] = settings.InstanceID
-	r.data["Host"] = settings.Host
-	r.data["GTag"] = settings.GTag
-	r.data["Footer"] = settings.Footer
-
-	//User Details
-	loggedIn := avo != nil
-	r.data["LoggedIn"] = loggedIn
-
-	if loggedIn {
-		r.data["Username"] = avo.Username
-	}
 }
 
 func (r *tmpl) CreateTopMenu(enablesave bool, menu bodies.Menu) {

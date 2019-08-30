@@ -9,6 +9,6 @@ import (
 type SubAPICtrl struct {
 }
 
-func (c *SubAPICtrl) Get(ctx context.Contexer) (int, interface{}) {
+func (c *SubAPICtrl) Get(ctx context.Requester) (int, interface{}) {
 	return http.StatusOK, "I am a sub controller"
 }

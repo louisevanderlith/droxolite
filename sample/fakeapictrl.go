@@ -15,11 +15,11 @@ import (
 type FakeAPI struct {
 }
 
-func (ctrl *FakeAPI) Get(ctx context.Contexer) (int, interface{}) {
+func (ctrl *FakeAPI) Get(ctx context.Requester) (int, interface{}) {
 	return http.StatusOK, "Fake GET Working"
 }
 
-func (c *FakeAPI) GetHash(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) GetHash(ctx context.Requester) (int, interface{}) {
 	hsh := ctx.FindParam("hash")
 
 	decoded, err := base64.StdEncoding.DecodeString(hsh)
@@ -31,7 +31,7 @@ func (c *FakeAPI) GetHash(ctx context.Contexer) (int, interface{}) {
 	return http.StatusOK, string(decoded)
 }
 
-func (c *FakeAPI) GetKey(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) GetKey(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindParam("key")
 	result, err := husk.ParseKey(param)
 
@@ -42,28 +42,28 @@ func (c *FakeAPI) GetKey(ctx context.Contexer) (int, interface{}) {
 	return http.StatusOK, fmt.Sprintf("Got a Key %s", result)
 }
 
-func (c *FakeAPI) GetPage(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) GetPage(ctx context.Requester) (int, interface{}) {
 	page, size := ctx.GetPageData()
 
 	return http.StatusOK, fmt.Sprintf("Page %v, Size %v", page, size)
 }
 
 //:id
-func (c *FakeAPI) GetId(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) GetId(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindParam("id")
 	result := fmt.Sprintf("We Found %v", param)
 
 	return http.StatusOK, result
 }
 
-func (c *FakeAPI) GetQueryStr(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) GetQueryStr(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindQueryParam("name")
 	result := fmt.Sprintf("Fake Query %s", param)
 	return http.StatusOK, result
 }
 
 //name:/id:
-func (c *FakeAPI) GetName(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) GetName(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindParam("id")
 	name := ctx.FindParam("name")
 	result := fmt.Sprintf("%s is %v", name, param)
@@ -71,7 +71,7 @@ func (c *FakeAPI) GetName(ctx context.Contexer) (int, interface{}) {
 }
 
 //yes:
-func (c *FakeAPI) GetAnswer(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) GetAnswer(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindParam("yes")
 	yes, err := strconv.ParseBool(param)
 
@@ -88,7 +88,7 @@ func (c *FakeAPI) GetAnswer(ctx context.Contexer) (int, interface{}) {
 }
 
 // :id {string}
-func (c *FakeAPI) Post(ctx context.Contexer) (int, interface{}) {
+func (c *FakeAPI) Post(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindParam("id")
 	body := struct{ Act string }{}
 	err := ctx.Body(&body)
