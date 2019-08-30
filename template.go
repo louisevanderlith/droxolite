@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/louisevanderlith/droxolite/do"
 )
 
 //UpdateTheme downloads the latest master templates from Theme.API
@@ -15,7 +17,7 @@ func UpdateTheme(instanceID string) error {
 		return err
 	}
 
-	url, err := GetServiceURL(instanceID, "Theme.API", false)
+	url, err := do.GetServiceURL(instanceID, "Theme.API", false)
 
 	if err != nil {
 		return err
@@ -34,7 +36,7 @@ func UpdateTheme(instanceID string) error {
 
 func findTemplates(instanceID string) ([]string, error) {
 	result := []string{}
-	_, err := DoGET("", &result, instanceID, "Theme.API", "asset", "html")
+	_, err := do.GET("", &result, instanceID, "Theme.API", "asset", "html")
 
 	if err != nil {
 		return []string{}, err

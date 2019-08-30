@@ -9,6 +9,7 @@ import (
 type Route struct {
 	Name         string //Name will be used to display links.
 	Path         string
+	PageName     string
 	Method       string
 	RequiredRole roletype.Enum
 	Queries      map[string]string
@@ -17,19 +18,22 @@ type Route struct {
 
 type RouteGroup struct {
 	Name      string
-	MixFunc   MixerFunc
+	MixFunc   mix.InitFunc
 	Routes    []*Route
 	SubGroups []*RouteGroup
 }
 
-type MixerFunc func(obj interface{}) mix.Mixer
-type ServeFunc func(context.Contexer) (int, interface{})
+type ServeFunc func(context.Requester) (int, interface{})
 
-func NewRouteGroup(name string, mxFunc MixerFunc) *RouteGroup {
+func NewRouteGroup(name string, mxFunc mix.InitFunc) *RouteGroup {
 	return &RouteGroup{
 		Name:    name,
 		MixFunc: mxFunc,
 	}
+}
+
+func (g *RouteGroup) RouteGroup() *RouteGroup {
+	return g
 }
 
 func (g *RouteGroup) AddSubGroup(subgrp *RouteGroup) {
@@ -39,6 +43,7 @@ func (g *RouteGroup) AddSubGroup(subgrp *RouteGroup) {
 func (g *RouteGroup) AddRoute(name, path, method string, requiredRole roletype.Enum, function ServeFunc) *Route {
 	result := &Route{
 		Name:         name,
+		PageName:     g.Name + name,
 		Path:         path,
 		Method:       method,
 		RequiredRole: requiredRole,
@@ -54,6 +59,7 @@ func (g *RouteGroup) AddRoute(name, path, method string, requiredRole roletype.E
 func (g *RouteGroup) AddRouteWithQueries(name, path, method string, requiredRole roletype.Enum, queries map[string]string, function ServeFunc) *Route {
 	result := &Route{
 		Name:         name,
+		PageName:     g.Name + name,
 		Path:         path,
 		Method:       method,
 		RequiredRole: requiredRole,
