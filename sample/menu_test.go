@@ -7,11 +7,11 @@ import (
 )
 
 func TestMenu_HasCorrectItems(t *testing.T) {
-	
+
 }
 
 func TestAPP_Menu_Paths(t *testing.T) {
-	req, err := http.NewRequest("GET", "/", nil)
+	req, err := http.NewRequest("GET", "", nil)
 
 	if err != nil {
 		t.Fatal(err)

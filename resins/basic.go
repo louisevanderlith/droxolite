@@ -12,7 +12,8 @@ import (
 	"github.com/louisevanderlith/droxolite/element"
 	"github.com/louisevanderlith/droxolite/filters"
 	"github.com/louisevanderlith/droxolite/mix"
-	"github.com/louisevanderlith/droxolite/routing"
+	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/droxolite/xontrols"
 	"github.com/rs/cors"
 )
 
@@ -20,51 +21,66 @@ type BasicEpoxy struct {
 	service  *bodies.Service
 	router   http.Handler
 	identity *element.Identity
+	mxFunc   mix.InitFunc
 }
 
 //NewBasicExpoxy returns a new Instance of the Epoxy
-func NewBasicEpoxy(service *bodies.Service, d *element.Identity) Epoxi {
+func NewBasicEpoxy(service *bodies.Service, d *element.Identity, mxFunc mix.InitFunc) Epoxi {
 	routr := mux.NewRouter()
 
 	return &BasicEpoxy{
 		service:  service,
 		router:   routr,
 		identity: d,
+		mxFunc:   mxFunc,
 	}
 }
 
-func (e *BasicEpoxy) AddBundle(b routing.Bundler) {
-	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(b.RouteGroup().Name)).Subrouter()
+func (e *BasicEpoxy) JoinBundle(name string, required roletype.Enum, ctrls ...xontrols.Nomad) {
+	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(name)).Subrouter()
 
-	for _, v := range b.RouteGroup().Routes {
-		r := sub.Handle(v.Path, e.Handle(b.RouteGroup().MixFunc, v)).Methods(v.Method)
+	for _, ctrl := range ctrls {
+		ctrlName := getControllerName(ctrl)
+		ctrlPath := "/" + strings.ToLower(ctrlName)
+		log.Println("Controller:", ctrlName)
 
-		for qkey, qval := range v.Queries {
-			r.Queries(qkey, qval)
-		}
-	}
+		//The nested subrouter will create the basepath for every function in the controller
+		//eg. Articles will create /blog/articles
+		xsub := sub.PathPrefix(ctrlPath).Subrouter()
 
-	//add sub groups
-	for _, sgroup := range b.RouteGroup().SubGroups {
-		xsub := sub.PathPrefix("/" + strings.ToLower(sgroup.Name)).Subrouter()
+		//Default
+		xsub.Handle("", e.Handle(ctrlName, required, ctrl.Get)).Methods(http.MethodGet)
 
-		for _, v := range sgroup.Routes {
-			r := xsub.Handle(v.Path, e.Handle(b.RouteGroup().MixFunc, v)).Methods(v.Method)
+		//Storable
+		storeCtrl, isStore := ctrl.(xontrols.Store)
 
-			for qkey, qval := range v.Queries {
-				r.Queries(qkey, qval)
+		if isStore {
+			xsub.Handle("", e.Handle(ctrlName+"Create", required, storeCtrl.Create)).Methods(http.MethodPost)
+
+			xsub.Handle("/{key:[0-9]+\x60[0-9]+}", e.Handle(ctrlName, required, storeCtrl.GetOne)).Methods(http.MethodGet)
+			xsub.Handle("/{key:[0-9]+\x60[0-9]+}", e.Handle(ctrlName, required, storeCtrl.Update)).Methods(http.MethodPut)
+			xsub.Handle("/{key:[0-9]+\x60[0-9]+}", e.Handle(ctrlName, required, storeCtrl.Delete)).Methods(http.MethodDelete)
+
+			xsub.Handle("/all/{pagesize:[A-Z][0-9]+}", e.Handle("Get All", required, storeCtrl.Get)).Methods(http.MethodGet)
+
+			qryCtrl, isQueried := ctrl.(xontrols.Queries)
+
+			if isQueried {
+				for qkey, qval := range qryCtrl.AcceptsQuery() {
+					xsub.Queries(qkey, qval)
+				}
 			}
 		}
 	}
 }
 
-func (e *BasicEpoxy) Handle(mxFunc mix.InitFunc, route *routing.Route) http.HandlerFunc {
+func (e *BasicEpoxy) Handle(name string, required roletype.Enum, process ServeFunc) http.HandlerFunc {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req, e.service.ID)
 
-		allow, avoc := filters.TokenCheck(ctx, route.RequiredRole, e.service.PublicKey, e.service.Name)
+		allow, avoc := filters.TokenCheck(ctx, required, e.service.PublicKey, e.service.Name)
 		if !allow {
-			err := ctx.Serve(http.StatusUnauthorized, mxFunc(route.Name, nil, e.identity, nil))
+			err := ctx.Serve(http.StatusUnauthorized, e.mxFunc(name, nil, e.identity, nil))
 
 			if err != nil {
 				log.Panicln(err)
@@ -75,10 +91,9 @@ func (e *BasicEpoxy) Handle(mxFunc mix.InitFunc, route *routing.Route) http.Hand
 
 		//Calls the Controller Function
 		//Context should be sent to function, so no controller is needed
-		status, data := route.Function(ctx)
-		mxer := mxFunc(ctx.RequestURI(), data, e.identity, avoc)
+		status, data := process(ctx)
+		mxer := e.mxFunc(ctx.RequestURI(), data, e.identity, avoc)
 
-		//mxer.ApplySettings(ctx.RequestURI(), *e.settings, avoc)
 		err := ctx.Serve(status, mxer)
 		if err != nil {
 			log.Panicln(err)

@@ -6,11 +6,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/louisevanderlith/droxolite/sample/clients"
+
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/element"
 	"github.com/louisevanderlith/droxolite/resins"
 	"github.com/louisevanderlith/droxolite/roletype"
-	"github.com/louisevanderlith/droxolite/routing"
 	"github.com/louisevanderlith/droxolite/servicetype"
 )
 
@@ -29,7 +30,7 @@ func init() {
 		panic(err)
 	}
 
-	appEpoxy = resins.NewColourEpoxy(srvc, theme, "auth.localhost")
+	appEpoxy = resins.NewColourEpoxy(srvc, theme, "auth.localhost", clients.Index)
 	appRoutes(appEpoxy)
 }
 
@@ -131,13 +132,15 @@ func TestAPP_Error_OK(t *testing.T) {
 	}
 }
 
-func appRoutes(poxy resins.Epoxi) {
-	fakeCtrl := &FakeAPP{}
+func appRoutes(e resins.Epoxi) {
+	e.JoinBundle("App", roletype.Unknown, &clients.Interface{})
+	e.JoinBundle("Stock", roletype.Unknown, &clients.Parts{}, &clients.Services{})
+	/*fakeCtrl := &FakeAPP{}
 	grp := routing.NewInterfaceBundle("", roletype.Unknown, fakeCtrl)
 	grp.RouteGroup().AddRoute("Home", "/broken", "GET", roletype.Unknown, fakeCtrl.GetBroken)
 
 	poxy.AddBundle(grp)
 
 	stockGrp := routing.NewInterfaceBundle("Stock", roletype.Unknown, &Parts{}, &Services{})
-	poxy.AddBundle(stockGrp)
+	poxy.AddBundle(stockGrp)*/
 }
