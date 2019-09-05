@@ -3,7 +3,6 @@ package sample
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"testing"
 
@@ -11,9 +10,8 @@ import (
 	"github.com/louisevanderlith/droxolite/mix"
 
 	"github.com/louisevanderlith/droxolite/resins"
-	"github.com/louisevanderlith/droxolite/routing"
 
-	"github.com/louisevanderlith/droxolite/sample/sub"
+	"github.com/louisevanderlith/droxolite/sample/clients"
 
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/roletype"
@@ -28,13 +26,13 @@ func init() {
 	srvc := bodies.NewService("Test.API", "/certs/none.pem", 8090, servicetype.API)
 	srvc.ID = "Tester1"
 
-	apiEpoxy = resins.NewBasicEpoxy(srvc, element.GetNoTheme(".localhost/", srvc.ID, ""))
+	apiEpoxy = resins.NewBasicEpoxy(srvc, element.GetNoTheme(".localhost/", srvc.ID, ""), mix.JSON)
 	apiRoutes(apiEpoxy)
 	apiEpoxy.EnableCORS(".localhost/")
 }
 
-func TestPrepare_MustHaveHeader_StrictTransportSecurity(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake", nil)
+func TestNomad_GetAcceptsQuery_OK(t *testing.T) {
+	rr, err := GetResponse(apiEpoxy, "/fake/nomad?name=Jannie", nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -42,109 +40,40 @@ func TestPrepare_MustHaveHeader_StrictTransportSecurity(t *testing.T) {
 
 	if rr.Code != http.StatusOK {
 		t.Fatal(rr.Body.String())
-	}
-
-	val := rr.Header().Get("Strict-Transport-Security")
-
-	if len(val) == 0 {
-		t.Fatal("No values set")
-	}
-}
-
-func TestPrepare_MustHaveHeader_AccessControlAllowCredentialls(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake", nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if rr.Code != http.StatusOK {
-		t.Fatal(rr.Body.String())
-	}
-
-	val := rr.Header().Get("Access-Control-Allow-Credentials")
-
-	if len(val) == 0 {
-		t.Fatal("No values set")
-	}
-}
-
-func TestPrepare_MustHaveHeader_Server(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake", nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if rr.Code != http.StatusOK {
-		t.Fatal(rr.Body.String())
-	}
-
-	val := rr.Header().Get("Server")
-
-	if len(val) == 0 {
-		t.Fatal("No values set")
-	}
-}
-
-func TestPrepare_MustHaveHeader_XContentTypeOptions(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake", nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if rr.Code != http.StatusOK {
-		t.Fatal(rr.Body.String())
-	}
-
-	val := rr.Header().Get("X-Content-Type-Options")
-
-	if len(val) == 0 {
-		t.Fatal("No values set")
-	}
-}
-
-/*
-func TestAPI_OPTIONS_CORS(t *testing.T) {
-	req, err := http.NewRequest("OPTIONS", "/fake", nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header.Set("Access-Control-Request-Method", "POST")           // needs to be non-empty
-	req.Header.Set("Access-Control-Request-Headers", "Authorization") // needs to be non-empty
-	req.Header.Set("Origin", "https://tester.localhost/")             // needs to be non-empty
-
-	handle := apiEpoxy.Router()
-
-	rr := httptest.NewRecorder()
-	handle.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Fatal(rr.Body.String())
-	}
-
-	t.Log(rr.Header())
-
-	if len(rr.Header().Get("Access-Control-Allow-Method")) == 0 {
-		t.Fatal("Allow Methods not Found")
-	}
-
-	if len(rr.Header().Get("Access-Control-Allow-Origin")) == 0 {
-		t.Fatal("Allow Origin not Found")
-	}
-}*/
-
-func TestMain_API_DefaultPath_OK(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake", nil)
-
-	if err != nil {
-		t.Fatal(err)
 	}
 
 	result := ""
+	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
+
+	if err != nil {
+		t.Fatal(err, rr.Body.String())
+	}
+
+	if len(rest.Reason) > 0 {
+		t.Fatalf(rest.Reason)
+	}
+
+	expected := "Nomad got Jannie"
+	if result != expected {
+		t.Errorf("unexpected body: got %v want %v",
+			result, expected)
+	}
+}
+
+func TestStore_Get_OK(t *testing.T) {
+	rr, err := GetResponse(apiEpoxy, "/fake/store", nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
+	}
+
+	t.Log(rr.Body.String())
+
+	var result []string
 	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
 
 	if err != nil {
@@ -155,91 +84,17 @@ func TestMain_API_DefaultPath_OK(t *testing.T) {
 		t.Fatalf(rest.Reason)
 	}
 
-	expected := "Fake GET Working"
-	if result != expected {
-		t.Errorf("unexpected body: got %v want %v",
-			result, expected)
+	expected := []string{"Berry", "Orange", "Apple"}
+
+	for i := 0; i < len(result); i++ {
+		if result[i] != expected[i] {
+			t.Fatalf("unexpected body: got %v want %v", result[i], expected[i])
+		}
 	}
 }
 
-func TestMain_API_SubPath_OK(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/sub", nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	result := ""
-	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(rest.Reason) > 0 {
-		t.Fatalf(rest.Reason)
-	}
-
-	expected := "I am a sub controller"
-	if result != expected {
-		t.Errorf("unexpected body: got %v want %v",
-			result, expected)
-	}
-}
-
-func TestMain_API_SubComplexPath_OK(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/sub/complex", nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	result := ""
-	log.Println(rr.Body.String())
-	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(rest.Reason) > 0 {
-		t.Fatalf(rest.Reason)
-	}
-
-	expected := "This is complex!"
-	if result != expected {
-		t.Errorf("unexpected body: got %v want %v",
-			result, expected)
-	}
-}
-
-func TestMain_API_QueryPath_OK(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake/query?name=%60", nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	result := ""
-	rest, err := bodies.MarshalToResult(rr.Body.Bytes(), &result)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(rest.Reason) > 0 {
-		t.Fatalf(rest.Reason)
-	}
-
-	expected := "Fake Query `"
-	if result != expected {
-		t.Errorf("unexpected body: got %v want %v",
-			result, expected)
-	}
-}
-
-func TestMain_API_IdParam_OK(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake/73", nil)
+func TestStore_GetOne_OK(t *testing.T) {
+	rr, err := GetResponse(apiEpoxy, "/fake/store/1560674025%601", nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -262,11 +117,15 @@ func TestMain_API_IdParam_OK(t *testing.T) {
 		t.Fatalf(rest.Reason)
 	}
 
-	expected := "We Found 73"
+	expected := "Got a Key 1560674025`1"
 	if result != expected {
 		t.Errorf("unexpected body: got %v want %v",
 			result, expected)
 	}
+}
+
+func TestStore_Create_OK(t *testing.T) {
+
 }
 
 func TestMain_API_NameAndIdParam_OK(t *testing.T) {
@@ -393,10 +252,6 @@ func TestMain_API_BooleanParam_OK(t *testing.T) {
 	}
 }
 
-/*
-
- */
-
 func TestMain_API_HashParam_OK(t *testing.T) {
 	rr, err := GetResponse(apiEpoxy, "/fake/base/eyJuYW1lIjogIkppbW15IiwiYWdlOiB7ICJtb250aCI6IDIsICJkYXRlIjogOCwgInllYXIiOiAxOTkxfSwiYWxpdmUiOiB0cnVlfQ==", nil)
 
@@ -458,8 +313,10 @@ func TestMain_API_POST_OK(t *testing.T) {
 	}
 }
 
-func apiRoutes(poxy resins.Epoxi) {
-	fakeCtrl := &FakeAPI{}
+func apiRoutes(e resins.Epoxi) {
+	e.JoinBundle("Fake", roletype.Unknown, &clients.Nomad{}, &clients.Store{}, &clients.Apx{})
+
+	/*fakeCtrl := &FakeAPI{}
 
 	fkgroup := routing.NewRouteGroup("Fake", mix.JSON)
 	fkgroup.AddRoute("Home", "", "GET", roletype.Unknown, fakeCtrl.Get)
@@ -474,6 +331,7 @@ func apiRoutes(poxy resins.Epoxi) {
 	fkgroup.AddRoute("Name", "/{name:[a-zA-Z]+}/{id:[0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetName)
 	fkgroup.AddRoute("Page", "/all/{pagesize:[A-Z][0-9]+}", "GET", roletype.Unknown, fakeCtrl.GetPage)
 	fkgroup.AddRoute("base", "/base/{hash:[a-zA-Z0-9]+={0,2}}", "GET", roletype.Unknown, fakeCtrl.GetHash)
+	poxy.JoinBundle("Fake", roletype.Unknown, fakeCtrl)
 	poxy.AddBundle(fkgroup)
 
 	subCtrl := &sub.SubAPICtrl{}
@@ -485,5 +343,5 @@ func apiRoutes(poxy resins.Epoxi) {
 	complxGroup.AddRoute("Sub Complex Home", "", http.MethodGet, roletype.Unknown, complxCtrl.Get)
 
 	subGroup.AddSubGroup(complxGroup)
-	poxy.AddBundle(subGroup)
+	poxy.AddBundle(subGroup)*/
 }
