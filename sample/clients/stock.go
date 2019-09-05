@@ -1,4 +1,4 @@
-package sample
+package clients
 
 import (
 	"net/http"
@@ -6,17 +6,10 @@ import (
 	"github.com/louisevanderlith/droxolite/context"
 )
 
-type Stock struct {
-}
-
-func (req *Stock) Default(ctx context.Requester) (int, interface{}) {
-	return http.StatusOK, nil
-}
-
 type Parts struct {
 }
 
-func (req *Parts) Default(ctx context.Requester) (int, interface{}) {
+func (req *Parts) Get(ctx context.Requester) (int, interface{}) {
 	return http.StatusOK, nil
 }
 
@@ -35,7 +28,7 @@ func (req *Parts) Create(ctx context.Requester) (int, interface{}) {
 type Services struct {
 }
 
-func (req *Services) Default(ctx context.Requester) (int, interface{}) {
+func (req *Services) Get(ctx context.Requester) (int, interface{}) {
 	return http.StatusOK, nil
 }
 

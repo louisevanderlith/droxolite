@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/louisevanderlith/husk"
-
 	"github.com/louisevanderlith/droxolite/context"
 )
 
@@ -32,14 +30,7 @@ func (c *FakeAPI) GetHash(ctx context.Requester) (int, interface{}) {
 }
 
 func (c *FakeAPI) GetKey(ctx context.Requester) (int, interface{}) {
-	param := ctx.FindParam("key")
-	result, err := husk.ParseKey(param)
 
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	return http.StatusOK, fmt.Sprintf("Got a Key %s", result)
 }
 
 func (c *FakeAPI) GetPage(ctx context.Requester) (int, interface{}) {
@@ -53,12 +44,6 @@ func (c *FakeAPI) GetId(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindParam("id")
 	result := fmt.Sprintf("We Found %v", param)
 
-	return http.StatusOK, result
-}
-
-func (c *FakeAPI) GetQueryStr(ctx context.Requester) (int, interface{}) {
-	param := ctx.FindQueryParam("name")
-	result := fmt.Sprintf("Fake Query %s", param)
 	return http.StatusOK, result
 }
 
@@ -89,15 +74,5 @@ func (c *FakeAPI) GetAnswer(ctx context.Requester) (int, interface{}) {
 
 // :id {string}
 func (c *FakeAPI) Post(ctx context.Requester) (int, interface{}) {
-	param := ctx.FindParam("id")
-	body := struct{ Act string }{}
-	err := ctx.Body(&body)
 
-	if err != nil {
-		return http.StatusBadRequest, err
-	}
-
-	result := fmt.Sprintf("#%v: %s", param, body.Act)
-
-	return http.StatusOK, result
 }
