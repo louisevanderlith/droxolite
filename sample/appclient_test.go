@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/sample/clients"
 
 	"github.com/louisevanderlith/droxolite/bodies"
@@ -133,8 +134,8 @@ func TestAPP_Error_OK(t *testing.T) {
 }
 
 func appRoutes(e resins.Epoxi) {
-	e.JoinBundle("App", roletype.Unknown, &clients.Interface{})
-	e.JoinBundle("Stock", roletype.Unknown, &clients.Parts{}, &clients.Services{})
+	e.JoinXontrol("/", roletype.Unknown, mix.Page, &clients.Interface{})
+	e.JoinBundle("/stock", roletype.Unknown, mix.Page, &clients.Parts{}, &clients.Services{})
 	/*fakeCtrl := &FakeAPP{}
 	grp := routing.NewInterfaceBundle("", roletype.Unknown, fakeCtrl)
 	grp.RouteGroup().AddRoute("Home", "/broken", "GET", roletype.Unknown, fakeCtrl.GetBroken)

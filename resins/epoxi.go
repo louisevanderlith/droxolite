@@ -5,6 +5,7 @@ import (
 
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
 )
@@ -12,8 +13,8 @@ import (
 type Epoxi interface {
 	Router() http.Handler
 	Service() *bodies.Service
-	JoinBundle(name string, required roletype.Enum, ctrls ...xontrols.Nomad)
-	Handle(name string, required roletype.Enum, process ServeFunc) http.HandlerFunc
+	JoinXontrol(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrl xontrols.Nomad)
+	JoinBundle(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrls ...xontrols.Nomad)
 	EnableCORS(host string)
 }
 

@@ -7,5 +7,5 @@ import (
 )
 
 func Index(ctx context.Requester) (int, interface{}) {
-	return http.StatusOK, "You're Home!"
+	return http.StatusOK, "You are Home!"
 }

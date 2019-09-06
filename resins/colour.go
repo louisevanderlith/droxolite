@@ -18,29 +18,26 @@ import (
 	"github.com/louisevanderlith/droxolite/xontrols"
 )
 
-type ColourEpoxy struct {
-	service  *bodies.Service
-	router   http.Handler
-	identity *element.Identity
-	sideMenu *bodies.Menu
-	//templates   *template.Template --rather use
+type colourEpoxy struct {
+	service     *bodies.Service
+	router      http.Handler
+	identity    *element.Identity
+	sideMenu    *bodies.Menu
 	securityUrl string
-	mxFunc      mix.InitFunc
 }
 
 //NewColourExpoxy returns a new Instance of the Epoxy with a Theme
 func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl string, indexPage ServeFunc) Epoxi {
 
-	e := &ColourEpoxy{
+	e := &colourEpoxy{
 		service:     service,
 		identity:    d,
 		securityUrl: securityUrl,
 		sideMenu:    bodies.NewMenu(),
-		mxFunc:      mix.Page,
 	}
 
 	routr := mux.NewRouter()
-	routr.HandleFunc("/", e.Handle("index", roletype.Unknown, indexPage))
+	routr.HandleFunc("/", e.filter("index", roletype.Unknown, mix.Page, indexPage))
 	//Applications have assets in the 'dist' folder
 	distPath := http.FileSystem(http.Dir("dist/"))
 	fs := http.FileServer(distPath)
@@ -51,151 +48,127 @@ func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl st
 	return e
 }
 
-/*
-func (e *ColourEpoxy) AddBundle(b routing.Bundler) {
-	interBun := b.(routing.InterfaceBundle)
-	log.Println("RouteGroup:", b.RouteGroup().Name)
+func (e *colourEpoxy) Router() http.Handler {
+	return e.router
+}
 
-	sub := e.router.(*mux.Router).PathPrefix("/" + strings.ToLower(b.RouteGroup().Name)).Subrouter()
-	e.sideMenu.AddGroup(b.RouteGroup().Name, interBun.SideMenu)
+func (e *colourEpoxy) Service() *bodies.Service {
+	return e.service
+}
 
-	for _, v := range b.RouteGroup().Routes {
-		log.Println("Route:", v.Path)
-		r := sub.Handle(v.Path, e.Handle(b.RouteGroup().MixFunc, v)).Methods(v.Method)
+func (e *colourEpoxy) EnableCORS(host string) {
+	//No Need.
+}
 
-		for qkey, qval := range v.Queries {
-			r.Queries(qkey, qval)
+func (e *colourEpoxy) JoinXontrol(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrl xontrols.Nomad) {
+	sub := e.router.(*mux.Router).PathPrefix(path).Subrouter()
+
+	ctrlName := getControllerName(ctrl)
+	ctrlPath := "/" + strings.ToLower(ctrlName)
+	ctrlSub := sub.PathPrefix(ctrlPath).Subrouter()
+
+	//Get
+	ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, ctrl.Get)).Methods(http.MethodGet)
+
+	//Search & View
+	searchCtrl, isSearch := ctrl.(xontrols.Searchable)
+
+	if isSearch {
+		ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
+		ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
+		ctrlSub.Handle("/{key:[0-9]+\x60[0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.View)).Methods(http.MethodGet)
+	}
+
+	//Create
+	createCtrl, isCreate := ctrl.(xontrols.Createable)
+
+	if isCreate {
+		ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, createCtrl.Create)).Methods(http.MethodPost)
+	}
+
+	//Update - Pages can't update
+	//Delete -Pages can't delete
+
+	//Queries
+	qryCtrl, isQueried := ctrl.(xontrols.Queries)
+
+	if isQueried {
+		for qkey, qval := range qryCtrl.AcceptsQuery() {
+			ctrlSub.Queries(qkey, qval)
 		}
 	}
 
-	//add sub groups
-	for _, sgroup := range b.RouteGroup().SubGroups {
-		log.Println("SubRoute:", strings.ToLower(sgroup.Name))
-		xsub := sub.PathPrefix("/" + strings.ToLower(sgroup.Name)).Subrouter()
+	menuPath := ctrlPath
+	groupName := "General"
 
-		for _, v := range sgroup.Routes {
-			r := xsub.Handle(v.Path, e.Handle(b.RouteGroup().MixFunc, v)).Methods(v.Method)
-
-			for qkey, qval := range v.Queries {
-				r.Queries(qkey, qval)
-			}
-		}
-	}
-}*/
-
-//JoinBundle will populate a mux.Router with paths generated from the ctrls names.
-func (e *ColourEpoxy) JoinBundle(name string, required roletype.Enum, ctrls ...xontrols.Nomad) {
-	if len(ctrls) == 0 {
-		panic("ctrls must have at least one controller")
+	//more than just a slash
+	if strings.HasPrefix(path, "/") && len(path) > 1 {
+		menuPath = path + ctrlPath
+		groupName = strings.Title(strings.Replace(path, "/", "", -1))
 	}
 
-	//The subrouter will create the basepath for every controller in the bundle
-	//eg. Blog will create /blog
-	subroute := e.router.(*mux.Router).PathPrefix("/" + name).Subrouter()
-	subroute.Handle("", e.Handle("", roletype.Unknown, ctrls[0].Get)).Methods(http.MethodGet)
+	e.sideMenu.AddGroup(groupName, []bodies.MenuItem{bodies.NewItem("", menuPath, ctrlName, isCreate, nil)})
+}
 
+func (e *colourEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrls ...xontrols.Nomad) {
+	sub := e.router.(*mux.Router).PathPrefix(path).Subrouter()
 	var menu []bodies.MenuItem
+
 	for _, ctrl := range ctrls {
 		ctrlName := getControllerName(ctrl)
 		ctrlPath := "/" + strings.ToLower(ctrlName)
-		log.Println("Controller:", ctrlName)
+		ctrlSub := sub.PathPrefix(ctrlPath).Subrouter()
 
-		//The nested subrouter will create the basepath for every function in the controller
-		//eg. Articles will create /blog/articles
-		xsub := subroute.PathPrefix(ctrlPath).Subrouter()
+		//Get
+		ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, ctrl.Get)).Methods(http.MethodGet)
 
+		//Search & View
+		searchCtrl, isSearch := ctrl.(xontrols.Searchable)
+
+		if isSearch {
+			ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
+			ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
+			ctrlSub.Handle("/{key:[0-9]+\x60[0-9]+}", e.filter(ctrlName+"View", required, mxFunc, searchCtrl.View)).Methods(http.MethodGet)
+		}
+
+		//Create
+		createCtrl, isCreate := ctrl.(xontrols.Createable)
+
+		if isCreate {
+			ctrlSub.Handle("/create", e.filter(ctrlName, required, mxFunc, createCtrl.Create)).Methods(http.MethodGet)
+		}
+
+		//Update - Pages can't update
+		//Delete -Pages can't delete
+
+		//Queries
 		qryCtrl, isQueried := ctrl.(xontrols.Queries)
 
 		if isQueried {
 			for qkey, qval := range qryCtrl.AcceptsQuery() {
-				xsub.Queries(qkey, qval)
+				ctrlSub.Queries(qkey, qval)
 			}
 		}
 
-		//Default
-		xsub.Handle("", e.Handle(ctrlName, required, ctrl.Get)).Methods(http.MethodGet)
+		menuPath := ctrlPath
 
-		searchCtrl, searchable := ctrl.(xontrols.Searchable)
-		createable := false
-		if searchable {
-			//Search, it uses the default page
-			xsub.Handle("/{pagesize:[A-Z][0-9]+}", e.Handle(ctrlName, required, searchCtrl.Search)).Methods(http.MethodGet)
-			xsub.Handle("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", e.Handle(ctrlName, required, searchCtrl.Search)).Methods(http.MethodGet)
-
-			//View
-			xsub.Handle("/{key:[0-9]+\x60[0-9]+}", e.Handle(ctrlName+"View", required, searchCtrl.View)).Methods(http.MethodGet)
-
-			//Create
-			createCtrl, createable := searchCtrl.(xontrols.Createable)
-
-			if createable {
-				xsub.Handle("/create", e.Handle(ctrlName+"Create", required, createCtrl.Create)).Methods(http.MethodGet)
-			}
+		//more than just a slash
+		if strings.HasPrefix(path, "/") && len(path) > 1 {
+			menuPath = path + ctrlPath
 		}
 
-		menu = append(menu, bodies.NewItem("", ctrlPath, ctrlName, createable, nil))
+		menu = append(menu, bodies.NewItem("", menuPath, ctrlName, isCreate, nil))
 	}
 
-	e.sideMenu.AddGroup(name, menu)
-
-	/*var menu []bodies.MenuItem
-	rg := NewRouteGroup(name, mix.Page)
-
-	for _, ctrl := range ctrls {
-		createable := false
-		ctrlName := getControllerName(ctrl)
-		sub := NewRouteGroup(ctrlName, mix.Page)
-
-		//Default
-		qryCtrl, isQueried := ctrl.(xontrols.QueriesXontrol)
-
-		if isQueried {
-			sub.AddRouteWithQueries("", "/", http.MethodGet, required, qryCtrl.AcceptsQuery(), ctrl.Default)
-		} else {
-			sub.AddRoute("", "/", http.MethodGet, required, ctrl.Default)
-		}
-
-		searchCtrl, searchable := ctrl.(xontrols.SearchableXontroller)
-
-		if searchable {
-			//Search, it uses the default page
-			sub.AddRoute("", "/{pagesize:[A-Z][0-9]+}", http.MethodGet, required, searchCtrl.Search)
-			sub.AddRoute("", "/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", http.MethodGet, required, searchCtrl.Search)
-
-			//View
-			sub.AddRoute("View", "/{key:[0-9]+\x60[0-9]+}", http.MethodGet, required, searchCtrl.View)
-
-			//Create
-			createCtrl, createable := searchCtrl.(xontrols.CreateableXontroller)
-
-			if createable {
-				sub.AddRoute("Create", "/create", http.MethodGet, required, createCtrl.Create)
-			}
-		}
-
-		menu = append(menu, bodies.NewItem("", "/"+strings.ToLower(ctrlName), ctrlName, createable, nil))
-		rg.AddSubGroup(sub)
-	}
-
-	return InterfaceBundle{menu, rg}*/
+	e.sideMenu.AddGroup(strings.Title(strings.Replace(path, "/", "", -1)), menu)
 }
 
-func getControllerName(ctrl xontrols.Nomad) string {
-	tpe := reflect.TypeOf(ctrl).String()
-	lstDot := strings.LastIndex(tpe, ".")
-
-	if lstDot != -1 {
-		return tpe[(lstDot + 1):]
-	}
-
-	return tpe
-}
-
-func (e *ColourEpoxy) Handle(name string, required roletype.Enum, process ServeFunc /*route *routing.Route*/) http.HandlerFunc {
+func (e *colourEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitFunc, process ServeFunc) http.HandlerFunc {
+	srv := e.service
 	return func(resp http.ResponseWriter, req *http.Request) {
-		ctx := context.New(resp, req, e.service.ID)
+		ctx := context.New(resp, req, srv.ID)
 
-		allow, avoc := filters.TokenCookieCheck(ctx, required, e.service.PublicKey, e.service.Name)
+		allow, avoc := filters.TokenCookieCheck(ctx, required, srv.PublicKey, srv.Name)
 		if !allow {
 			err := sendToLogin(ctx, e.securityUrl)
 
@@ -209,7 +182,7 @@ func (e *ColourEpoxy) Handle(name string, required roletype.Enum, process ServeF
 		//Calls the Controller Function
 		//Context should be sent to function, so no controller is needed
 		status, data := process(ctx)
-		mxer := e.mxFunc(name, data, e.identity, avoc).(mix.ColourMixer)
+		mxer := mxFunc(name, data, e.identity, avoc).(mix.ColourMixer)
 		//mxer.ApplySettings(route.Name, *e.settings, avoc)
 
 		mxer.CreateSideMenu(e.sideMenu)
@@ -221,16 +194,15 @@ func (e *ColourEpoxy) Handle(name string, required roletype.Enum, process ServeF
 	}
 }
 
-func (e *ColourEpoxy) Router() http.Handler {
-	return e.router
-}
+func getControllerName(ctrl xontrols.Nomad) string {
+	tpe := reflect.TypeOf(ctrl).String()
+	lstDot := strings.LastIndex(tpe, ".")
 
-func (e *ColourEpoxy) Service() *bodies.Service {
-	return e.service
-}
+	if lstDot != -1 {
+		return tpe[(lstDot + 1):]
+	}
 
-func (e *ColourEpoxy) EnableCORS(host string) {
-	//No Need.
+	return tpe
 }
 
 func sendToLogin(ctx context.Contexer, securityURL string) error {
