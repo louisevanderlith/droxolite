@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -15,7 +16,20 @@ func (x *Store) Get(ctx context.Requester) (int, interface{}) {
 	return http.StatusOK, []string{"Berry", "Orange", "Apple"}
 }
 
-func (x *Store) GetOne(ctx context.Requester) (int, interface{}) {
+func (x *Store) Search(ctx context.Requester) (int, interface{}) {
+	page, size := ctx.GetPageData()
+	hsh := ctx.FindParam("hash")
+
+	decoded, err := base64.StdEncoding.DecodeString(hsh)
+
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, fmt.Sprintf("Page: %v Size: %v Decode: %s", page, size, string(decoded))
+}
+
+func (x *Store) View(ctx context.Requester) (int, interface{}) {
 	param := ctx.FindParam("key")
 	result, err := husk.ParseKey(param)
 
