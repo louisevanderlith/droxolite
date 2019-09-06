@@ -134,7 +134,7 @@ func TestAPP_Error_OK(t *testing.T) {
 }
 
 func appRoutes(e resins.Epoxi) {
-	e.JoinXontrol("/", roletype.Unknown, mix.Page, &clients.Interface{})
+	e.JoinBundle("/", roletype.Unknown, mix.Page, &clients.Interface{})
 	e.JoinBundle("/stock", roletype.Unknown, mix.Page, &clients.Parts{}, &clients.Services{})
 	/*fakeCtrl := &FakeAPP{}
 	grp := routing.NewInterfaceBundle("", roletype.Unknown, fakeCtrl)

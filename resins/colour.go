@@ -60,54 +60,8 @@ func (e *colourEpoxy) EnableCORS(host string) {
 	//No Need.
 }
 
-func (e *colourEpoxy) JoinXontrol(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrl xontrols.Nomad) {
-	sub := e.router.(*mux.Router).PathPrefix(path).Subrouter()
-
-	ctrlName := getControllerName(ctrl)
-	ctrlPath := "/" + strings.ToLower(ctrlName)
-	ctrlSub := sub.PathPrefix(ctrlPath).Subrouter()
-
-	//Get
-	ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, ctrl.Get)).Methods(http.MethodGet)
-
-	//Search & View
-	searchCtrl, isSearch := ctrl.(xontrols.Searchable)
-
-	if isSearch {
-		ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-		ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-		ctrlSub.Handle("/{key:[0-9]+\x60[0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.View)).Methods(http.MethodGet)
-	}
-
-	//Create
-	createCtrl, isCreate := ctrl.(xontrols.Createable)
-
-	if isCreate {
-		ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, createCtrl.Create)).Methods(http.MethodPost)
-	}
-
-	//Update - Pages can't update
-	//Delete -Pages can't delete
-
-	//Queries
-	qryCtrl, isQueried := ctrl.(xontrols.Queries)
-
-	if isQueried {
-		for qkey, qval := range qryCtrl.AcceptsQuery() {
-			ctrlSub.Queries(qkey, qval)
-		}
-	}
-
-	menuPath := ctrlPath
-	groupName := "General"
-
-	//more than just a slash
-	if strings.HasPrefix(path, "/") && len(path) > 1 {
-		menuPath = path + ctrlPath
-		groupName = strings.Title(strings.Replace(path, "/", "", -1))
-	}
-
-	e.sideMenu.AddGroup(groupName, []bodies.MenuItem{bodies.NewItem("", menuPath, ctrlName, isCreate, nil)})
+func (e *colourEpoxy) JoinPath(r *mux.Router, path, name, method string, required roletype.Enum, mxFunc mix.InitFunc, f ServeFunc) {
+	r.Handle(path, e.filter(name, required, mxFunc, f)).Methods(method)
 }
 
 func (e *colourEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrls ...xontrols.Nomad) {
@@ -126,19 +80,25 @@ func (e *colourEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix
 		searchCtrl, isSearch := ctrl.(xontrols.Searchable)
 
 		if isSearch {
-			ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-			ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-			ctrlSub.Handle("/{key:[0-9]+\x60[0-9]+}", e.filter(ctrlName+"View", required, mxFunc, searchCtrl.View)).Methods(http.MethodGet)
+			e.JoinPath(ctrlSub, "/{pagesize:[A-Z][0-9]+}", ctrlName, http.MethodGet, required, mxFunc, searchCtrl.Search)
+			e.JoinPath(ctrlSub, "/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", ctrlName, http.MethodGet, required, mxFunc, searchCtrl.Search)
+		}
+
+		//View
+		viewCtrl, isView := ctrl.(xontrols.Viewable)
+
+		if isView {
+			e.JoinPath(ctrlSub, "/{key:[0-9]+\x60[0-9]+}", ctrlName+"View", http.MethodGet, required, mxFunc, viewCtrl.View)
 		}
 
 		//Create
 		createCtrl, isCreate := ctrl.(xontrols.Createable)
 
 		if isCreate {
-			ctrlSub.Handle("/create", e.filter(ctrlName, required, mxFunc, createCtrl.Create)).Methods(http.MethodGet)
+			e.JoinPath(ctrlSub, "/create", ctrlName+"Create", http.MethodGet, required, mxFunc, createCtrl.Create)
 		}
 
-		//Update - Pages can't update
+		//Update - Pages can't update (View can do whatever)
 		//Delete -Pages can't delete
 
 		//Queries
