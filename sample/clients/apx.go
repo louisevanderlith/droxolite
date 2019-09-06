@@ -14,6 +14,6 @@ func (x *Apx) Get(ctx context.Requester) (int, interface{}) {
 	return http.StatusInternalServerError, errors.New("this path must break")
 }
 
-func (x *Apx) Send(ctx context.Requester) (int, interface{}) {
+func (x *Apx) Create(ctx context.Requester) (int, interface{}) {
 	return http.StatusNotImplemented, nil
 }

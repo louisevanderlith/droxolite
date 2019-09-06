@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/louisevanderlith/droxolite/element"
 	"github.com/louisevanderlith/droxolite/mix"
+
+	"github.com/louisevanderlith/droxolite/element"
 
 	"github.com/louisevanderlith/droxolite/resins"
 
@@ -26,7 +27,7 @@ func init() {
 	srvc := bodies.NewService("Test.API", "/certs/none.pem", 8090, servicetype.API)
 	srvc.ID = "Tester1"
 
-	apiEpoxy = resins.NewBasicEpoxy(srvc, element.GetNoTheme(".localhost/", srvc.ID, ""), mix.JSON)
+	apiEpoxy = resins.NewMonoEpoxy(srvc, element.GetNoTheme(".localhost/", srvc.ID, ""))
 	apiRoutes(apiEpoxy)
 	apiEpoxy.EnableCORS(".localhost/")
 }
@@ -203,7 +204,7 @@ func TestMain_API_HuskKey_OK(t *testing.T) {
 }
 
 func TestMain_API_PageSize_OK(t *testing.T) {
-	rr, err := GetResponse(apiEpoxy, "/fake/all/C78", nil)
+	rr, err := GetResponse(apiEpoxy, "/fake/store/C78/eyJuYW1lIjogIkppbW15IiwiYWdlOiB7ICJtb250aCI6IDIsICJkYXRlIjogOCwgInllYXIiOiAxOTkxfSwiYWxpdmUiOiB0cnVlfQ==", nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -289,7 +290,7 @@ func TestMain_API_POST_OK(t *testing.T) {
 	}
 
 	readr := bytes.NewBuffer(body)
-	rr, err := GetResponse(apiEpoxy, "/fake/73", readr)
+	rr, err := GetResponse(apiEpoxy, "/fake/store/73", readr)
 
 	if err != nil {
 		t.Fatal(err)
@@ -314,7 +315,7 @@ func TestMain_API_POST_OK(t *testing.T) {
 }
 
 func apiRoutes(e resins.Epoxi) {
-	e.JoinBundle("Fake", roletype.Unknown, &clients.Nomad{}, &clients.Store{}, &clients.Apx{})
+	e.JoinBundle("/fake", roletype.Unknown, mix.JSON, &clients.Nomad{}, &clients.Store{}, &clients.Apx{})
 
 	/*fakeCtrl := &FakeAPI{}
 
