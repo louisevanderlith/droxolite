@@ -64,54 +64,8 @@ func (e *monoEpoxy) EnableCORS(host string) {
 	e.router = corsOpts.Handler(e.router)
 }
 
-func (e *monoEpoxy) JoinXontrol(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrl xontrols.Nomad) {
-	sub := e.router.(*mux.Router).PathPrefix(path).Subrouter()
-
-	ctrlName := getControllerName(ctrl)
-	ctrlPath := "/" + strings.ToLower(ctrlName)
-	ctrlSub := sub.PathPrefix(ctrlPath).Subrouter()
-
-	//Get
-	ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, ctrl.Get)).Methods(http.MethodGet)
-
-	//Search & View
-	searchCtrl, isSearch := ctrl.(xontrols.Searchable)
-
-	if isSearch {
-		ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-		ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-		ctrlSub.Handle("/{key:[0-9]+\x60[0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.View)).Methods(http.MethodGet)
-	}
-
-	//Create
-	createCtrl, isCreate := ctrl.(xontrols.Createable)
-
-	if isCreate {
-		ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, createCtrl.Create)).Methods(http.MethodPost)
-	}
-
-	//Update
-	updatCtrl, isUpdate := ctrl.(xontrols.Updateable)
-
-	if isUpdate {
-		ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, updatCtrl.Update)).Methods(http.MethodPut)
-	}
-
-	//Delete
-	delCtrl, isDelete := ctrl.(xontrols.Deleteable)
-
-	if isDelete {
-		ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, delCtrl.Delete)).Methods(http.MethodDelete)
-	}
-
-	//Queries
-	qryCtrl, isQueried := ctrl.(xontrols.Queries)
-
-	if isQueried {
-		for qkey, qval := range qryCtrl.AcceptsQuery() {
-			ctrlSub.Queries(qkey, qval)
-		}
-	}
+func (e *monoEpoxy) JoinPath(r *mux.Router, path, name, method string, required roletype.Enum, mxFunc mix.InitFunc, f ServeFunc) {
+	r.Handle(path, e.filter(name, required, mxFunc, f)).Methods(method)
 }
 
 func (e *monoEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.InitFunc, ctrls ...xontrols.Nomad) {
@@ -123,36 +77,42 @@ func (e *monoEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.I
 		ctrlSub := sub.PathPrefix(ctrlPath).Subrouter()
 
 		//Get
-		ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, ctrl.Get)).Methods(http.MethodGet)
+		e.JoinPath(ctrlSub, "", ctrlName, http.MethodGet, required, mxFunc, ctrl.Get)
 
-		//Search & View
+		//Search
 		searchCtrl, isSearch := ctrl.(xontrols.Searchable)
 
 		if isSearch {
-			ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-			ctrlSub.Handle("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", e.filter(ctrlName, required, mxFunc, searchCtrl.Search)).Methods(http.MethodGet)
-			ctrlSub.Handle("/{key:[0-9]+\x60[0-9]+}", e.filter(ctrlName, required, mxFunc, searchCtrl.View)).Methods(http.MethodGet)
+			e.JoinPath(ctrlSub, "/{pagesize:[A-Z][0-9]+}", ctrlName, http.MethodGet, required, mxFunc, searchCtrl.Search)
+			e.JoinPath(ctrlSub, "/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", ctrlName, http.MethodGet, required, mxFunc, searchCtrl.Search)
+		}
+
+		//View
+		viewCtrl, isView := ctrl.(xontrols.Viewable)
+
+		if isView {
+			e.JoinPath(ctrlSub, "/{key:[0-9]+\x60[0-9]+}", ctrlName, http.MethodGet, required, mxFunc, viewCtrl.View)
 		}
 
 		//Create
 		createCtrl, isCreate := ctrl.(xontrols.Createable)
 
 		if isCreate {
-			ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, createCtrl.Create)).Methods(http.MethodPost)
+			e.JoinPath(ctrlSub, "", ctrlName, http.MethodPost, required, mxFunc, createCtrl.Create)
 		}
 
 		//Update
 		updatCtrl, isUpdate := ctrl.(xontrols.Updateable)
 
 		if isUpdate {
-			ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, updatCtrl.Update)).Methods(http.MethodPut)
+			e.JoinPath(ctrlSub, "", ctrlName, http.MethodPut, required, mxFunc, updatCtrl.Update)
 		}
 
 		//Delete
 		delCtrl, isDelete := ctrl.(xontrols.Deleteable)
 
 		if isDelete {
-			ctrlSub.Handle("", e.filter(ctrlName, required, mxFunc, delCtrl.Delete)).Methods(http.MethodDelete)
+			e.JoinPath(ctrlSub, "", ctrlName, http.MethodDelete, required, mxFunc, delCtrl.Delete)
 		}
 
 		//Queries
