@@ -73,6 +73,6 @@ func (c *FakeAPI) GetAnswer(ctx context.Requester) (int, interface{}) {
 }
 
 // :id {string}
-func (c *FakeAPI) Post(ctx context.Requester) (int, interface{}) {
+func (c *FakeAPI) Create(ctx context.Requester) (int, interface{}) {
 
 }

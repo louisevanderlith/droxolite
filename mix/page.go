@@ -45,18 +45,11 @@ func Page(name string, data interface{}, d *element.Identity, avoc *bodies.Cooki
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
+	r.data["ShowSearch"] = !(strings.HasSuffix(shortName, "Create") || strings.HasSuffix(shortName, "View"))
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
-
-	r.data["ShowSave"] = false
 	r.data["Name"] = name
 	r.data["Identity"] = d
-	//r.data["Title"] = fmt.Sprintf("%s %s", name, dentity.Name)
-	//r.data["LogoKey"] = dentity.LogoKey
-	//r.data["InstanceID"] = dentity.InstanceID
-	//r.data["Host"] = dentity.Host
-	//r.data["GTag"] = dentity.GTag
-	//r.data["Footer"] = dentity.Footer
 
 	//User Details
 	loggedIn := avoc != nil
@@ -101,7 +94,7 @@ func (r *tmpl) Reader() (io.Reader, error) {
 
 	r.data["LayoutContent"] = template.HTML(buffPage.String())
 
-	masterPage := r.Identity.Templates.Lookup(r.Identity.MasterTemplate.Name()) // "master.html")
+	masterPage := r.Identity.Templates.Lookup(r.Identity.MasterTemplate.Name())
 	var buffMaster bytes.Buffer
 	err = masterPage.ExecuteTemplate(&buffMaster, r.Identity.MasterTemplate.Name(), r.data)
 
@@ -110,15 +103,6 @@ func (r *tmpl) Reader() (io.Reader, error) {
 	}
 
 	return &buffMaster, nil
-}
-
-func (r *tmpl) ApplySettings(name string, dentity *element.Identity, avo *bodies.Cookies) {
-
-}
-
-func (r *tmpl) CreateTopMenu(enablesave bool, menu bodies.Menu) {
-	r.data["ShowSave"] = enablesave
-	r.data["TopMenu"] = menu.Items()
 }
 
 func (r *tmpl) CreateSideMenu(menu *bodies.Menu) {

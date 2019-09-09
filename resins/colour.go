@@ -143,7 +143,6 @@ func (e *colourEpoxy) filter(name string, required roletype.Enum, mxFunc mix.Ini
 		//Context should be sent to function, so no controller is needed
 		status, data := process(ctx)
 		mxer := mxFunc(name, data, e.identity, avoc).(mix.ColourMixer)
-		//mxer.ApplySettings(route.Name, *e.settings, avoc)
 
 		mxer.CreateSideMenu(e.sideMenu)
 		err := ctx.Serve(status, mxer)
