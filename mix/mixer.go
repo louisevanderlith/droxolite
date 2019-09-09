@@ -21,7 +21,6 @@ type InitFunc func(name string, obj interface{}, d *element.Identity, avoc *bodi
 
 type ColourMixer interface {
 	Mixer
-	CreateTopMenu(enablesave bool, menu bodies.Menu)
 	CreateSideMenu(menu *bodies.Menu)
 }
 
