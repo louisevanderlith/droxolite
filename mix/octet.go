@@ -63,6 +63,10 @@ func (r *octet) Headers() map[string]string {
 
 //Reader configures the response for reading files. data can be either io.Reader or []byte
 func (r *octet) Reader() (io.Reader, error) {
+	if r.data == nil {
+		return nil, nil
+	}
+
 	if readr, canRead := r.data.(io.Reader); canRead {
 		return readr, nil
 	}

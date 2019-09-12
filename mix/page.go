@@ -45,7 +45,7 @@ func Page(name string, data interface{}, d *element.Identity, avoc *bodies.Cooki
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
-	r.data["ShowSearch"] = strings.HasSuffix(shortName, "Create") || strings.HasSuffix(shortName, "View")
+	r.data["ShowSearch"] = !(strings.HasSuffix(shortName, "Create") || strings.HasSuffix(shortName, "View"))
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
 	r.data["Name"] = name
