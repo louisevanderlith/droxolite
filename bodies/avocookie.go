@@ -1,6 +1,7 @@
 package bodies
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,7 @@ import (
 	"github.com/louisevanderlith/husk"
 )
 
-//Cookies is our Cookie object.
+//Cookies is our Claims object
 type Cookies struct {
 	UserKey    husk.Key
 	Username   string
@@ -26,10 +27,11 @@ type Cookies struct {
 	Audience   string    `json:"aud"`
 	Expiration time.Time `json:"exp"`
 	IssuedAt   time.Time `json:"iat"`
+	Gravatar   string
 }
 
-//NewCookies returns some new Cookies.
-func NewCookies(userkey husk.Key, username, ip, location string, roles map[string]int) *Cookies {
+//NewCookies returns some new Claims.
+func NewCookies(userkey husk.Key, username, ip, location, email string, roles map[string]int) *Cookies {
 	return &Cookies{
 		UserKey:    userkey,
 		Username:   username,
@@ -40,6 +42,7 @@ func NewCookies(userkey husk.Key, username, ip, location string, roles map[strin
 		Expiration: time.Now().Add(time.Hour * 6),
 		Issuer:     "https://secure.localhost/oauth/",
 		Audience:   "https://localhost",
+		Gravatar:   hashGravatar(email),
 	}
 }
 
@@ -150,4 +153,11 @@ func removeToken(url string) (string, string) {
 	token := url[tokenIdx:]
 
 	return cleanURL, token
+}
+
+func hashGravatar(email string) string {
+	h := md5.New()
+	io.WriteString(h, strings.ToLower(strings.Trim(email, " ")))
+
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
