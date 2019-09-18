@@ -105,14 +105,14 @@ func (e *monoEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.I
 		updatCtrl, isUpdate := ctrl.(xontrols.Updateable)
 
 		if isUpdate {
-			e.JoinPath(ctrlSub, "", ctrlName, http.MethodPut, required, mxFunc, updatCtrl.Update)
+			e.JoinPath(ctrlSub, "/{key:[0-9]+\x60[0-9]+}", ctrlName, http.MethodPut, required, mxFunc, updatCtrl.Update)
 		}
 
 		//Delete
 		delCtrl, isDelete := ctrl.(xontrols.Deleteable)
 
 		if isDelete {
-			e.JoinPath(ctrlSub, "", ctrlName, http.MethodDelete, required, mxFunc, delCtrl.Delete)
+			e.JoinPath(ctrlSub, "/{key:[0-9]+\x60[0-9]+}", ctrlName, http.MethodDelete, required, mxFunc, delCtrl.Delete)
 		}
 
 		//Queries
