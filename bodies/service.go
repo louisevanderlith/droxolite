@@ -29,7 +29,7 @@ type Service struct {
 //publicKey refers to the location of the public key file (.pub)
 func NewService(name, profile, publicKey string, port int, serviceType servicetype.Enum) *Service {
 	result := &Service{
-		Name:           name,
+		Name:           fmt.Sprintf("%s.%s", name, serviceType),
 		Type:           serviceType,
 		PublicKey:      publicKey,
 		AllowedCallers: make(map[servicetype.Enum]struct{}),
