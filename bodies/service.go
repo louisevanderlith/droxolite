@@ -22,11 +22,12 @@ type Service struct {
 	Type           servicetype.Enum
 	PublicKey      string
 	Port           int
+	Profile        string
 }
 
 //NewService returns a new instance of a Services' information
 //publicKey refers to the location of the public key file (.pub)
-func NewService(name, publicKey string, port int, serviceType servicetype.Enum) *Service {
+func NewService(name, profile, publicKey string, port int, serviceType servicetype.Enum) *Service {
 	result := &Service{
 		Name:           name,
 		Type:           serviceType,
