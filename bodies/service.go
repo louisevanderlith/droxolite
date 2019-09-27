@@ -17,6 +17,8 @@ type Service struct {
 	ID             string
 	Name           string
 	URL            string
+	PublicURL      string
+	Host           string
 	Version        int
 	AllowedCallers map[servicetype.Enum]struct{}
 	Type           servicetype.Enum
@@ -27,7 +29,7 @@ type Service struct {
 
 //NewService returns a new instance of a Services' information
 //publicKey refers to the location of the public key file (.pub)
-func NewService(name, profile, publicKey string, port int, serviceType servicetype.Enum) *Service {
+func NewService(name, profile, publicKey, host string, port int, serviceType servicetype.Enum) *Service {
 	result := &Service{
 		Name:           fmt.Sprintf("%s.%s", name, serviceType),
 		Type:           serviceType,
@@ -35,6 +37,7 @@ func NewService(name, profile, publicKey string, port int, serviceType servicety
 		AllowedCallers: make(map[servicetype.Enum]struct{}),
 		Port:           port,
 		Profile:        profile,
+		Host:           host,
 	}
 
 	return result
@@ -42,7 +45,7 @@ func NewService(name, profile, publicKey string, port int, serviceType servicety
 
 // Register is used to register an application with the router service
 func (s *Service) Register(routerUrl string) error {
-	err := s.setURL(strconv.Itoa(s.Port))
+	err := s.setURL()
 
 	if err != nil {
 		return err
@@ -90,14 +93,15 @@ func (s *Service) sendRegistration(routerUrl string) (*RESTResult, error) {
 	return data, err
 }
 
-func (s *Service) setURL(port string) error {
-	url, err := getNetworkIP(s.Name, port)
+func (s *Service) setURL() error {
+	url, err := getNetworkIP(s.Name, strconv.Itoa(s.Port))
 
 	if err != nil {
 		return err
 	}
 
 	s.URL = url
+	s.PublicURL = makeURL(s.Host, strconv.Itoa(s.Port))
 
 	return nil
 }
