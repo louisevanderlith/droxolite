@@ -34,6 +34,7 @@ func NewService(name, profile, publicKey string, port int, serviceType servicety
 		PublicKey:      publicKey,
 		AllowedCallers: make(map[servicetype.Enum]struct{}),
 		Port:           port,
+		Profile:        profile,
 	}
 
 	return result
