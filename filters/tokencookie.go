@@ -17,10 +17,6 @@ func TokenCookieCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKe
 		return true, nil
 	}
 
-	if requiredRole == roletype.Unknown {
-		return true, nil
-	}
-
 	token := ctx.FindQueryParam("access_token")
 
 	if token == "" {
@@ -28,21 +24,15 @@ func TokenCookieCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKe
 
 		if err != nil {
 			log.Println(err)
-			return false, nil
 		}
 
 		token = cookie.Value
-
-		if len(token) == 0 {
-			return false, nil
-		}
 	}
 
 	avoc, err := bodies.GetAvoCookie(token, publicKeyPath)
 
 	if err != nil {
 		log.Println(err)
-		return false, nil
 	}
 
 	allowed, err := bodies.IsAllowed(serviceName, avoc.UserRoles, requiredRole)
