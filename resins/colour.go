@@ -27,7 +27,7 @@ type colourEpoxy struct {
 }
 
 //NewColourExpoxy returns a new Instance of the Epoxy with a Theme
-func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl string, indexPage ServeFunc) Epoxi {
+func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl string, indexRole roletype.Enum, indexPage ServeFunc) Epoxi {
 
 	e := &colourEpoxy{
 		service:     service,
@@ -37,7 +37,7 @@ func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl st
 	}
 
 	routr := mux.NewRouter()
-	routr.HandleFunc("/", e.filter("index", roletype.Unknown, mix.Page, indexPage))
+	routr.HandleFunc("/", e.filter("index", indexRole, mix.Page, indexPage))
 	//Applications have assets in the 'dist' folder
 	distPath := http.FileSystem(http.Dir("dist/"))
 	fs := http.FileServer(distPath)
