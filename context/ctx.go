@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/husk"
 )
@@ -18,13 +20,15 @@ type Ctx struct {
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
 	instanceID     string
+	publicKey      string
 }
 
-func New(response http.ResponseWriter, request *http.Request, instanceID string) Contexer {
+func New(response http.ResponseWriter, request *http.Request, instanceID, publicKey string) Contexer {
 	return &Ctx{
 		ResponseWriter: response,
 		Request:        request,
 		instanceID:     instanceID,
+		publicKey:      publicKey,
 	}
 }
 
@@ -210,4 +214,17 @@ func (ctx *Ctx) GetMyToken() string {
 	}
 
 	return cooki.Value
+}
+
+func (ctx *Ctx) GetMyUser() *bodies.Cookies {
+	token := ctx.GetMyToken()
+
+	avoc, err := bodies.GetAvoCookie(token, ctx.publicKey)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	return avoc
 }

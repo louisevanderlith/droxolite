@@ -20,13 +20,7 @@ func TokenCookieCheck(ctx context.Contexer, requiredRole roletype.Enum, publicKe
 	token := ctx.FindQueryParam("access_token")
 
 	if token == "" {
-		cookie, err := ctx.GetCookie("avosession")
-
-		if err != nil {
-			log.Println(err)
-		}
-
-		token = cookie.Value
+		token = ctx.GetMyToken()
 	}
 
 	avoc, err := bodies.GetAvoCookie(token, publicKeyPath)

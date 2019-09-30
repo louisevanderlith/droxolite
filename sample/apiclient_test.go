@@ -24,12 +24,13 @@ var (
 )
 
 func init() {
-	srvc := bodies.NewService("Test.API", "/certs/none.pem", 8090, servicetype.API)
+	host := ".localhost/"
+	srvc := bodies.NewService("Test.API", "", "/certs/none.pem", host, 8090, servicetype.API)
 	srvc.ID = "Tester1"
 
-	apiEpoxy = resins.NewMonoEpoxy(srvc, element.GetNoTheme(".localhost/", srvc.ID, ""))
+	apiEpoxy = resins.NewMonoEpoxy(srvc, element.GetNoTheme(host, srvc.ID, ""))
 	apiRoutes(apiEpoxy)
-	apiEpoxy.EnableCORS(".localhost/")
+	apiEpoxy.EnableCORS(host)
 }
 
 func TestNomad_GetAcceptsQuery_OK(t *testing.T) {
