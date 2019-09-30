@@ -129,7 +129,7 @@ func (e *monoEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.I
 func (e *monoEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitFunc, process ServeFunc) http.HandlerFunc {
 	srv := e.service
 	return func(resp http.ResponseWriter, req *http.Request) {
-		ctx := context.New(resp, req, srv.ID)
+		ctx := context.New(resp, req, srv.ID, srv.PublicKey)
 
 		allow, avoc := filters.TokenCheck(ctx, required, srv.PublicKey, srv.Name)
 		if !allow {

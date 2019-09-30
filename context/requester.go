@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/husk"
 )
 
@@ -23,4 +24,5 @@ type Requester interface {
 	GetKeyedRequest(target interface{}) (husk.Key, error)
 	GetPageData() (page, pageSize int)
 	GetMyToken() string
+	GetMyUser() *bodies.Cookies
 }
