@@ -21,9 +21,10 @@ var (
 )
 
 func init() {
-	srvc := bodies.NewService("Test.APP", "/certs/none.pem", 8091, servicetype.APP)
+	host := ".localhost/"
+	srvc := bodies.NewService("Test.APP", "", "/certs/none.pem", host, 8091, servicetype.APP)
 	srvc.ID = "Tester2"
-	theme := element.GetNoTheme(".localhost/", srvc.ID, "none")
+	theme := element.GetNoTheme(host, srvc.ID, "none")
 
 	err := theme.LoadTemplate("./views", "master.html")
 
@@ -31,7 +32,7 @@ func init() {
 		panic(err)
 	}
 
-	appEpoxy = resins.NewColourEpoxy(srvc, theme, "auth.localhost", clients.Index)
+	appEpoxy = resins.NewColourEpoxy(srvc, theme, "auth.localhost", roletype.Unknown, clients.Index)
 	appRoutes(appEpoxy)
 }
 
