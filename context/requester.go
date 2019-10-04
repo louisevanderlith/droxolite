@@ -9,6 +9,7 @@ import (
 )
 
 type Requester interface {
+	Request() *http.Request                                          //Request returns the current http request
 	GetInstanceID() string                                           //GetInstanceID returns the Service's ID
 	Scheme() string                                                  //Scheme returns the Input Scheme
 	Method() string                                                  //Method returns the Method associated with the Request
