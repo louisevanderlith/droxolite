@@ -17,7 +17,7 @@ import (
 
 //Ctx provides context around Requests and Responses
 type Ctx struct {
-	Request        *http.Request
+	request        *http.Request
 	ResponseWriter http.ResponseWriter
 	instanceID     string
 	publicKey      string
@@ -26,20 +26,24 @@ type Ctx struct {
 func New(response http.ResponseWriter, request *http.Request, instanceID, publicKey string) Contexer {
 	return &Ctx{
 		ResponseWriter: response,
-		Request:        request,
+		request:        request,
 		instanceID:     instanceID,
 		publicKey:      publicKey,
 	}
 }
 
+func (ctx *Ctx) Request() *http.Request {
+	return ctx.request
+}
+
 //Method returns the Requests' Method
 func (ctx *Ctx) Method() string {
-	return ctx.Request.Method
+	return ctx.request.Method
 }
 
 //GetHeader returns a Request Header
 func (ctx *Ctx) GetHeader(key string) (string, error) {
-	headers := ctx.Request.Header[key]
+	headers := ctx.request.Header[key]
 
 	if len(headers) == 0 {
 		return "", fmt.Errorf("no header '%s' found", key)
@@ -60,23 +64,23 @@ func (ctx *Ctx) SetStatus(code int) {
 
 //File returns the Uploaded file.
 func (ctx *Ctx) File(name string) (multipart.File, *multipart.FileHeader, error) {
-	err := ctx.Request.ParseMultipartForm(32 << 20)
+	err := ctx.request.ParseMultipartForm(32 << 20)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return ctx.Request.FormFile(name)
+	return ctx.request.FormFile(name)
 }
 
 //FindFormValue is used to read additional information from File Uploads
 func (ctx *Ctx) FindFormValue(name string) string {
-	return ctx.Request.FormValue(name)
+	return ctx.request.FormValue(name)
 }
 
 //FindQueryParam returns the requested querystring parameter
 func (ctx *Ctx) FindQueryParam(name string) string {
-	results, ok := ctx.Request.URL.Query()[name]
+	results, ok := ctx.request.URL.Query()[name]
 
 	if !ok {
 		return ""
@@ -87,7 +91,7 @@ func (ctx *Ctx) FindQueryParam(name string) string {
 
 //FindParam returns the requested path variable
 func (ctx *Ctx) FindParam(name string) string {
-	vars := mux.Vars(ctx.Request)
+	vars := mux.Vars(ctx.request)
 
 	result, ok := vars[name]
 
@@ -99,7 +103,7 @@ func (ctx *Ctx) FindParam(name string) string {
 }
 
 func (ctx *Ctx) Redirect(status int, url string) {
-	http.Redirect(ctx.ResponseWriter, ctx.Request, url, status)
+	http.Redirect(ctx.ResponseWriter, ctx.request, url, status)
 }
 
 func (ctx *Ctx) WriteResponse(data []byte) (int, error) {
@@ -111,24 +115,24 @@ func (ctx *Ctx) WriteStreamResponse(data io.Reader) (int64, error) {
 }
 
 func (ctx *Ctx) RequestURI() string {
-	return ctx.Request.URL.RequestURI()
+	return ctx.request.URL.RequestURI()
 }
 
 func (ctx *Ctx) GetCookie(name string) (*http.Cookie, error) {
-	return ctx.Request.Cookie(name)
+	return ctx.request.Cookie(name)
 }
 
 func (ctx *Ctx) Scheme() string {
-	return ctx.Request.URL.Scheme
+	return ctx.request.URL.Scheme
 }
 
 func (ctx *Ctx) Host() string {
-	return ctx.Request.Host
+	return ctx.request.Host
 }
 
 //Body returns an error when unable to Decode the JSON request
 func (ctx *Ctx) Body(container interface{}) error {
-	decoder := json.NewDecoder(ctx.Request.Body)
+	decoder := json.NewDecoder(ctx.request.Body)
 
 	return decoder.Decode(container)
 }
