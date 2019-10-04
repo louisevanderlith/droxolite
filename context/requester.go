@@ -10,6 +10,7 @@ import (
 
 type Requester interface {
 	Request() *http.Request                                          //Request returns the current http request
+	Responder() http.ResponseWriter                                  //Responder returns the current http response writer
 	GetInstanceID() string                                           //GetInstanceID returns the Service's ID
 	Scheme() string                                                  //Scheme returns the Input Scheme
 	Method() string                                                  //Method returns the Method associated with the Request
@@ -26,4 +27,5 @@ type Requester interface {
 	GetPageData() (page, pageSize int)
 	GetMyToken() string
 	GetMyUser() *bodies.Cookies
+	Redirect(status int, url string) //Redirects to the given URL with status code
 }
