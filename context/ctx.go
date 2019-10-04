@@ -18,14 +18,14 @@ import (
 //Ctx provides context around Requests and Responses
 type Ctx struct {
 	request        *http.Request
-	ResponseWriter http.ResponseWriter
+	responseWriter http.ResponseWriter
 	instanceID     string
 	publicKey      string
 }
 
 func New(response http.ResponseWriter, request *http.Request, instanceID, publicKey string) Contexer {
 	return &Ctx{
-		ResponseWriter: response,
+		responseWriter: response,
 		request:        request,
 		instanceID:     instanceID,
 		publicKey:      publicKey,
@@ -34,6 +34,10 @@ func New(response http.ResponseWriter, request *http.Request, instanceID, public
 
 func (ctx *Ctx) Request() *http.Request {
 	return ctx.request
+}
+
+func (ctx *Ctx) Responder() http.ResponseWriter {
+	return ctx.responseWriter
 }
 
 //Method returns the Requests' Method
@@ -54,12 +58,12 @@ func (ctx *Ctx) GetHeader(key string) (string, error) {
 
 //SetHeader sets a value on the Response Header
 func (ctx *Ctx) SetHeader(key string, val string) {
-	ctx.ResponseWriter.Header().Set(key, val)
+	ctx.responseWriter.Header().Set(key, val)
 }
 
 //SetStatus set the final Response Status
 func (ctx *Ctx) SetStatus(code int) {
-	ctx.ResponseWriter.WriteHeader(code)
+	ctx.responseWriter.WriteHeader(code)
 }
 
 //File returns the Uploaded file.
@@ -103,15 +107,15 @@ func (ctx *Ctx) FindParam(name string) string {
 }
 
 func (ctx *Ctx) Redirect(status int, url string) {
-	http.Redirect(ctx.ResponseWriter, ctx.request, url, status)
+	http.Redirect(ctx.responseWriter, ctx.request, url, status)
 }
 
 func (ctx *Ctx) WriteResponse(data []byte) (int, error) {
-	return ctx.ResponseWriter.Write(data)
+	return ctx.responseWriter.Write(data)
 }
 
 func (ctx *Ctx) WriteStreamResponse(data io.Reader) (int64, error) {
-	return io.Copy(ctx.ResponseWriter, data)
+	return io.Copy(ctx.responseWriter, data)
 }
 
 func (ctx *Ctx) RequestURI() string {
@@ -157,7 +161,7 @@ func (ctx *Ctx) Serve(status int, mx mix.Mixer) error {
 		return err
 	}
 
-	_, err = io.Copy(ctx.ResponseWriter, readr)
+	_, err = io.Copy(ctx.responseWriter, readr)
 
 	return err
 }
