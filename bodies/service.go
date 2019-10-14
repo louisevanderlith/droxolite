@@ -25,11 +25,12 @@ type Service struct {
 	PublicKey      string
 	Port           int
 	Profile        string
+	Secret         string `json:"-"`
 }
 
 //NewService returns a new instance of a Services' information
 //publicKey refers to the location of the public key file (.pub)
-func NewService(name, profile, publicKey, host string, port int, serviceType servicetype.Enum) *Service {
+func NewService(name, secret, profile, publicKey, host string, port int, serviceType servicetype.Enum) *Service {
 	result := &Service{
 		Name:           fmt.Sprintf("%s.%s", name, serviceType),
 		Type:           serviceType,
@@ -38,6 +39,7 @@ func NewService(name, profile, publicKey, host string, port int, serviceType ser
 		Port:           port,
 		Profile:        profile,
 		Host:           host,
+		Secret:         secret,
 	}
 
 	return result
