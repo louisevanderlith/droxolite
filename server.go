@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/louisevanderlith/droxolite/resins"
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 const (
@@ -45,6 +46,17 @@ func BootSecure(e resins.Epoxi, privKeyPath string, fromPort int) error {
 	}
 
 	return http.ListenAndServe(fmt.Sprintf(":%v", fromPort), http.HandlerFunc(redirectTLS))
+}
+
+//GenerateSecret returns a Base-16 UUID
+func GenerateSecret() string {
+	id, err := uuid.NewV4()
+
+	if err != nil {
+		panic(err)
+	}
+
+	return fmt.Sprintf("%X", id)
 }
 
 func newServer(port int) *http.Server {
