@@ -9,11 +9,11 @@ import (
 	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/sample/clients"
 
-	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/element"
 	"github.com/louisevanderlith/droxolite/resins"
-	"github.com/louisevanderlith/droxolite/roletype"
-	"github.com/louisevanderlith/droxolite/servicetype"
+	"github.com/louisevanderlith/droxolite/security/impl"
+	"github.com/louisevanderlith/droxolite/security/models"
+	"github.com/louisevanderlith/droxolite/security/roletype"
 )
 
 var (
@@ -22,17 +22,32 @@ var (
 
 func init() {
 	host := ".localhost/"
-	srvc := bodies.NewService("Test.APP", "", "/certs/none.pem", host, 8091, servicetype.APP)
-	srvc.ID = "Tester2"
-	theme := element.GetNoTheme(host, srvc.ID, "none")
+	uri := ".localhost:8091/"
+	callb := "https://localhost:48091/"
+	clnt := models.NewPublicClient("Test.APP", "Sample App Client", uri, callb)
+	clnt.LogoURI = uri + "logo.jpg"
+	clnt.Scopes = append(clnt.Scopes, models.NewScope("testapp", "Test APP", "just a scope to test with", []models.Claim{
+		{"app:user", "Allows User base interactions with APP"},
+	}))
 
-	err := theme.LoadTemplate("./views", "master.html")
+	cs := impl.NewFakeRegister()
+	cred, err := cs.AddClient(clnt)
 
 	if err != nil {
 		panic(err)
 	}
 
-	appEpoxy = resins.NewColourEpoxy(srvc, theme, "auth.localhost", roletype.Unknown, clients.Index)
+	intro := impl.NewFakeInspector(cs)
+
+	theme := element.GetNoTheme(host, cred.ID, "none")
+
+	err = theme.LoadTemplate("./views", "master.html")
+
+	if err != nil {
+		panic(err)
+	}
+
+	appEpoxy = resins.NewColourEpoxy(cred, intro, theme, "auth.localhost", roletype.Unknown, clients.Index)
 	appRoutes(appEpoxy)
 }
 

@@ -1,4 +1,4 @@
-package bodies
+package models
 
 import (
 	"crypto/md5"
@@ -12,7 +12,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/droxolite/security/roletype"
 	"github.com/louisevanderlith/husk"
 )
 
