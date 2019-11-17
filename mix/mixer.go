@@ -5,6 +5,7 @@ import (
 
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/element"
+	"github.com/louisevanderlith/droxolite/security/models"
 )
 
 //Mixer is used by the Contexer to ApplyHeaders and Write the Response from the Reader
@@ -17,7 +18,7 @@ type Mixer interface {
 //@name is the name of the current route
 //@obj is the data that has to be returned
 //@d is the identity of the services' state
-type InitFunc func(name string, obj interface{}, d *element.Identity, avoc *bodies.Cookies) Mixer
+type InitFunc func(name string, obj interface{}, d *element.Identity, avoc *models.ClaimIdentity) Mixer
 
 type ColourMixer interface {
 	Mixer

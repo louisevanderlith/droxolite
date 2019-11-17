@@ -10,9 +10,9 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/louisevanderlith/droxolite/bodies"
-	"github.com/louisevanderlith/proofclient/client"
 	"github.com/louisevanderlith/droxolite/mix"
+	"github.com/louisevanderlith/droxolite/security/client"
+	"github.com/louisevanderlith/droxolite/security/models"
 	"github.com/louisevanderlith/husk"
 )
 
@@ -21,15 +21,15 @@ type Ctx struct {
 	request        *http.Request
 	responseWriter http.ResponseWriter
 	client         models.ClientCred
-	introspect client.Inspector
+	introspect     client.Inspector
 }
 
-func New(response http.ResponseWriter, request *http.Request, client models.ClientCred, ) Contexer {
+func New(response http.ResponseWriter, request *http.Request, client models.ClientCred, introspect client.Inspector) Contexer {
 	return &Ctx{
 		responseWriter: response,
 		request:        request,
 		client:         client,
-		introspect: 
+		introspect:     introspect,
 	}
 }
 
@@ -143,7 +143,7 @@ func (ctx *Ctx) Body(container interface{}) error {
 }
 
 func (ctx *Ctx) GetInstanceID() string {
-	return ctx.instanceID
+	return ctx.client.ID
 }
 
 //Serve is usually sent a Mixer. Serve(mixer.JSON(500, nil))
@@ -225,15 +225,17 @@ func (ctx *Ctx) GetMyToken() string {
 	return cooki.Value
 }
 
-func (ctx *Ctx) GetMyUser() models.ClaimIdentity {
+func (ctx *Ctx) GetMyUser() *models.ClaimIdentity {
 	token := ctx.GetMyToken()
 
-	avoc, err := bodies.GetAvoCookie(token, ctx.publicKey)
+	//avoc, err := bodies.GetAvoCookie(token, ctx.publicKey)
+
+	idn, err := ctx.introspect.Introspect(token, ctx.client)
 
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	return avoc
+	return idn
 }

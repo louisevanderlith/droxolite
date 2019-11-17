@@ -15,8 +15,9 @@ import (
 	"github.com/louisevanderlith/droxolite/sample/clients"
 
 	"github.com/louisevanderlith/droxolite/bodies"
-	"github.com/louisevanderlith/droxolite/roletype"
-	"github.com/louisevanderlith/droxolite/servicetype"
+	"github.com/louisevanderlith/droxolite/security/impl"
+	"github.com/louisevanderlith/droxolite/security/models"
+	"github.com/louisevanderlith/droxolite/security/roletype"
 )
 
 var (
@@ -25,10 +26,21 @@ var (
 
 func init() {
 	host := ".localhost/"
-	srvc := bodies.NewService("Test.API", "", "/certs/none.pem", host, 8090, servicetype.API)
-	srvc.ID = "Tester1"
+	uri := ".localhost:8090/"
+	clnt := models.NewPrivateClient("TestAPI", "Sample Api Client", uri)
+	clnt.Scopes = append(clnt.Scopes, models.NewScope("testapi", "Test API", "just a scope to test with", []models.Claim{
+		{"api:user", "Allows User base interactions with API"},
+	}))
 
-	apiEpoxy = resins.NewMonoEpoxy(srvc, element.GetNoTheme(host, srvc.ID, ""))
+	cs := impl.NewFakeRegister()
+	cred, err := cs.AddClient(clnt)
+
+	if err != nil {
+		panic(err)
+	}
+
+	intro := impl.NewFakeInspector(cs)
+	apiEpoxy = resins.NewMonoEpoxy(cred, intro, element.GetNoTheme(host, cred.ID, ""))
 	apiRoutes(apiEpoxy)
 	apiEpoxy.EnableCORS(host)
 }
@@ -295,6 +307,10 @@ func TestMain_API_POST_OK(t *testing.T) {
 
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if rr.Code != http.StatusOK {
+		t.Fatal(rr.Body.String())
 	}
 
 	result := ""

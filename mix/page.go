@@ -11,6 +11,7 @@ import (
 
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/element"
+	"github.com/louisevanderlith/droxolite/security/models"
 )
 
 //Page provides a io.Reader for serving html pages
@@ -21,7 +22,7 @@ type tmpl struct {
 	headers     map[string]string
 }
 
-func Page(name string, data interface{}, d *element.Identity, avoc *bodies.Cookies) Mixer {
+func Page(name string, data interface{}, d *element.Identity, avoc *models.ClaimIdentity) Mixer {
 	r := &tmpl{
 		data:    make(map[string]interface{}),
 		headers: make(map[string]string),
@@ -52,11 +53,11 @@ func Page(name string, data interface{}, d *element.Identity, avoc *bodies.Cooki
 	r.data["Identity"] = d
 
 	//User Details
-	loggedIn := avoc != nil
+	loggedIn := avoc.Active
 	r.data["LoggedIn"] = loggedIn
 
 	if loggedIn {
-		r.data["Username"] = avoc.Username
+		r.data["Username"] = avoc.Name
 		r.data["Gravatar"] = avoc.Gravatar
 	}
 

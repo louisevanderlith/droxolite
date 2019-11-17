@@ -18,16 +18,16 @@ const (
 )
 
 //Boot starts the Epoxy Objects to serve a configured service.
-func Boot(e resins.Epoxi) error {
-	srvr := newServer(e.Service().Port)
+func Boot(e resins.Epoxi, port int) error {
+	srvr := newServer(port)
 	srvr.Handler = e.Router()
 
 	return srvr.ListenAndServe()
 }
 
 //Boot starts the Epoxy Objects to securely serve a configured service
-func BootSecure(e resins.Epoxi, privKeyPath string, fromPort int) error {
-	publicKeyPem := readBlocks(e.Service().PublicKey)
+func BootSecure(e resins.Epoxi, pubKeyPath, privKeyPath string, port, fromPort int) error {
+	publicKeyPem := readBlocks(pubKeyPath)
 	privateKeyPem := readBlocks(privKeyPath)
 	cert, err := tls.X509KeyPair(publicKeyPem, privateKeyPem)
 
@@ -35,7 +35,7 @@ func BootSecure(e resins.Epoxi, privKeyPath string, fromPort int) error {
 		return err
 	}
 
-	srvr := newServer(e.Service().Port)
+	srvr := newServer(port)
 	srvr.TLSConfig = &tls.Config{Certificates: []tls.Certificate{cert}}
 	srvr.Handler = e.Router()
 

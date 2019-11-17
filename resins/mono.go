@@ -9,25 +9,28 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/droxolite/element"
-	"github.com/louisevanderlith/droxolite/filters"
 	"github.com/louisevanderlith/droxolite/mix"
-	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/droxolite/security/client"
+	"github.com/louisevanderlith/droxolite/security/filters"
+	"github.com/louisevanderlith/droxolite/security/models"
+	"github.com/louisevanderlith/droxolite/security/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
-	"github.com/louisevanderlith/proofclient/models"
 	"github.com/rs/cors"
 )
 
 type monoEpoxy struct {
-	clientCred models.ClientCred
-	router     http.Handler
-	identity   *element.Identity
+	client   models.ClientCred
+	intro    client.Inspector
+	router   http.Handler
+	identity *element.Identity
 }
 
-func NewMonoEpoxy(clientCred models.ClientCred, d *element.Identity) Epoxi {
+func NewMonoEpoxy(client models.ClientCred, intro client.Inspector, d *element.Identity) Epoxi {
 	routr := mux.NewRouter()
 
 	return &monoEpoxy{
 		client:   client,
+		intro:    intro,
 		router:   routr,
 		identity: d,
 	}
@@ -127,30 +130,31 @@ func (e *monoEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.I
 }
 
 func (e *monoEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitFunc, process ServeFunc) http.HandlerFunc {
-	srv := e.service
+
 	return func(resp http.ResponseWriter, req *http.Request) {
-		ctx := context.New(resp, req, srv.ID, srv.PublicKey)
-		
+		ctx := context.New(resp, req, e.client, e.intro)
+
 		p := filters.Pack{
-			RequestURI: ctx.
+			RequestURI:   ctx.RequestURI(),
+			Token:        ctx.GetMyToken(),
+			RequiredRole: required,
+			ClientName:   name,
+			ClientCred:   e.Client(),
+			Inspector:    e.intro,
 		}
 		/*
-		RequestURI   string
-	Token        string
-	RequiredRole roletype.Enum
-	ClientName   string //used to be service name
-	ClientCred   models.ClientCred
-	Inspector    client.Inspector
+				RequestURI   string
+			Token        string
+			RequiredRole roletype.Enum
+			ClientName   string //used to be service name
+			ClientCred   models.ClientCred
+			Inspector    client.Inspector
 		*/
-		allow, avoc := filters.TokenCheck(ctx, required, srv.PublicKey, srv.Name)
-		if !allow {
-			err := ctx.Serve(http.StatusUnauthorized, mxFunc(name, nil, e.identity, nil))
 
-			if err != nil {
-				log.Panicln(err)
-			}
+		avoc, err := p.IdentifyToken()
 
-			return
+		if err != nil {
+			log.Panicln(err)
 		}
 
 		//Calls the Controller Function
@@ -158,7 +162,8 @@ func (e *monoEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitF
 		status, data := process(ctx)
 		mxer := mxFunc(ctx.RequestURI(), data, e.identity, avoc)
 
-		err := ctx.Serve(status, mxer)
+		err = ctx.Serve(status, mxer)
+
 		if err != nil {
 			log.Panicln(err)
 		}
