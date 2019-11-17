@@ -1,6 +1,7 @@
 package resins
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
+	"github.com/louisevanderlith/proofclient/models"
 )
 
 type colourEpoxy struct {
@@ -52,8 +54,8 @@ func (e *colourEpoxy) Router() http.Handler {
 	return e.router
 }
 
-func (e *colourEpoxy) Service() *bodies.Service {
-	return e.service
+func (e *colourEpoxy) Client() models.ClientCred {
+	return e.client
 }
 
 func (e *colourEpoxy) EnableCORS(host string) {
@@ -197,4 +199,21 @@ func removeQueries(url string) string {
 
 func buildSubscribeURL(securityURL string) string {
 	return fmt.Sprintf("%ssubscribe", securityURL)
+}
+
+//Returns the [TOKEN] in 'Bearer [TOKEN]'
+func getAuthorizationToken(ctx context.Contexer) (string, error) {
+	authHead, err := ctx.GetHeader("Authorization")
+
+	if err != nil {
+		return "", err
+	}
+
+	parts := strings.Split(authHead, " ")
+	tokenType := parts[0]
+	if strings.Trim(tokenType, " ") != "Bearer" {
+		return "", errors.New("Bearer Authentication only")
+	}
+
+	return parts[1], nil
 }

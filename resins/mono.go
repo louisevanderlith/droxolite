@@ -7,27 +7,27 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/droxolite/element"
 	"github.com/louisevanderlith/droxolite/filters"
 	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
+	"github.com/louisevanderlith/proofclient/models"
 	"github.com/rs/cors"
 )
 
 type monoEpoxy struct {
-	service  *bodies.Service
-	router   http.Handler
-	identity *element.Identity
+	clientCred models.ClientCred
+	router     http.Handler
+	identity   *element.Identity
 }
 
-func NewMonoEpoxy(service *bodies.Service, d *element.Identity) Epoxi {
+func NewMonoEpoxy(clientCred models.ClientCred, d *element.Identity) Epoxi {
 	routr := mux.NewRouter()
 
 	return &monoEpoxy{
-		service:  service,
+		client:   client,
 		router:   routr,
 		identity: d,
 	}
@@ -38,8 +38,8 @@ func (e *monoEpoxy) Router() http.Handler {
 	return e.router
 }
 
-func (e *monoEpoxy) Service() *bodies.Service {
-	return e.service
+func (e *monoEpoxy) Client() models.ClientCred {
+	return e.client
 }
 
 func (e *monoEpoxy) EnableCORS(host string) {
@@ -130,7 +130,18 @@ func (e *monoEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitF
 	srv := e.service
 	return func(resp http.ResponseWriter, req *http.Request) {
 		ctx := context.New(resp, req, srv.ID, srv.PublicKey)
-
+		
+		p := filters.Pack{
+			RequestURI: ctx.
+		}
+		/*
+		RequestURI   string
+	Token        string
+	RequiredRole roletype.Enum
+	ClientName   string //used to be service name
+	ClientCred   models.ClientCred
+	Inspector    client.Inspector
+		*/
 		allow, avoc := filters.TokenCheck(ctx, required, srv.PublicKey, srv.Name)
 		if !allow {
 			err := ctx.Serve(http.StatusUnauthorized, mxFunc(name, nil, e.identity, nil))

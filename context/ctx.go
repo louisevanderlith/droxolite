@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/louisevanderlith/droxolite/bodies"
+	"github.com/louisevanderlith/proofclient/client"
 	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/husk"
 )
@@ -19,16 +20,16 @@ import (
 type Ctx struct {
 	request        *http.Request
 	responseWriter http.ResponseWriter
-	instanceID     string
-	publicKey      string
+	client         models.ClientCred
+	introspect client.Inspector
 }
 
-func New(response http.ResponseWriter, request *http.Request, instanceID, publicKey string) Contexer {
+func New(response http.ResponseWriter, request *http.Request, client models.ClientCred, ) Contexer {
 	return &Ctx{
 		responseWriter: response,
 		request:        request,
-		instanceID:     instanceID,
-		publicKey:      publicKey,
+		client:         client,
+		introspect: 
 	}
 }
 
@@ -224,7 +225,7 @@ func (ctx *Ctx) GetMyToken() string {
 	return cooki.Value
 }
 
-func (ctx *Ctx) GetMyUser() *bodies.Cookies {
+func (ctx *Ctx) GetMyUser() models.ClaimIdentity {
 	token := ctx.GetMyToken()
 
 	avoc, err := bodies.GetAvoCookie(token, ctx.publicKey)

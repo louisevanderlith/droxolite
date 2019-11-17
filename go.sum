@@ -2,8 +2,13 @@ github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumC
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
 github.com/gorilla/mux v1.7.3/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
+github.com/louisevanderlith/droxolite v1.7.1/go.mod h1:buLsUSSCEJ8U1VvodwauRi7S8UNjirctNyABA50qwFQ=
 github.com/louisevanderlith/husk v0.6.28 h1:oKC9JUFjOMAy8pT0VilK+nQUP/sBTVxsAt9muobvefE=
 github.com/louisevanderlith/husk v0.6.28/go.mod h1:pGAPhpNC+raC0SvX2nR2+mDLUrmIJ+iyP6yt7SFQR+M=
+github.com/louisevanderlith/husk v0.6.29 h1:zUei8C9eRoTvxewv25xsMLm3PdKJYg54ZjTemT18gdw=
+github.com/louisevanderlith/husk v0.6.29/go.mod h1:pGAPhpNC+raC0SvX2nR2+mDLUrmIJ+iyP6yt7SFQR+M=
+github.com/louisevanderlith/proofclient v1.0.0 h1:G/a0favmBYQWrGnLV2VlOb/L/62wM9TNDcAcjjlYrbk=
+github.com/louisevanderlith/proofclient v1.0.0/go.mod h1:hfnqzpqYQqLOOiiw/MWOFqtI8kYUt8vG/pP1nZLFPAM=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/56bj7Y/xa04UccTW04VP0Qed4vnQ=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
 github.com/rs/cors v1.6.0 h1:G9tHG9lebljV9mfp9SNPDL36nCDxmo3zTlAf1YgvzmI=
