@@ -7,27 +7,30 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/droxolite/element"
-	"github.com/louisevanderlith/droxolite/filters"
 	"github.com/louisevanderlith/droxolite/mix"
-	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/droxolite/security/client"
+	"github.com/louisevanderlith/droxolite/security/filters"
+	"github.com/louisevanderlith/droxolite/security/models"
+	"github.com/louisevanderlith/droxolite/security/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
 	"github.com/rs/cors"
 )
 
 type monoEpoxy struct {
-	service  *bodies.Service
+	client   models.ClientCred
+	intro    client.Inspector
 	router   http.Handler
 	identity *element.Identity
 }
 
-func NewMonoEpoxy(service *bodies.Service, d *element.Identity) Epoxi {
+func NewMonoEpoxy(client models.ClientCred, intro client.Inspector, d *element.Identity) Epoxi {
 	routr := mux.NewRouter()
 
 	return &monoEpoxy{
-		service:  service,
+		client:   client,
+		intro:    intro,
 		router:   routr,
 		identity: d,
 	}
@@ -38,8 +41,8 @@ func (e *monoEpoxy) Router() http.Handler {
 	return e.router
 }
 
-func (e *monoEpoxy) Service() *bodies.Service {
-	return e.service
+func (e *monoEpoxy) Client() models.ClientCred {
+	return e.client
 }
 
 func (e *monoEpoxy) EnableCORS(host string) {
@@ -127,19 +130,31 @@ func (e *monoEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix.I
 }
 
 func (e *monoEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitFunc, process ServeFunc) http.HandlerFunc {
-	srv := e.service
+
 	return func(resp http.ResponseWriter, req *http.Request) {
-		ctx := context.New(resp, req, srv.ID, srv.PublicKey)
+		ctx := context.New(resp, req, e.client, e.intro)
 
-		allow, avoc := filters.TokenCheck(ctx, required, srv.PublicKey, srv.Name)
-		if !allow {
-			err := ctx.Serve(http.StatusUnauthorized, mxFunc(name, nil, e.identity, nil))
+		p := filters.Pack{
+			RequestURI:   ctx.RequestURI(),
+			Token:        ctx.GetMyToken(),
+			RequiredRole: required,
+			ClientName:   name,
+			ClientCred:   e.Client(),
+			Inspector:    e.intro,
+		}
+		/*
+				RequestURI   string
+			Token        string
+			RequiredRole roletype.Enum
+			ClientName   string //used to be service name
+			ClientCred   models.ClientCred
+			Inspector    client.Inspector
+		*/
 
-			if err != nil {
-				log.Panicln(err)
-			}
+		avoc, err := p.IdentifyToken()
 
-			return
+		if err != nil {
+			log.Panicln(err)
 		}
 
 		//Calls the Controller Function
@@ -147,7 +162,8 @@ func (e *monoEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitF
 		status, data := process(ctx)
 		mxer := mxFunc(ctx.RequestURI(), data, e.identity, avoc)
 
-		err := ctx.Serve(status, mxer)
+		err = ctx.Serve(status, mxer)
+
 		if err != nil {
 			log.Panicln(err)
 		}

@@ -5,8 +5,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/element"
+	"github.com/louisevanderlith/droxolite/security/models"
 )
 
 //Octet provides a io.Reader for serving data (octet-)streams
@@ -17,7 +17,7 @@ type octet struct {
 	data     interface{}
 }
 
-func Octet(name string, data interface{}, d *element.Identity, avoc *bodies.Cookies) Mixer {
+func Octet(name string, data interface{}, d *element.Identity, avoc *models.ClaimIdentity) Mixer {
 	r := &octet{
 		data: data,
 	}

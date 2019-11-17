@@ -1,6 +1,7 @@
 package resins
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,14 +13,17 @@ import (
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/droxolite/element"
-	"github.com/louisevanderlith/droxolite/filters"
 	"github.com/louisevanderlith/droxolite/mix"
-	"github.com/louisevanderlith/droxolite/roletype"
+	"github.com/louisevanderlith/droxolite/security/client"
+	"github.com/louisevanderlith/droxolite/security/filters"
+	"github.com/louisevanderlith/droxolite/security/models"
+	"github.com/louisevanderlith/droxolite/security/roletype"
 	"github.com/louisevanderlith/droxolite/xontrols"
 )
 
 type colourEpoxy struct {
-	service     *bodies.Service
+	client      models.ClientCred
+	intro       client.Inspector
 	router      http.Handler
 	identity    *element.Identity
 	sideMenu    *bodies.Menu
@@ -27,10 +31,11 @@ type colourEpoxy struct {
 }
 
 //NewColourExpoxy returns a new Instance of the Epoxy with a Theme
-func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl string, indexRole roletype.Enum, indexPage ServeFunc) Epoxi {
+func NewColourEpoxy(client models.ClientCred, intro client.Inspector, d *element.Identity, securityUrl string, indexRole roletype.Enum, indexPage ServeFunc) Epoxi {
 
 	e := &colourEpoxy{
-		service:     service,
+		client:      client,
+		intro:       intro,
 		identity:    d,
 		securityUrl: securityUrl,
 		sideMenu:    bodies.NewMenu(),
@@ -48,12 +53,16 @@ func NewColourEpoxy(service *bodies.Service, d *element.Identity, securityUrl st
 	return e
 }
 
+func (e *colourEpoxy) Port() int {
+	return 0
+}
+
 func (e *colourEpoxy) Router() http.Handler {
 	return e.router
 }
 
-func (e *colourEpoxy) Service() *bodies.Service {
-	return e.service
+func (e *colourEpoxy) Client() models.ClientCred {
+	return e.client
 }
 
 func (e *colourEpoxy) EnableCORS(host string) {
@@ -124,19 +133,22 @@ func (e *colourEpoxy) JoinBundle(path string, required roletype.Enum, mxFunc mix
 }
 
 func (e *colourEpoxy) filter(name string, required roletype.Enum, mxFunc mix.InitFunc, process ServeFunc) http.HandlerFunc {
-	srv := e.service
 	return func(resp http.ResponseWriter, req *http.Request) {
-		ctx := context.New(resp, req, srv.ID, srv.PublicKey)
+		ctx := context.New(resp, req, e.client, e.intro)
 
-		allow, avoc := filters.TokenCookieCheck(ctx, required, srv.PublicKey, srv.Name)
-		if !allow {
-			err := sendToLogin(ctx, e.securityUrl)
+		p := filters.Pack{
+			RequestURI:   ctx.RequestURI(),
+			Token:        ctx.GetMyToken(),
+			RequiredRole: required,
+			ClientName:   name,
+			ClientCred:   e.Client(),
+			Inspector:    e.intro,
+		}
 
-			if err != nil {
-				log.Panicln(err)
-			}
+		avoc, err := p.IdentifyToken()
 
-			return
+		if err != nil {
+			log.Panicln(err)
 		}
 
 		//Calls the Controller Function
@@ -145,7 +157,7 @@ func (e *colourEpoxy) filter(name string, required roletype.Enum, mxFunc mix.Ini
 		mxer := mxFunc(name, data, e.identity, avoc).(mix.ColourMixer)
 
 		mxer.CreateSideMenu(e.sideMenu)
-		err := ctx.Serve(status, mxer)
+		err = ctx.Serve(status, mxer)
 
 		if err != nil {
 			log.Panicln(err)
@@ -197,4 +209,21 @@ func removeQueries(url string) string {
 
 func buildSubscribeURL(securityURL string) string {
 	return fmt.Sprintf("%ssubscribe", securityURL)
+}
+
+//Returns the [TOKEN] in 'Bearer [TOKEN]'
+func getAuthorizationToken(ctx context.Contexer) (string, error) {
+	authHead, err := ctx.GetHeader("Authorization")
+
+	if err != nil {
+		return "", err
+	}
+
+	parts := strings.Split(authHead, " ")
+	tokenType := parts[0]
+	if strings.Trim(tokenType, " ") != "Bearer" {
+		return "", errors.New("Bearer Authentication only")
+	}
+
+	return parts[1], nil
 }

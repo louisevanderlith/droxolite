@@ -7,6 +7,7 @@ import (
 
 	"github.com/louisevanderlith/droxolite/bodies"
 	"github.com/louisevanderlith/droxolite/element"
+	"github.com/louisevanderlith/droxolite/security/models"
 )
 
 // default paging values
@@ -22,7 +23,7 @@ type js struct {
 }
 
 //JSON is called before every function execution to setup the environment a Handler will expect
-func JSON(name string, data interface{}, d *element.Identity, avoc *bodies.Cookies) Mixer {
+func JSON(name string, data interface{}, d *element.Identity, avoc *models.ClaimIdentity) Mixer {
 	result := &js{
 		headers: DefaultHeaders(),
 		data:    data,
