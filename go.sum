@@ -2,8 +2,8 @@ github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumC
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
 github.com/gorilla/mux v1.7.3/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
-github.com/louisevanderlith/husk v0.6.29 h1:zUei8C9eRoTvxewv25xsMLm3PdKJYg54ZjTemT18gdw=
-github.com/louisevanderlith/husk v0.6.29/go.mod h1:pGAPhpNC+raC0SvX2nR2+mDLUrmIJ+iyP6yt7SFQR+M=
+github.com/louisevanderlith/husk v0.0.0-20191215135532-d37a499a2503 h1:RxwOyBr0RLt3EjWmZdkmzvOtgth+AARspByPKrro/NQ=
+github.com/louisevanderlith/husk v0.0.0-20191215135532-d37a499a2503/go.mod h1:pGAPhpNC+raC0SvX2nR2+mDLUrmIJ+iyP6yt7SFQR+M=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/56bj7Y/xa04UccTW04VP0Qed4vnQ=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
 github.com/rs/cors v1.6.0 h1:G9tHG9lebljV9mfp9SNPDL36nCDxmo3zTlAf1YgvzmI=
