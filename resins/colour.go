@@ -145,10 +145,14 @@ func (e *colourEpoxy) filter(name string, required roletype.Enum, mxFunc mix.Ini
 			Inspector:    e.intro,
 		}
 
-		avoc, err := p.IdentifyToken()
+		avoc := &models.ClaimIdentity{}
+		if p.Inspector != nil {
+			var err error
+			avoc, err = p.IdentifyToken()
 
-		if err != nil {
-			log.Panicln(err)
+			if err != nil {
+				log.Panicln(err)
+			}
 		}
 
 		//Calls the Controller Function
@@ -157,7 +161,7 @@ func (e *colourEpoxy) filter(name string, required roletype.Enum, mxFunc mix.Ini
 		mxer := mxFunc(name, data, e.identity, avoc).(mix.ColourMixer)
 
 		mxer.CreateSideMenu(e.sideMenu)
-		err = ctx.Serve(status, mxer)
+		err := ctx.Serve(status, mxer)
 
 		if err != nil {
 			log.Panicln(err)
