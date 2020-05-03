@@ -3,16 +3,14 @@ package context
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/louisevanderlith/kong/tokens"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/louisevanderlith/droxolite/mix"
-	"github.com/louisevanderlith/droxolite/security/client"
-	"github.com/louisevanderlith/droxolite/security/models"
 	"github.com/louisevanderlith/husk"
 )
 
@@ -20,16 +18,14 @@ import (
 type Ctx struct {
 	request        *http.Request
 	responseWriter http.ResponseWriter
-	client         models.ClientCred
-	introspect     client.Inspector
+	claims         tokens.Claimer
 }
 
-func New(response http.ResponseWriter, request *http.Request, client models.ClientCred, introspect client.Inspector) Contexer {
+func New(response http.ResponseWriter, request *http.Request, claims tokens.Claimer) Contexer {
 	return &Ctx{
 		responseWriter: response,
 		request:        request,
-		client:         client,
-		introspect:     introspect,
+		claims:         claims,
 	}
 }
 
@@ -143,7 +139,7 @@ func (ctx *Ctx) Body(container interface{}) error {
 }
 
 func (ctx *Ctx) GetInstanceID() string {
-	return ctx.client.ID
+	return ctx.claims.GetId()
 }
 
 //Serve is usually sent a Mixer. Serve(mixer.JSON(500, nil))
@@ -215,7 +211,7 @@ func getPageData(pageData string) (int, int) {
 	return page, pageSize
 }
 
-func (ctx *Ctx) GetMyToken() string {
+func (ctx *Ctx) GetToken() string {
 	cooki, err := ctx.GetCookie("avosession")
 
 	if err != nil {
@@ -225,17 +221,6 @@ func (ctx *Ctx) GetMyToken() string {
 	return cooki.Value
 }
 
-func (ctx *Ctx) GetMyUser() *models.ClaimIdentity {
-	token := ctx.GetMyToken()
-
-	//avoc, err := bodies.GetAvoCookie(token, ctx.publicKey)
-
-	idn, err := ctx.introspect.Introspect(token, ctx.client)
-
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-
-	return idn
+func (ctx *Ctx) GetTokenInfo() tokens.Claimer {
+	return ctx.claims
 }
