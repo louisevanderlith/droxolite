@@ -2,11 +2,9 @@ package mix
 
 import (
 	"bytes"
+	"github.com/louisevanderlith/kong/tokens"
 	"io"
 	"strings"
-
-	"github.com/louisevanderlith/droxolite/element"
-	"github.com/louisevanderlith/droxolite/security/models"
 )
 
 //Octet provides a io.Reader for serving data (octet-)streams
@@ -17,7 +15,7 @@ type octet struct {
 	data     interface{}
 }
 
-func Octet(name string, data interface{}, d *element.Identity, avoc *models.ClaimIdentity) Mixer {
+func Octet(name string, data interface{}, claims tokens.Claimer) Mixer {
 	r := &octet{
 		data: data,
 	}

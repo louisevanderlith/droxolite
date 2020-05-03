@@ -3,6 +3,7 @@ package mix
 import (
 	"bytes"
 	"fmt"
+	"github.com/louisevanderlith/kong/tokens"
 	"html/template"
 	"io"
 	"os"
@@ -10,22 +11,23 @@ import (
 	"strings"
 
 	"github.com/louisevanderlith/droxolite/bodies"
-	"github.com/louisevanderlith/droxolite/element"
-	"github.com/louisevanderlith/droxolite/security/models"
 )
 
 //Page provides a io.Reader for serving html pages
 type tmpl struct {
 	contentPage string
-	Identity    *element.Identity
 	data        map[string]interface{}
 	headers     map[string]string
+	templates   *template.Template
+	master      *template.Template
 }
 
-func Page(name string, data interface{}, d *element.Identity, avoc *models.ClaimIdentity) Mixer {
+func Page(name string, data interface{}, claims tokens.Claimer, mastr *template.Template, templates *template.Template) Mixer {
 	r := &tmpl{
-		data:    make(map[string]interface{}),
-		headers: make(map[string]string),
+		data:      make(map[string]interface{}),
+		headers:   make(map[string]string),
+		master:    mastr,
+		templates: templates,
 	}
 
 	if _, isErr := data.(error); isErr {
@@ -41,8 +43,6 @@ func Page(name string, data interface{}, d *element.Identity, avoc *models.Claim
 		r.contentPage = fmt.Sprintf("%s.html", shortName)
 	}
 
-	r.Identity = d
-
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
@@ -50,15 +50,15 @@ func Page(name string, data interface{}, d *element.Identity, avoc *models.Claim
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
 	r.data["Name"] = name
-	r.data["Identity"] = d
+	r.data["Identity"] = claims
 
 	//User Details
-	loggedIn := avoc.Active
+	loggedIn := claims.HasUser()
 	r.data["LoggedIn"] = loggedIn
 
 	if loggedIn {
-		r.data["Username"] = avoc.Name
-		r.data["Gravatar"] = avoc.Gravatar
+		_, n := claims.GetUserinfo()
+		r.data["Username"] = n
 	}
 
 	return r
@@ -81,7 +81,7 @@ func (r *tmpl) Headers() map[string]string {
 func (r *tmpl) Reader() (io.Reader, error) {
 	contentpage := r.contentPage
 
-	page := r.Identity.Templates.Lookup(contentpage)
+	page := r.templates.Lookup(contentpage)
 
 	if page == nil {
 		return nil, fmt.Errorf("Template not Found: %s", contentpage)
@@ -96,9 +96,9 @@ func (r *tmpl) Reader() (io.Reader, error) {
 
 	r.data["LayoutContent"] = template.HTML(buffPage.String())
 
-	masterPage := r.Identity.Templates.Lookup(r.Identity.MasterTemplate.Name())
+	masterPage := r.templates.Lookup(r.master.Name())
 	var buffMaster bytes.Buffer
-	err = masterPage.ExecuteTemplate(&buffMaster, r.Identity.MasterTemplate.Name(), r.data)
+	err = masterPage.ExecuteTemplate(&buffMaster, r.master.Name(), r.data)
 
 	if err != nil {
 		return nil, err

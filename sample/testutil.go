@@ -4,11 +4,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-
-	"github.com/louisevanderlith/droxolite/resins"
 )
 
-func GetResponse(e resins.Epoxi, path string, data io.Reader) (*httptest.ResponseRecorder, error) {
+func GetResponse(handle http.Handler, path string, data io.Reader) (*httptest.ResponseRecorder, error) {
 	method := "GET"
 
 	if data != nil {
@@ -21,8 +19,6 @@ func GetResponse(e resins.Epoxi, path string, data io.Reader) (*httptest.Respons
 	if err != nil {
 		return nil, err
 	}
-
-	handle := e.Router()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)

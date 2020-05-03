@@ -20,10 +20,6 @@ import (
 	"github.com/louisevanderlith/droxolite/security/roletype"
 )
 
-var (
-	apiEpoxy resins.Epoxi
-)
-
 func init() {
 	host := ".localhost/"
 	uri := ".localhost:8090/"
