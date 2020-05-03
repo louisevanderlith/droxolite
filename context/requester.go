@@ -1,18 +1,16 @@
 package context
 
 import (
+	"github.com/louisevanderlith/kong/tokens"
 	"mime/multipart"
 	"net/http"
 
-	"github.com/louisevanderlith/droxolite/security/models"
 	"github.com/louisevanderlith/husk"
 )
 
 type Requester interface {
 	Request() *http.Request                                          //Request returns the current http request
 	Responder() http.ResponseWriter                                  //Responder returns the current http response writer
-	GetInstanceID() string                                           //GetInstanceID returns the Service's ID
-	Scheme() string                                                  //Scheme returns the Input Scheme
 	Method() string                                                  //Method returns the Method associated with the Request
 	GetHeader(key string) (string, error)                            //GetHeader returns the value of the Request Header
 	FindParam(name string) string                                    //FindParam returns the value of a path parameter
@@ -25,7 +23,7 @@ type Requester interface {
 	FindFormValue(name string) string                                //FindFormValue is used to read additional information from File Uploads
 	GetKeyedRequest(target interface{}) (husk.Key, error)
 	GetPageData() (page, pageSize int)
-	GetMyToken() string
-	GetMyUser() *models.ClaimIdentity
+	GetToken() string
+	GetTokenInfo() tokens.Claimer
 	Redirect(status int, url string) //Redirects to the given URL with status code
 }

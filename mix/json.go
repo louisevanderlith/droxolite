@@ -3,11 +3,8 @@ package mix
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/louisevanderlith/kong/tokens"
 	"io"
-
-	"github.com/louisevanderlith/droxolite/bodies"
-	"github.com/louisevanderlith/droxolite/element"
-	"github.com/louisevanderlith/droxolite/security/models"
 )
 
 // default paging values
@@ -23,7 +20,7 @@ type js struct {
 }
 
 //JSON is called before every function execution to setup the environment a Handler will expect
-func JSON(name string, data interface{}, d *element.Identity, avoc *models.ClaimIdentity) Mixer {
+func JSON(name string, data interface{}, claims tokens.Claimer) Mixer {
 	result := &js{
 		headers: DefaultHeaders(),
 		data:    data,
@@ -38,9 +35,7 @@ func (r *js) Headers() map[string]string {
 
 //Reader configures the response for reading
 func (r *js) Reader() (io.Reader, error) {
-	resp := bodies.NewRESTResult(r.data)
-
-	content, err := json.Marshal(*resp)
+	content, err := json.Marshal(r.data)
 
 	if err != nil {
 		return nil, err
