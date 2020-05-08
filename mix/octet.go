@@ -2,7 +2,6 @@ package mix
 
 import (
 	"bytes"
-	"github.com/louisevanderlith/kong/tokens"
 	"io"
 	"strings"
 )
@@ -15,7 +14,7 @@ type octet struct {
 	data     interface{}
 }
 
-func Octet(name string, data interface{}, claims tokens.Claimer) Mixer {
+func Octet(name string, data interface{}) Mixer {
 	r := &octet{
 		data: data,
 	}
