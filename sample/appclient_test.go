@@ -1,55 +1,15 @@
 package sample
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/louisevanderlith/droxolite"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/droxolite/sample/clients"
-
-	"github.com/louisevanderlith/droxolite/element"
-	"github.com/louisevanderlith/droxolite/resins"
-	"github.com/louisevanderlith/droxolite/security/impl"
-	"github.com/louisevanderlith/droxolite/security/models"
-	"github.com/louisevanderlith/droxolite/security/roletype"
 )
-
-var (
-	appEpoxy resins.Epoxi
-)
-
-func init() {
-	host := ".localhost/"
-	uri := ".localhost:8091/"
-	callb := "https://localhost:48091/"
-	clnt := models.NewPublicClient("Test.APP", "Sample App Client", uri, callb)
-	clnt.LogoURI = uri + "logo.jpg"
-	clnt.Scopes = append(clnt.Scopes, models.NewScope("testapp", "Test APP", "just a scope to test with", []models.Claim{
-		{"app:user", "Allows User base interactions with APP"},
-	}))
-
-	cs := impl.NewFakeRegister()
-	cred, err := cs.AddClient(clnt)
-
-	if err != nil {
-		panic(err)
-	}
-
-	intro := impl.NewFakeInspector(cs)
-
-	theme := element.GetNoTheme(host, cred.ID, "none")
-
-	err = theme.LoadTemplate("./views", "master.html")
-
-	if err != nil {
-		panic(err)
-	}
-
-	appEpoxy = resins.NewColourEpoxy(cred, intro, theme, "auth.localhost", roletype.Unknown, clients.Index)
-	appRoutes(appEpoxy)
-}
 
 func TestAPP_DistAsset_OK(t *testing.T) {
 	req, err := http.NewRequest("GET", "/dist/site.css", nil)
@@ -58,7 +18,7 @@ func TestAPP_DistAsset_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := appEpoxy.Router()
+	handle := appRoutes()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -81,7 +41,7 @@ func TestAPP_Home_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := appEpoxy.Router()
+	handle := appRoutes()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -104,7 +64,7 @@ func TestAPP_SubDefault_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := appEpoxy.Router()
+	handle := appRoutes()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -127,7 +87,7 @@ func TestAPP_Error_OK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := appEpoxy.Router()
+	handle := appRoutes()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
@@ -149,15 +109,35 @@ func TestAPP_Error_OK(t *testing.T) {
 	}
 }
 
-func appRoutes(e resins.Epoxi) {
-	e.JoinBundle("/", roletype.Unknown, mix.Page, &clients.Interface{})
-	e.JoinBundle("/stock", roletype.Unknown, mix.Page, &clients.Parts{}, &clients.Services{})
-	/*fakeCtrl := &FakeAPP{}
-	grp := routing.NewInterfaceBundle("", roletype.Unknown, fakeCtrl)
-	grp.RouteGroup().AddRoute("Home", "/broken", "GET", roletype.Unknown, fakeCtrl.GetBroken)
+func appRoutes() http.Handler {
+	mstr, tmpl, err := droxolite.LoadTemplate("./views", "master.html")
 
-	poxy.AddBundle(grp)
+	if err != nil {
+		panic(err)
+	}
 
-	stockGrp := routing.NewInterfaceBundle("Stock", roletype.Unknown, &Parts{}, &Services{})
-	poxy.AddBundle(stockGrp)*/
+	r := mux.NewRouter()
+	distPath := http.FileSystem(http.Dir("dist/"))
+	fs := http.FileServer(distPath)
+	r.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
+
+	r.HandleFunc("/", clients.InterfaceGet(mstr, tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.InterfaceSearch(mstr, tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/{pagesize:[A-Z][0-9]+}", clients.InterfaceSearch(mstr, tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/{key:[0-9]+\x60[0-9]+}", clients.InterfaceView(mstr, tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/create", clients.InterfaceCreate(mstr, tmpl)).Methods(http.MethodPost)
+
+	stck := r.PathPrefix("/stock").Subrouter()
+	stck.HandleFunc("/parts", clients.PartsGet(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.PartsSearch(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}", clients.PartsSearch(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{key:[0-9]+\x60[0-9]+}", clients.PartsView(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/create", clients.PartsCreate(mstr, tmpl)).Methods(http.MethodPost)
+	stck.HandleFunc("/services", clients.ServicesGet(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.ServicesSearch(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}", clients.ServicesSearch(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{key:[0-9]+\x60[0-9]+}", clients.ServicesView(mstr, tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/create", clients.ServicesCreate(mstr, tmpl)).Methods(http.MethodPost)
+
+	return r
 }

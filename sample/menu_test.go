@@ -6,10 +6,6 @@ import (
 	"testing"
 )
 
-func TestMenu_HasCorrectItems(t *testing.T) {
-
-}
-
 func TestAPP_Menu_Paths(t *testing.T) {
 	req, err := http.NewRequest("GET", "/", nil)
 
@@ -17,7 +13,7 @@ func TestAPP_Menu_Paths(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle := appEpoxy.Router()
+	handle :=  appRoutes()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)

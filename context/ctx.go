@@ -21,12 +21,18 @@ type Ctx struct {
 	claims         tokens.Claimer
 }
 
-func New(response http.ResponseWriter, request *http.Request, claims tokens.Claimer) Contexer {
-	return &Ctx{
-		responseWriter: response,
-		request:        request,
-		claims:         claims,
+func New(w http.ResponseWriter, r *http.Request) Contexer {
+	result := &Ctx{
+		responseWriter: w,
+		request:        r,
 	}
+
+	clms := r.Context().Value("claims")
+	if clms != nil {
+		result.claims = clms.(tokens.Claimer)
+	}
+
+	return result
 }
 
 func (ctx *Ctx) Request() *http.Request {
