@@ -50,15 +50,18 @@ func Page(name string, data interface{}, claims tokens.Claimer, mastr *template.
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
 	r.data["Name"] = name
-	r.data["Identity"] = claims
 
-	//User Details
-	loggedIn := claims.HasUser()
-	r.data["LoggedIn"] = loggedIn
+	if claims != nil {
+		r.data["Identity"] = claims
 
-	if loggedIn {
-		_, n := claims.GetUserinfo()
-		r.data["Username"] = n
+		//User Details
+		loggedIn := claims.HasUser()
+		r.data["LoggedIn"] = loggedIn
+
+		if loggedIn {
+			_, n := claims.GetUserinfo()
+			r.data["Username"] = n
+		}
 	}
 
 	return r

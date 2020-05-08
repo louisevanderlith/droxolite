@@ -3,7 +3,6 @@ package mix
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/louisevanderlith/kong/tokens"
 	"io"
 )
 
@@ -20,7 +19,7 @@ type js struct {
 }
 
 //JSON is called before every function execution to setup the environment a Handler will expect
-func JSON(name string, data interface{}, claims tokens.Claimer) Mixer {
+func JSON(data interface{}) Mixer {
 	result := &js{
 		headers: DefaultHeaders(),
 		data:    data,

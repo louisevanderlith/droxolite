@@ -3,43 +3,81 @@ package clients
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/louisevanderlith/droxolite/mix"
+	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/louisevanderlith/droxolite/context"
 	"github.com/louisevanderlith/husk"
 )
 
-type Interface struct {
-}
+func InterfaceGet(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.New(w, r)
 
-func (x *Interface) Get(ctx context.Requester) (int, interface{}) {
-	data := "Welcome"
-	return http.StatusOK, data
-}
+		mxr := mix.Page("index", "You're Home!", ctx.GetTokenInfo(), mstr, tmpl)
 
-func (x *Interface) Search(ctx context.Requester) (int, interface{}) {
-	hsh := ctx.FindParam("hash")
+		err := ctx.Serve(http.StatusOK, mxr)
 
-	decoded, err := base64.StdEncoding.DecodeString(hsh)
-
-	if err != nil {
-		return http.StatusInternalServerError, err
+		if err != nil {
+			log.Println(err)
+		}
 	}
-
-	return http.StatusOK, string(decoded)
 }
 
-func (x *Interface) View(ctx context.Requester) (int, interface{}) {
-	param := ctx.FindParam("key")
-	result, err := husk.ParseKey(param)
+func InterfaceSearch(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.New(w, r)
+		hsh := ctx.FindParam("hash")
 
-	if err != nil {
-		return http.StatusInternalServerError, err
+		decoded, err := base64.StdEncoding.DecodeString(hsh)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		mxr := mix.Page("index", string(decoded), ctx.GetTokenInfo(), mstr, tmpl)
+
+		err = ctx.Serve(http.StatusOK, mxr)
+
+		if err != nil {
+			log.Println(err)
+		}
 	}
-
-	return http.StatusOK, fmt.Sprintf("Viewing %s", result)
 }
 
-func (x *Interface) Create(ctx context.Requester) (int, interface{}) {
-	return http.StatusOK, nil
+func InterfaceView(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.New(w, r)
+		param := ctx.FindParam("key")
+		result, err := husk.ParseKey(param)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		mxr := mix.Page("Index", fmt.Sprintf("Viewing %s", result), ctx.GetTokenInfo(), mstr, tmpl)
+
+		err = ctx.Serve(http.StatusOK, mxr)
+
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func InterfaceCreate(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.New(w, r)
+		mxr := mix.Page("Index", nil, ctx.GetTokenInfo(), mstr, tmpl)
+
+		err := ctx.Serve(http.StatusOK, mxr)
+
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }
