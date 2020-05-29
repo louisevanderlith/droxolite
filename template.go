@@ -8,27 +8,28 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 //UpdateTemplate downloads the latest master templates from Theme.API
-func UpdateTemplate(claims tokens.Claimer) error {
+func UpdateTemplate(access string, claims tokens.Claimer) error {
 	url, err := claims.GetResourceURL("theme")
 
 	if err != nil {
 		return err
 	}
 
-	lst, err := findTemplates(url)
+	lst, err := findTemplates(access, url)
 
 	if err != nil {
 		return err
 	}
 
 	for _, v := range lst {
-		err = downloadTemplate(v, url)
+		err = downloadTemplate(access, v, url)
 
 		if err != nil {
 			return err
@@ -38,10 +39,13 @@ func UpdateTemplate(claims tokens.Claimer) error {
 	return nil
 }
 
-func findTemplates(themeUrl string) ([]string, error) {
+func findTemplates(access, themeUrl string) ([]string, error) {
 	fullURL := fmt.Sprintf("%s/asset/html", themeUrl)
 
-	resp, err := http.Get(fullURL)
+	req := httptest.NewRequest(http.MethodGet, fullURL, nil)
+	req.Header.Set("Authorization", "Bearer "+access)
+
+	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		return nil, err
@@ -60,14 +64,17 @@ func findTemplates(themeUrl string) ([]string, error) {
 	return result, nil
 }
 
-func downloadTemplate(template, themeURL string) error {
+func downloadTemplate(access, template, themeURL string) error {
 	fullURL := fmt.Sprintf("%s/asset/html/%s", themeURL, template)
-	resp, err := http.Get(fullURL)
+	req := httptest.NewRequest(http.MethodGet, fullURL, nil)
+	req.Header.Set("Authorization", "Bearer "+access)
+
+	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		return err
 	}
-	
+
 	defer resp.Body.Close()
 
 	out, err := os.Create("/views/_shared/" + template)
