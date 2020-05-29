@@ -21,7 +21,7 @@ func UpdateTemplate(claims tokens.Claimer) error {
 		return err
 	}
 
-	lst, err := findTemplates(claims.GetClient())
+	lst, err := findTemplates(url)
 
 	if err != nil {
 		return err
