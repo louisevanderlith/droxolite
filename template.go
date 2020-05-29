@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,8 +41,12 @@ func UpdateTemplate(access string, claims tokens.Claimer) error {
 func findTemplates(access, themeUrl string) ([]string, error) {
 	fullURL := fmt.Sprintf("%s/asset/html", themeUrl)
 
-	req := httptest.NewRequest(http.MethodGet, fullURL, nil)
+	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 	req.Header.Set("Authorization", "Bearer "+access)
+
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 
@@ -66,8 +69,12 @@ func findTemplates(access, themeUrl string) ([]string, error) {
 
 func downloadTemplate(access, template, themeURL string) error {
 	fullURL := fmt.Sprintf("%s/asset/html/%s", themeURL, template)
-	req := httptest.NewRequest(http.MethodGet, fullURL, nil)
+	req, err := http.NewRequest(http.MethodGet, fullURL, nil)
 	req.Header.Set("Authorization", "Bearer "+access)
+
+	if err != nil {
+		return nil
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 
