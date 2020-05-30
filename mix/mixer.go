@@ -2,19 +2,12 @@ package mix
 
 import (
 	"io"
-
-	"github.com/louisevanderlith/droxolite/bodies"
 )
 
 //Mixer is used by the Contexer to ApplyHeaders and Write the Response from the Reader
 type Mixer interface {
 	Reader() (io.Reader, error)
 	Headers() map[string]string
-}
-
-type ColourMixer interface {
-	Mixer
-	CreateSideMenu(menu *bodies.Menu)
 }
 
 //DefaultHeaders returns a set of Headers that apply to all mixers
