@@ -13,7 +13,7 @@ func TestAPP_Menu_Paths(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handle :=  appRoutes()
+	handle := appRoutes()
 
 	rr := httptest.NewRecorder()
 	handle.ServeHTTP(rr, req)
