@@ -9,8 +9,6 @@ import (
 	"os"
 	"path"
 	"strings"
-
-	"github.com/louisevanderlith/droxolite/bodies"
 )
 
 //Page provides a io.Reader for serving html pages
@@ -46,7 +44,6 @@ func Page(name string, data interface{}, claims tokens.Claimer, mastr *template.
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
-	r.data["ShowSearch"] = !(strings.HasSuffix(shortName, "create") || strings.HasSuffix(shortName, "view"))
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
 	r.data["Name"] = name
@@ -55,10 +52,7 @@ func Page(name string, data interface{}, claims tokens.Claimer, mastr *template.
 		r.data["Identity"] = claims
 
 		//User Details
-		loggedIn := claims.HasUser()
-		r.data["LoggedIn"] = loggedIn
-
-		if loggedIn {
+		if claims.HasUser() {
 			_, n := claims.GetUserinfo()
 			r.data["Username"] = n
 		}
@@ -108,8 +102,4 @@ func (r *tmpl) Reader() (io.Reader, error) {
 	}
 
 	return &buffMaster, nil
-}
-
-func (r *tmpl) CreateSideMenu(menu *bodies.Menu) {
-	r.data["SideMenu"] = menu.Items()
 }

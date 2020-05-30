@@ -6,12 +6,6 @@ import (
 	"io"
 )
 
-// default paging values
-const (
-	_page = 1
-	_size = 5
-)
-
 //JSON provides a io.Reader for serving json data
 type js struct {
 	headers map[string]string
