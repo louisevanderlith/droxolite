@@ -218,13 +218,15 @@ func getPageData(pageData string) (int, int) {
 }
 
 func (ctx *Ctx) GetToken() string {
-	cooki, err := ctx.GetCookie("avosession")
+	v := ctx.Request().Context().Value("token")
 
-	if err != nil {
+	tkn, ok := v.(string)
+
+	if !ok {
 		return ""
 	}
 
-	return cooki.Value
+	return tkn
 }
 
 func (ctx *Ctx) GetTokenInfo() tokens.Claimer {
