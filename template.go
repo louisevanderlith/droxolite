@@ -105,7 +105,12 @@ func LoadTemplate(viewPath, masterpage string) (*template.Template, *template.Te
 		return nil, nil, err
 	}
 
-	return template.New(masterpage), temps, nil
+	mstr := template.New(masterpage)
+	mstr.Funcs(template.FuncMap{"marshal": func(v interface{}) template.JS {
+		a, _ := json.Marshal(v)
+		return template.JS(a)
+	}})
+	return mstr, temps, nil
 }
 
 func findFiles(templatesPath string) []string {
