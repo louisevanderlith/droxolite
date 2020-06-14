@@ -105,11 +105,6 @@ func LoadTemplate(viewPath, masterpage string) (*template.Template, *template.Te
 		return nil, nil, err
 	}
 
-	temps.Funcs(template.FuncMap{"marshal": func(v interface{}) template.JS {
-		a, _ := json.Marshal(v)
-		return template.JS(a)
-	}})
-
 	return template.New(masterpage), temps, nil
 }
 
