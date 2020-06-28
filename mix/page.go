@@ -12,7 +12,7 @@ import (
 )
 
 //Page provides a io.Reader for serving html pages
-type tmpl struct {
+type pge struct {
 	contentPage string
 	data        map[string]interface{}
 	headers     map[string]string
@@ -20,39 +20,44 @@ type tmpl struct {
 	master      *template.Template
 }
 
-func Page(name string, data interface{}, claims tokens.Claimer, mastr *template.Template, templates *template.Template) Mixer {
-	r := &tmpl{
+func PreparePage(title, name string, mastr *template.Template, templates *template.Template) PageMixer {
+	r := &pge{
 		data:      make(map[string]interface{}),
 		headers:   make(map[string]string),
 		master:    mastr,
 		templates: templates,
 	}
 
-	if _, isErr := data.(error); isErr {
-		r.data["Error"] = data
-		r.contentPage = "error.html"
-	} else {
-		r.data["Data"] = data
-	}
-
 	shortName := strings.ToLower(strings.Trim(name, " "))
-
-	if len(r.contentPage) == 0 {
-		r.contentPage = fmt.Sprintf("%s.html", shortName)
-	}
+	r.contentPage = fmt.Sprintf("%s.html", shortName)
 
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
-	r.data["Name"] = name
+	r.data["Title"] = title
+
+	return r
+}
+
+func (r *pge) Page(data interface{}, claims tokens.Claimer, token string) Mixer {
+	r.data["Data"] = data
+
+	if _, isErr := data.(error); isErr {
+		r.data["HasScript"] = false
+		r.data["ScriptName"] = ""
+		r.contentPage = "error.html"
+		return r
+	}
 
 	if claims != nil {
 		r.data["Identity"] = claims
+		r.data["Token"] = token
 
 		//User Details
 		if claims.HasUser() {
+			//never display the user's key on the front-end
 			_, n := claims.GetUserinfo()
 			r.data["Username"] = n
 		}
@@ -61,7 +66,7 @@ func Page(name string, data interface{}, claims tokens.Claimer, mastr *template.
 	return r
 }
 
-func (r *tmpl) Headers() map[string]string {
+func (r *pge) Headers() map[string]string {
 	result := make(map[string]string)
 
 	result["X-Frame-Options"] = "SAMEORIGIN"
@@ -75,13 +80,13 @@ func (r *tmpl) Headers() map[string]string {
 }
 
 //Reader configures the response for reading
-func (r *tmpl) Reader() (io.Reader, error) {
+func (r *pge) Reader() (io.Reader, error) {
 	contentpage := r.contentPage
 
 	page := r.templates.Lookup(contentpage)
 
 	if page == nil {
-		return nil, fmt.Errorf("Template not Found: %s", contentpage)
+		return nil, fmt.Errorf("template not found: %s", contentpage)
 	}
 
 	var buffPage bytes.Buffer

@@ -1,6 +1,7 @@
 package mix
 
 import (
+	"github.com/louisevanderlith/kong/tokens"
 	"io"
 )
 
@@ -8,6 +9,11 @@ import (
 type Mixer interface {
 	Reader() (io.Reader, error)
 	Headers() map[string]string
+}
+
+type PageMixer interface {
+	Mixer
+	Page(data interface{}, claims tokens.Claimer, token string) Mixer
 }
 
 //DefaultHeaders returns a set of Headers that apply to all mixers

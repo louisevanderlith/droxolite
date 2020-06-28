@@ -13,10 +13,11 @@ import (
 )
 
 func InterfaceGet(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("Home!", "index", mstr, tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 
-		mxr := mix.Page("index", "You're Home!", ctx.GetTokenInfo(), mstr, tmpl)
+		mxr := pge.Page("You're Home!", ctx.GetTokenInfo(), ctx.GetToken())
 
 		err := ctx.Serve(http.StatusOK, mxr)
 
@@ -27,6 +28,7 @@ func InterfaceGet(mstr *template.Template, tmpl *template.Template) http.Handler
 }
 
 func InterfaceSearch(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("Home!", "index", mstr, tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		hsh := ctx.FindParam("hash")
@@ -38,7 +40,7 @@ func InterfaceSearch(mstr *template.Template, tmpl *template.Template) http.Hand
 			return
 		}
 
-		mxr := mix.Page("index", string(decoded), ctx.GetTokenInfo(), mstr, tmpl)
+		mxr := pge.Page(string(decoded), ctx.GetTokenInfo(), ctx.GetToken())
 
 		err = ctx.Serve(http.StatusOK, mxr)
 
@@ -49,6 +51,7 @@ func InterfaceSearch(mstr *template.Template, tmpl *template.Template) http.Hand
 }
 
 func InterfaceView(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("Home!", "index", mstr, tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		param := ctx.FindParam("key")
@@ -59,7 +62,7 @@ func InterfaceView(mstr *template.Template, tmpl *template.Template) http.Handle
 			return
 		}
 
-		mxr := mix.Page("Index", fmt.Sprintf("Viewing %s", result), ctx.GetTokenInfo(), mstr, tmpl)
+		mxr := pge.Page(fmt.Sprintf("Viewing %s", result), ctx.GetTokenInfo(), ctx.GetToken())
 
 		err = ctx.Serve(http.StatusOK, mxr)
 
@@ -70,9 +73,10 @@ func InterfaceView(mstr *template.Template, tmpl *template.Template) http.Handle
 }
 
 func InterfaceCreate(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("Home!", "index", mstr, tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
-		mxr := mix.Page("Index", nil, ctx.GetTokenInfo(), mstr, tmpl)
+		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
 
 		err := ctx.Serve(http.StatusOK, mxr)
 
