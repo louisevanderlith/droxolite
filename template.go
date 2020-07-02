@@ -3,7 +3,7 @@ package droxolite
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/louisevanderlith/kong/tokens"
+	"github.com/louisevanderlith/kong"
 	"html/template"
 	"io"
 	"log"
@@ -14,21 +14,38 @@ import (
 )
 
 //UpdateTemplate downloads the latest master templates from Theme.API
-func UpdateTemplate(access string, claims tokens.Claimer) error {
+func UpdateTemplate(clientId, clientSecret, securityUrl string) error {
+	scps := []string{
+		"theme.assets.download",
+		"theme.assets.view",
+	}
+
+	tkn, err := kong.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, scps...)
+
+	if err != nil {
+		panic(err)
+	}
+
+	claims, err := kong.Exchange(http.DefaultClient, tkn, clientId, clientSecret, securityUrl+"/info")
+
+	if err != nil {
+		panic(err)
+	}
+
 	url, err := claims.GetResourceURL("theme")
 
 	if err != nil {
 		return err
 	}
 
-	lst, err := findTemplates(access, url)
+	lst, err := findTemplates(tkn, url)
 
 	if err != nil {
 		return err
 	}
 
 	for _, v := range lst {
-		err = downloadTemplate(access, v, url)
+		err = downloadTemplate(tkn, v, url)
 
 		if err != nil {
 			return err
