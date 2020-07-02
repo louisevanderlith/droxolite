@@ -3,6 +3,7 @@ package mix
 import (
 	"bytes"
 	"fmt"
+	"github.com/louisevanderlith/droxolite/menu"
 	"github.com/louisevanderlith/kong/tokens"
 	"html/template"
 	"io"
@@ -20,7 +21,7 @@ type pge struct {
 	master      *template.Template
 }
 
-func PreparePage(title, name string, mastr *template.Template, templates *template.Template) PageMixer {
+func PreparePage(name string, mastr *template.Template, templates *template.Template) PageMixer {
 	r := &pge{
 		data:      make(map[string]interface{}),
 		headers:   make(map[string]string),
@@ -36,9 +37,17 @@ func PreparePage(title, name string, mastr *template.Template, templates *templa
 
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
-	r.data["Title"] = title
+	r.data["Title"] = name
 
 	return r
+}
+
+func (r *pge) ChangeTitle(title string) {
+	r.data["Title"] = title
+}
+
+func (r *pge) AddMenu(m *menu.Menu) {
+	r.data["Menu"] = m
 }
 
 func (r *pge) Page(data interface{}, claims tokens.Claimer, token string) Mixer {
