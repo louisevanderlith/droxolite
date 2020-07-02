@@ -1,6 +1,7 @@
 package mix
 
 import (
+	"github.com/louisevanderlith/droxolite/menu"
 	"github.com/louisevanderlith/kong/tokens"
 	"io"
 )
@@ -13,6 +14,8 @@ type Mixer interface {
 
 type PageMixer interface {
 	Mixer
+	ChangeTitle(title string)
+	AddMenu(menu *menu.Menu)
 	Page(data interface{}, claims tokens.Claimer, token string) Mixer
 }
 
