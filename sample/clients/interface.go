@@ -12,8 +12,8 @@ import (
 	"github.com/louisevanderlith/husk"
 )
 
-func InterfaceGet(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", mstr, tmpl)
+func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 
@@ -27,8 +27,8 @@ func InterfaceGet(mstr *template.Template, tmpl *template.Template) http.Handler
 	}
 }
 
-func InterfaceSearch(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", mstr, tmpl)
+func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		hsh := ctx.FindParam("hash")
@@ -50,8 +50,8 @@ func InterfaceSearch(mstr *template.Template, tmpl *template.Template) http.Hand
 	}
 }
 
-func InterfaceView(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", mstr, tmpl)
+func InterfaceView(tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		param := ctx.FindParam("key")
@@ -72,8 +72,8 @@ func InterfaceView(mstr *template.Template, tmpl *template.Template) http.Handle
 	}
 }
 
-func InterfaceCreate(mstr *template.Template, tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", mstr, tmpl)
+func InterfaceCreate(tmpl *template.Template) http.HandlerFunc {
+	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())

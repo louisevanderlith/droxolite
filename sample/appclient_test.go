@@ -57,6 +57,29 @@ func TestAPP_Home_OK(t *testing.T) {
 	}
 }
 
+func BenchmarkAPP_SubDefault_OK(b *testing.B) {
+	req, err := http.NewRequest("GET", "/stock/parts", nil)
+
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	handle := appRoutes()
+
+	rr := httptest.NewRecorder()
+	handle.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		b.Errorf("Not OK: %v", rr.Code)
+	}
+
+	expected := "<h1>MasterPage</h1><h2>Layout X</h2><div><p>This is the parts page</p></div><span>Footer</span>"
+	act := rr.Body.String()
+	if act != expected {
+		b.Errorf("unexpected body: got %v want %v", act, expected)
+	}
+}
+
 func TestAPP_SubDefault_OK(t *testing.T) {
 	req, err := http.NewRequest("GET", "/stock/parts", nil)
 
@@ -73,7 +96,7 @@ func TestAPP_SubDefault_OK(t *testing.T) {
 		t.Errorf("Not OK: %v", rr.Code)
 	}
 
-	expected := "<h1>MasterPage</h1><h1>Parts</h1>  <span>Footer</span>"
+	expected := "<h1>MasterPage</h1><h2>Layout X</h2><div><p>This is the parts page</p></div><span>Footer</span>"
 	if rr.Body.String() != expected {
 		t.Errorf("unexpected body: got %v want %v",
 			rr.Body.String(), expected)
@@ -96,7 +119,7 @@ func TestAPP_Error_OK(t *testing.T) {
 		t.Errorf("Not OK: %v", rr.Code)
 	}
 
-	expected := "<h1>MasterPage</h1><h1>Something unexptected Happended:</h1><p>this path must break</p>  <span>Footer</span>"
+	expected := "<h1>MasterPage</h1><h1>Something unexpected Happened:</h1><p>this path must break</p>  <span>Footer</span>"
 
 	if rr.Body.Len() != len(expected) {
 		t.Errorf("unexpected length: got %v want %v",
@@ -110,7 +133,7 @@ func TestAPP_Error_OK(t *testing.T) {
 }
 
 func appRoutes() http.Handler {
-	mstr, tmpl, err := droxolite.LoadTemplate("./views", "master.html")
+	tmpl, err := droxolite.LoadTemplate("./views")
 
 	if err != nil {
 		panic(err)
@@ -121,23 +144,23 @@ func appRoutes() http.Handler {
 	fs := http.FileServer(distPath)
 	r.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
 
-	r.HandleFunc("/", clients.InterfaceGet(mstr, tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.InterfaceSearch(mstr, tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/{pagesize:[A-Z][0-9]+}", clients.InterfaceSearch(mstr, tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/{key:[0-9]+\x60[0-9]+}", clients.InterfaceView(mstr, tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/create", clients.InterfaceCreate(mstr, tmpl)).Methods(http.MethodPost)
+	r.HandleFunc("/", clients.InterfaceGet(tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.InterfaceSearch(tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/{pagesize:[A-Z][0-9]+}", clients.InterfaceSearch(tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/{key:[0-9]+\x60[0-9]+}", clients.InterfaceView(tmpl)).Methods(http.MethodGet)
+	r.HandleFunc("/create", clients.InterfaceCreate(tmpl)).Methods(http.MethodPost)
 
 	stck := r.PathPrefix("/stock").Subrouter()
-	stck.HandleFunc("/parts", clients.PartsGet(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.PartsSearch(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}", clients.PartsSearch(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/{key:[0-9]+\x60[0-9]+}", clients.PartsView(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/create", clients.PartsCreate(mstr, tmpl)).Methods(http.MethodPost)
-	stck.HandleFunc("/services", clients.ServicesGet(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.ServicesSearch(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}", clients.ServicesSearch(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/{key:[0-9]+\x60[0-9]+}", clients.ServicesView(mstr, tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/create", clients.ServicesCreate(mstr, tmpl)).Methods(http.MethodPost)
+	stck.HandleFunc("/parts", clients.PartsGet(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.PartsSearch(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}", clients.PartsSearch(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{key:[0-9]+\x60[0-9]+}", clients.PartsView(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/create", clients.PartsCreate(tmpl)).Methods(http.MethodPost)
+	stck.HandleFunc("/services", clients.ServicesGet(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.ServicesSearch(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}", clients.ServicesSearch(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{key:[0-9]+\x60[0-9]+}", clients.ServicesView(tmpl)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/create", clients.ServicesCreate(tmpl)).Methods(http.MethodPost)
 
 	return r
 }
