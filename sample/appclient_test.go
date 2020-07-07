@@ -50,7 +50,7 @@ func TestAPP_Home_OK(t *testing.T) {
 		t.Errorf("Not OK: %v", rr.Code)
 	}
 
-	expected := "<h1>MasterPage</h1><p>This is the Home Page</p><p>Welcome</p>  <span>Footer</span>"
+	expected := "<h1>MasterPage</h1><p>This is the Home Page</p><p>Welcome</p><span>Footer</span>"
 	if rr.Body.String() != expected {
 		t.Errorf("unexpected body: got %v want %v",
 			rr.Body.String(), expected)
