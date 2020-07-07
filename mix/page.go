@@ -1,12 +1,11 @@
 package mix
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/louisevanderlith/droxolite/menu"
 	"github.com/louisevanderlith/kong/tokens"
 	"html/template"
-	"io"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -86,19 +85,18 @@ func (r *pge) Headers() map[string]string {
 }
 
 //Reader configures the response for reading
-func (r *pge) Reader() (io.Reader, error) {
-	//page := r.templates.Lookup(r.contentPage)
+func (r *pge) Reader(w http.ResponseWriter) error {
+	page := r.templates.Lookup(r.contentPage)
 
-	//if page == nil {
-	//	return nil, fmt.Errorf("template %s not found", r.contentPage)
+	if page == nil {
+		return fmt.Errorf("template %s not found", r.contentPage)
+	}
+	//var buffPage bytes.Buffer
+	return page.ExecuteTemplate(w, r.contentPage, r.data)
+
+	//if err != nil {
+	//	return err
 	//}
 
-	var buffPage bytes.Buffer
-	err := r.templates.ExecuteTemplate(&buffPage, r.contentPage, r.data)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &buffPage, nil
+	//return &buffPage, nil
 }
