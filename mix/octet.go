@@ -2,7 +2,9 @@ package mix
 
 import (
 	"bytes"
+	"errors"
 	"io"
+	"net/http"
 	"strings"
 )
 
@@ -59,16 +61,20 @@ func (r *octet) Headers() map[string]string {
 }
 
 //Reader configures the response for reading files. data can be either io.Reader or []byte
-func (r *octet) Reader() (io.Reader, error) {
+func (r *octet) Reader(w http.ResponseWriter) error {
 	if r.data == nil {
-		return bytes.NewBuffer([]byte{}), nil
+		return errors.New("data is nil")
 	}
 
 	if readr, canRead := r.data.(io.Reader); canRead {
-		return readr, nil
+		_, err := io.Copy(w, readr)
+		return err
 	}
 
-	return bytes.NewBuffer(r.data.([]byte)), nil
+	buff := bytes.NewBuffer(r.data.([]byte))
+
+	_, err := io.Copy(w, buff)
+	return err
 }
 
 func getName(path string) string {

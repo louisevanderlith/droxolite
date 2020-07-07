@@ -158,15 +158,7 @@ func (ctx *Ctx) Serve(status int, mx mix.Mixer) error {
 		ctx.SetStatus(status)
 	}
 
-	readr, err := mx.Reader()
-
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(ctx.responseWriter, readr)
-
-	return err
+	return mx.Reader(ctx.responseWriter)
 }
 
 //GetKeyedRequest will return the Key and update the Target when Requests are sent for updates.
