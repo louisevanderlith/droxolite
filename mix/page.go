@@ -17,10 +17,10 @@ type pge struct {
 	contentPage string
 	data        map[string]interface{}
 	headers     map[string]string
-	templates   *template.Template
+	templates   template.Template
 }
 
-func PreparePage(name string, templates *template.Template) PageMixer {
+func PreparePage(name string, templates template.Template) PageMixer {
 	r := &pge{
 		data:      make(map[string]interface{}),
 		headers:   make(map[string]string),
