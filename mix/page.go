@@ -18,14 +18,12 @@ type pge struct {
 	data        map[string]interface{}
 	headers     map[string]string
 	templates   *template.Template
-	master      *template.Template
 }
 
-func PreparePage(name string, mastr *template.Template, templates *template.Template) PageMixer {
+func PreparePage(name string, templates *template.Template) PageMixer {
 	r := &pge{
 		data:      make(map[string]interface{}),
 		headers:   make(map[string]string),
-		master:    mastr,
 		templates: templates,
 	}
 
@@ -105,15 +103,5 @@ func (r *pge) Reader() (io.Reader, error) {
 		return nil, err
 	}
 
-	r.data["LayoutContent"] = template.HTML(buffPage.String())
-
-	masterPage := r.templates.Lookup(r.master.Name())
-	var buffMaster bytes.Buffer
-	err = masterPage.ExecuteTemplate(&buffMaster, r.master.Name(), r.data)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &buffMaster, nil
+	return &buffPage, nil
 }
