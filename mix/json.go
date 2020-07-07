@@ -1,9 +1,8 @@
 package mix
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
+	"net/http"
 )
 
 //JSON provides a io.Reader for serving json data
@@ -27,12 +26,7 @@ func (r *js) Headers() map[string]string {
 }
 
 //Reader configures the response for reading
-func (r *js) Reader() (io.Reader, error) {
-	content, err := json.Marshal(r.data)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes.NewBuffer(content), nil
+func (r *js) Reader(w http.ResponseWriter) error {
+	enc := json.NewEncoder(w)
+	return enc.Encode(r.data)
 }

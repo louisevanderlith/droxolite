@@ -3,12 +3,12 @@ package mix
 import (
 	"github.com/louisevanderlith/droxolite/menu"
 	"github.com/louisevanderlith/kong/tokens"
-	"io"
+	"net/http"
 )
 
 //Mixer is used by the Contexer to ApplyHeaders and Write the Response from the Reader
 type Mixer interface {
-	Reader() (io.Reader, error)
+	Reader(w http.ResponseWriter) error
 	Headers() map[string]string
 }
 
