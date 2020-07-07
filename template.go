@@ -115,21 +115,14 @@ func downloadTemplate(access, template, themeURL string) error {
 }
 
 //LoadTemplate parses html files, to be used as layouts
-func LoadTemplate(viewPath string) (template.Template, error) {
-	temps, err := template.ParseFiles(findFiles(viewPath)...)
-
-	if err != nil {
-		return template.Template{}, err
-	}
-
-	return *temps, nil
+func LoadTemplate(viewPath string) (*template.Template, error) {
+	return template.ParseFiles(findFiles(viewPath)...)
 }
 
 func findFiles(templatesPath string) []string {
 	var result []string
 
 	filepath.Walk(templatesPath, func(path string, f os.FileInfo, err error) error {
-
 		if err != nil {
 			log.Println(err)
 		}

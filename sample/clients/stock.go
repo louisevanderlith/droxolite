@@ -9,7 +9,7 @@ import (
 	"github.com/louisevanderlith/droxolite/context"
 )
 
-func PartsGet(tmpl template.Template) http.HandlerFunc {
+func PartsGet(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("Parts", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -23,7 +23,7 @@ func PartsGet(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func PartsSearch(tmpl template.Template) http.HandlerFunc {
+func PartsSearch(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("Parts!", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -37,7 +37,7 @@ func PartsSearch(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func PartsView(tmpl template.Template) http.HandlerFunc {
+func PartsView(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("parts", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -51,7 +51,7 @@ func PartsView(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func PartsCreate(tmpl template.Template) http.HandlerFunc {
+func PartsCreate(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("parts", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -65,7 +65,7 @@ func PartsCreate(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func ServicesGet(tmpl template.Template) http.HandlerFunc {
+func ServicesGet(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("services", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -79,7 +79,7 @@ func ServicesGet(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func ServicesSearch(tmpl template.Template) http.HandlerFunc {
+func ServicesSearch(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("services", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -93,7 +93,7 @@ func ServicesSearch(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func ServicesView(tmpl template.Template) http.HandlerFunc {
+func ServicesView(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("services", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -107,7 +107,7 @@ func ServicesView(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func ServicesCreate(tmpl template.Template) http.HandlerFunc {
+func ServicesCreate(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("services", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
