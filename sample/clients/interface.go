@@ -12,7 +12,7 @@ import (
 	"github.com/louisevanderlith/husk"
 )
 
-func InterfaceGet(tmpl template.Template) http.HandlerFunc {
+func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -27,7 +27,7 @@ func InterfaceGet(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func InterfaceSearch(tmpl template.Template) http.HandlerFunc {
+func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -50,7 +50,7 @@ func InterfaceSearch(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func InterfaceView(tmpl template.Template) http.HandlerFunc {
+func InterfaceView(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
@@ -72,7 +72,7 @@ func InterfaceView(tmpl template.Template) http.HandlerFunc {
 	}
 }
 
-func InterfaceCreate(tmpl template.Template) http.HandlerFunc {
+func InterfaceCreate(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("index", tmpl)
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)

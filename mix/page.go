@@ -17,10 +17,10 @@ type pge struct {
 	contentPage string
 	data        map[string]interface{}
 	headers     map[string]string
-	templates   template.Template
+	templates   *template.Template
 }
 
-func PreparePage(name string, templates template.Template) PageMixer {
+func PreparePage(name string, templates *template.Template) PageMixer {
 	r := &pge{
 		data:      make(map[string]interface{}),
 		headers:   make(map[string]string),
@@ -29,7 +29,6 @@ func PreparePage(name string, templates template.Template) PageMixer {
 
 	shortName := strings.ToLower(strings.Trim(name, " "))
 	r.contentPage = fmt.Sprintf("%s.html", shortName)
-
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
 	_, err := os.Stat(path.Join("dist/js", scriptName))
 
@@ -88,16 +87,14 @@ func (r *pge) Headers() map[string]string {
 
 //Reader configures the response for reading
 func (r *pge) Reader() (io.Reader, error) {
-	contentpage := r.contentPage
-
-	page := r.templates.Lookup(contentpage)
+	page := r.templates.Lookup(r.contentPage)
 
 	if page == nil {
-		return nil, fmt.Errorf("template not found: %s", contentpage)
+		return nil, fmt.Errorf("template %s not found", r.contentPage)
 	}
 
 	var buffPage bytes.Buffer
-	err := page.ExecuteTemplate(&buffPage, contentpage, r.data)
+	err := page.Execute(&buffPage, r.data)
 
 	if err != nil {
 		return nil, err
