@@ -87,14 +87,14 @@ func (r *pge) Headers() map[string]string {
 
 //Reader configures the response for reading
 func (r *pge) Reader() (io.Reader, error) {
-	page := r.templates.Lookup(r.contentPage)
+	//page := r.templates.Lookup(r.contentPage)
 
-	if page == nil {
-		return nil, fmt.Errorf("template %s not found", r.contentPage)
-	}
+	//if page == nil {
+	//	return nil, fmt.Errorf("template %s not found", r.contentPage)
+	//}
 
 	var buffPage bytes.Buffer
-	err := page.Execute(&buffPage, r.data)
+	err := r.templates.ExecuteTemplate(&buffPage, r.contentPage, r.data)
 
 	if err != nil {
 		return nil, err
