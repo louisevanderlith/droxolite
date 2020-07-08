@@ -20,7 +20,7 @@ type pge struct {
 }
 
 func PreparePage(files *template.Template, name, page string) PageMixer {
-	shortName := strings.ToLower(strings.Trim(name, " "))
+	shortName := strings.ToLower(strings.Replace(name, " ", "", -1))
 	htmlName := fmt.Sprintf("%s.html", shortName)
 
 	cpy, err := files.Clone()
