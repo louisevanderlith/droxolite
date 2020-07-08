@@ -13,7 +13,7 @@ import (
 )
 
 func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", tmpl)
+	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 
@@ -28,7 +28,7 @@ func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
 }
 
 func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", tmpl)
+	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		hsh := ctx.FindParam("hash")
@@ -51,7 +51,7 @@ func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
 }
 
 func InterfaceView(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", tmpl)
+	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		param := ctx.FindParam("key")
@@ -73,7 +73,7 @@ func InterfaceView(tmpl *template.Template) http.HandlerFunc {
 }
 
 func InterfaceCreate(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("index", tmpl)
+	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())

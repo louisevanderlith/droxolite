@@ -10,7 +10,7 @@ import (
 )
 
 func PartsGet(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("Parts", tmpl)
+	pge := mix.PreparePage(tmpl, "Parts", "./views/stock/parts.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
@@ -24,7 +24,7 @@ func PartsGet(tmpl *template.Template) http.HandlerFunc {
 }
 
 func PartsSearch(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("Parts!", tmpl)
+	pge := mix.PreparePage(tmpl, "Parts", "./views/stock/parts.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
@@ -38,7 +38,7 @@ func PartsSearch(tmpl *template.Template) http.HandlerFunc {
 }
 
 func PartsView(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("parts", tmpl)
+	pge := mix.PreparePage(tmpl, "Parts View", "./views/stock/parts.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
@@ -52,7 +52,7 @@ func PartsView(tmpl *template.Template) http.HandlerFunc {
 }
 
 func PartsCreate(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("parts", tmpl)
+	pge := mix.PreparePage(tmpl, "Parts Create", "./views/stock/parts.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
@@ -66,7 +66,7 @@ func PartsCreate(tmpl *template.Template) http.HandlerFunc {
 }
 
 func ServicesGet(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("services", tmpl)
+	pge := mix.PreparePage(tmpl, "Services", "./views/stock/services.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
@@ -80,7 +80,7 @@ func ServicesGet(tmpl *template.Template) http.HandlerFunc {
 }
 
 func ServicesSearch(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("services", tmpl)
+	pge := mix.PreparePage(tmpl, "Services", "./views/stock/services.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
@@ -94,7 +94,7 @@ func ServicesSearch(tmpl *template.Template) http.HandlerFunc {
 }
 
 func ServicesView(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("services", tmpl)
+	pge := mix.PreparePage(tmpl, "Services View", "./views/stock/services.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
@@ -108,7 +108,7 @@ func ServicesView(tmpl *template.Template) http.HandlerFunc {
 }
 
 func ServicesCreate(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("services", tmpl)
+	pge := mix.PreparePage(tmpl, "Services Create", "./views/stock/services.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.New(w, r)
 		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
