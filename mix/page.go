@@ -16,20 +16,34 @@ type pge struct {
 	contentPage string
 	data        map[string]interface{}
 	headers     map[string]string
-	templates   *template.Template
+	template    *template.Template
 }
 
-func PreparePage(name string, templates *template.Template) PageMixer {
-	r := &pge{
-		data:      make(map[string]interface{}),
-		headers:   make(map[string]string),
-		templates: templates,
+func PreparePage(files *template.Template, name, page string) PageMixer {
+	shortName := strings.ToLower(strings.Trim(name, " "))
+	htmlName := fmt.Sprintf("%s.html", shortName)
+
+	cpy, err := files.Clone()
+
+	if err != nil {
+		panic(err)
 	}
 
-	shortName := strings.ToLower(strings.Trim(name, " "))
-	r.contentPage = fmt.Sprintf("%s.html", shortName)
+	tmpl, err := cpy.ParseFiles(page)
+
+	if err != nil {
+		panic(err)
+	}
+
+	r := &pge{
+		data:     make(map[string]interface{}),
+		headers:  make(map[string]string),
+		template: tmpl,
+	}
+
+	r.contentPage = htmlName
 	scriptName := fmt.Sprintf("%s.entry.dart.js", shortName)
-	_, err := os.Stat(path.Join("dist/js", scriptName))
+	_, err = os.Stat(path.Join("dist/js", scriptName))
 
 	r.data["HasScript"] = err == nil
 	r.data["ScriptName"] = scriptName
@@ -86,17 +100,5 @@ func (r *pge) Headers() map[string]string {
 
 //Reader configures the response for reading
 func (r *pge) Reader(w http.ResponseWriter) error {
-	page := r.templates.Lookup(r.contentPage)
-
-	if page == nil {
-		return fmt.Errorf("template %s not found", r.contentPage)
-	}
-	//var buffPage bytes.Buffer
-	return page.ExecuteTemplate(w, r.contentPage, r.data)
-
-	//if err != nil {
-	//	return err
-	//}
-
-	//return &buffPage, nil
+	return r.template.ExecuteTemplate(w, r.contentPage, r.data)
 }
