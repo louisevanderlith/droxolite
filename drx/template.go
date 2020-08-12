@@ -32,7 +32,7 @@ func UpdateTemplate(clientId, clientSecret, securityUrl string) error {
 		panic(err)
 	}
 
-	url, err := claims.GetResourceURL("theme")
+	url, err := claims.GetResourceURL("theme.assets.view")
 
 	if err != nil {
 		return err
