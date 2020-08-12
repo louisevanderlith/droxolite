@@ -7,14 +7,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/drx"
 	"github.com/louisevanderlith/husk"
 )
 
 func StoreGet(w http.ResponseWriter, r *http.Request) {
-	ctx := context.New(w, r)
-	mxr := mix.JSON([]string{"Berry", "Orange", "Apple"})
-	err := ctx.Serve(http.StatusOK, mxr)
+	err := mix.Write(w, mix.JSON([]string{"Berry", "Orange", "Apple"}))
 
 	if err != nil {
 		log.Println(err)
@@ -22,9 +20,8 @@ func StoreGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func StoreSearch(w http.ResponseWriter, r *http.Request) {
-	ctx := context.New(w, r)
-	page, size := ctx.GetPageData()
-	hsh := ctx.FindParam("hash")
+	page, size := drx.GetPageData(r)
+	hsh := drx.FindParam(r, "hash")
 
 	decoded, err := base64.StdEncoding.DecodeString(hsh)
 
@@ -35,7 +32,7 @@ func StoreSearch(w http.ResponseWriter, r *http.Request) {
 
 	mxr := mix.JSON(fmt.Sprintf("Page: %v Size: %v Decode: %s", page, size, string(decoded)))
 
-	err = ctx.Serve(http.StatusOK, mxr)
+	err = mix.Write(w, mxr)
 
 	if err != nil {
 		log.Println(err)
@@ -43,8 +40,7 @@ func StoreSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func StoreView(w http.ResponseWriter, r *http.Request) {
-	ctx := context.New(w, r)
-	param := ctx.FindParam("key")
+	param := drx.FindParam(r, "key")
 	result, err := husk.ParseKey(param)
 
 	if err != nil {
@@ -54,7 +50,7 @@ func StoreView(w http.ResponseWriter, r *http.Request) {
 
 	mxr := mix.JSON(fmt.Sprintf("Got a Key %s", result))
 
-	err = ctx.Serve(http.StatusOK, mxr)
+	err = mix.Write(w, mxr)
 
 	if err != nil {
 		log.Println(err)
@@ -62,10 +58,9 @@ func StoreView(w http.ResponseWriter, r *http.Request) {
 }
 
 func StoreCreate(w http.ResponseWriter, r *http.Request) {
-	ctx := context.New(w, r)
-	param := ctx.FindParam("id")
+	param := drx.FindParam(r, "id")
 	body := struct{ Act string }{}
-	err := ctx.Body(&body)
+	err := drx.JSONBody(r, &body)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -74,7 +69,7 @@ func StoreCreate(w http.ResponseWriter, r *http.Request) {
 
 	mxr := mix.JSON(fmt.Sprintf("#%v: %s", param, body.Act))
 
-	err = ctx.Serve(http.StatusOK, mxr)
+	err = mix.Write(w, mxr)
 
 	if err != nil {
 		log.Println(err)
@@ -82,8 +77,7 @@ func StoreCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func StoreUpdate(w http.ResponseWriter, r *http.Request) {
-	ctx := context.New(w, r)
-	param := ctx.FindParam("key")
+	param := drx.FindParam(r, "key")
 	result, err := husk.ParseKey(param)
 
 	if err != nil {
@@ -93,7 +87,7 @@ func StoreUpdate(w http.ResponseWriter, r *http.Request) {
 
 	mxr := mix.JSON(fmt.Sprintf("Updated item with Key %s", result))
 
-	err = ctx.Serve(http.StatusOK, mxr)
+	err = mix.Write(w, mxr)
 
 	if err != nil {
 		log.Println(err)
@@ -101,8 +95,7 @@ func StoreUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func StoreDelete(w http.ResponseWriter, r *http.Request) {
-	ctx := context.New(w, r)
-	param := ctx.FindParam("key")
+	param := drx.FindParam(r, "key")
 	result, err := husk.ParseKey(param)
 
 	if err != nil {
@@ -112,7 +105,7 @@ func StoreDelete(w http.ResponseWriter, r *http.Request) {
 
 	mxr := mix.JSON(fmt.Sprintf("Deleted item with Key %s", result))
 
-	err = ctx.Serve(http.StatusOK, mxr)
+	err = mix.Write(w, mxr)
 
 	if err != nil {
 		log.Println(err)
