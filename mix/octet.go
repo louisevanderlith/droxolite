@@ -2,9 +2,7 @@ package mix
 
 import (
 	"bytes"
-	"errors"
 	"io"
-	"net/http"
 	"strings"
 )
 
@@ -17,6 +15,10 @@ type octet struct {
 }
 
 func Octet(name string, data interface{}) Mixer {
+	if data == nil {
+		panic("data is nil")
+	}
+
 	r := &octet{
 		data: data,
 	}
@@ -61,20 +63,12 @@ func (r *octet) Headers() map[string]string {
 }
 
 //Reader configures the response for reading files. data can be either io.Reader or []byte
-func (r *octet) Reader(w http.ResponseWriter) error {
-	if r.data == nil {
-		return errors.New("data is nil")
-	}
-
+func (r *octet) Reader() io.Reader {
 	if readr, canRead := r.data.(io.Reader); canRead {
-		_, err := io.Copy(w, readr)
-		return err
+		return readr
 	}
 
-	buff := bytes.NewBuffer(r.data.([]byte))
-
-	_, err := io.Copy(w, buff)
-	return err
+	return bytes.NewReader(r.data.([]byte))
 }
 
 func getName(path string) string {

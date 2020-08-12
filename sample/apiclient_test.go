@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"testing"
 
@@ -114,12 +115,12 @@ func TestMain_API_HuskKey_Escaped_OK(t *testing.T) {
 }
 
 func TestMain_API_HuskKey_OK(t *testing.T) {
-	rr, err := GetResponse(apiRoutes(), "/fake/1563985947336`12", nil)
+	rr, err := GetResponse(apiRoutes(), "/fake/store/1563985947336`12", nil)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	log.Println(rr.Body.String())
 	result := ""
 	err = json.Unmarshal(rr.Body.Bytes(), &result)
 
@@ -177,7 +178,7 @@ func TestMain_API_BooleanParam_OK(t *testing.T) {
 }
 
 func TestMain_API_HashParam_OK(t *testing.T) {
-	rr, err := GetResponse(apiRoutes(), "/fake/base/eyJuYW1lIjogIkppbW15IiwiYWdlOiB7ICJtb250aCI6IDIsICJkYXRlIjogOCwgInllYXIiOiAxOTkxfSwiYWxpdmUiOiB0cnVlfQ==", nil)
+	rr, err := GetResponse(apiRoutes(), "/fake/store/A1/eyJuYW1lIjogIkppbW15IiwiYWdlOiB7ICJtb250aCI6IDIsICJkYXRlIjogOCwgInllYXIiOiAxOTkxfSwiYWxpdmUiOiB0cnVlfQ==", nil)
 
 	if err != nil {
 		t.Fatal(err)

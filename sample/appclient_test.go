@@ -2,7 +2,7 @@ package sample
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/louisevanderlith/droxolite"
+	"github.com/louisevanderlith/droxolite/drx"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -133,7 +133,7 @@ func TestAPP_Error_OK(t *testing.T) {
 }
 
 func appRoutes() http.Handler {
-	tmpl, err := droxolite.LoadTemplate("./views")
+	tmpl, err := drx.LoadTemplate("./views")
 
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package droxolite
+package drx
 
 import (
 	"encoding/json"
@@ -15,18 +15,18 @@ import (
 
 //UpdateTemplate downloads the latest master templates from Theme.API
 func UpdateTemplate(clientId, clientSecret, securityUrl string) error {
-	scps := []string{
-		"theme.assets.download",
-		"theme.assets.view",
+	scps := map[string]bool{
+		"theme.assets.download": true,
+		"theme.assets.view":     true,
 	}
 
-	tkn, err := kong.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, scps...)
+	tkn, err := kong.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, scps)
 
 	if err != nil {
 		panic(err)
 	}
 
-	claims, err := kong.Exchange(http.DefaultClient, tkn, clientId, clientSecret, securityUrl+"/info")
+	claims, err := kong.FetchIdentity(http.DefaultClient, []byte(tkn), securityUrl+"/info", clientId, clientSecret)
 
 	if err != nil {
 		panic(err)

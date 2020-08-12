@@ -8,18 +8,14 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/louisevanderlith/droxolite/context"
+	"github.com/louisevanderlith/droxolite/drx"
 	"github.com/louisevanderlith/husk"
 )
 
 func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
+	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.New(w, r)
-
-		mxr := pge.Page("You're Home!", ctx.GetTokenInfo(), ctx.GetToken())
-
-		err := ctx.Serve(http.StatusOK, mxr)
+		err := mix.Write(w, pge.Create(r, "You are Home!"))
 
 		if err != nil {
 			log.Println(err)
@@ -28,10 +24,9 @@ func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
 }
 
 func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
+	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.New(w, r)
-		hsh := ctx.FindParam("hash")
+		hsh := drx.FindParam(r, "hash")
 
 		decoded, err := base64.StdEncoding.DecodeString(hsh)
 
@@ -40,9 +35,7 @@ func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
 			return
 		}
 
-		mxr := pge.Page(string(decoded), ctx.GetTokenInfo(), ctx.GetToken())
-
-		err = ctx.Serve(http.StatusOK, mxr)
+		err = mix.Write(w, pge.Create(r, string(decoded)))
 
 		if err != nil {
 			log.Println(err)
@@ -51,10 +44,9 @@ func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
 }
 
 func InterfaceView(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
+	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.New(w, r)
-		param := ctx.FindParam("key")
+		param := drx.FindParam(r, "key")
 		result, err := husk.ParseKey(param)
 
 		if err != nil {
@@ -62,9 +54,9 @@ func InterfaceView(tmpl *template.Template) http.HandlerFunc {
 			return
 		}
 
-		mxr := pge.Page(fmt.Sprintf("Viewing %s", result), ctx.GetTokenInfo(), ctx.GetToken())
+		data := fmt.Sprintf("Viewing %s", result)
 
-		err = ctx.Serve(http.StatusOK, mxr)
+		err = mix.Write(w, pge.Create(r, data))
 
 		if err != nil {
 			log.Println(err)
@@ -73,12 +65,9 @@ func InterfaceView(tmpl *template.Template) http.HandlerFunc {
 }
 
 func InterfaceCreate(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage(tmpl, "Index", "./views/index.html")
+	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.New(w, r)
-		mxr := pge.Page(nil, ctx.GetTokenInfo(), ctx.GetToken())
-
-		err := ctx.Serve(http.StatusOK, mxr)
+		err := mix.Write(w, pge.Create(r, "Nothing Created"))
 
 		if err != nil {
 			log.Println(err)

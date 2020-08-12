@@ -1,22 +1,13 @@
 package mix
 
 import (
-	"github.com/louisevanderlith/droxolite/menu"
-	"github.com/louisevanderlith/kong/tokens"
-	"net/http"
+	"io"
 )
 
-//Mixer is used by the Contexer to ApplyHeaders and Write the Response from the Reader
+//Mixer is used by the drx.ite to ApplyHeaders and Write the Response from the Reader
 type Mixer interface {
-	Reader(w http.ResponseWriter) error
+	Reader() io.Reader
 	Headers() map[string]string
-}
-
-type PageMixer interface {
-	Mixer
-	ChangeTitle(title string)
-	AddMenu(menu *menu.Menu)
-	Page(data interface{}, claims tokens.Claimer, token string) Mixer
 }
 
 //DefaultHeaders returns a set of Headers that apply to all mixers
