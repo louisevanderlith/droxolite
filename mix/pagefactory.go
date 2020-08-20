@@ -6,7 +6,6 @@ import (
 	"github.com/louisevanderlith/droxolite/drx"
 	"github.com/louisevanderlith/droxolite/menu"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -33,15 +32,14 @@ func PreparePage(title string, files *template.Template, tmplPath string) MixerF
 	}
 
 	result := &pgeFactory{
+		title:    title,
 		name:     strings.ToLower(strings.Replace(title, " ", "", -1)),
 		template: tmpl,
 		model:    make(map[string]interface{}),
 	}
 
-	result.ChangeTitle(title)
-
 	scriptName := fmt.Sprintf("%s.entry.dart.js", result.name)
-	_, err = os.Stat(path.Join("dist/js", scriptName))
+		_, err = os.Stat(path.Join("dist/js", scriptName))
 
 	result.model["HasScript"] = err == nil
 	result.model["ScriptName"] = scriptName
@@ -50,6 +48,7 @@ func PreparePage(title string, files *template.Template, tmplPath string) MixerF
 }
 
 type pgeFactory struct {
+	title    string
 	name     string
 	template *template.Template
 	model    map[string]interface{}
@@ -62,8 +61,10 @@ func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
 	f.model["Identity"] = claims
 
 	if claims != nil {
-		profTitle := fmt.Sprintf("%s - %s", f.model["Title"], claims.GetProfile())
-		f.ChangeTitle(profTitle)
+		if !strings.Contains(f.title, " - ") {
+			profTitle := fmt.Sprintf("%s - %s", f.title, claims.GetProfile())
+			f.ChangeTitle(profTitle)
+		}
 
 		f.model["Token"] = drx.GetToken(r)
 
@@ -76,7 +77,6 @@ func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
 
 	pageBuff := bytes.Buffer{}
 	htmlName := fmt.Sprintf("%s.html", f.name)
-	log.Println("HTML:", f.name, "TMPL:", f.template.Name())
 	err := f.template.ExecuteTemplate(&pageBuff, htmlName, f.model)
 
 	if err != nil {
