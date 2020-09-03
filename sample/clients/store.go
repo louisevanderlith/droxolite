@@ -4,11 +4,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/louisevanderlith/droxolite/mix"
+	"github.com/louisevanderlith/husk/keys"
 	"log"
 	"net/http"
 
 	"github.com/louisevanderlith/droxolite/drx"
-	"github.com/louisevanderlith/husk"
 )
 
 func StoreGet(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +41,7 @@ func StoreSearch(w http.ResponseWriter, r *http.Request) {
 
 func StoreView(w http.ResponseWriter, r *http.Request) {
 	param := drx.FindParam(r, "key")
-	result, err := husk.ParseKey(param)
+	result, err := keys.ParseKey(param)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -78,7 +78,7 @@ func StoreCreate(w http.ResponseWriter, r *http.Request) {
 
 func StoreUpdate(w http.ResponseWriter, r *http.Request) {
 	param := drx.FindParam(r, "key")
-	result, err := husk.ParseKey(param)
+	result, err := keys.ParseKey(param)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -96,7 +96,7 @@ func StoreUpdate(w http.ResponseWriter, r *http.Request) {
 
 func StoreDelete(w http.ResponseWriter, r *http.Request) {
 	param := drx.FindParam(r, "key")
-	result, err := husk.ParseKey(param)
+	result, err := keys.ParseKey(param)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
