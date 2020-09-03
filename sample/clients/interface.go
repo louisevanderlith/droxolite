@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/louisevanderlith/droxolite/mix"
+	"github.com/louisevanderlith/husk/keys"
 	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/louisevanderlith/droxolite/drx"
-	"github.com/louisevanderlith/husk"
 )
 
 func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
@@ -47,7 +47,7 @@ func InterfaceView(tmpl *template.Template) http.HandlerFunc {
 	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
 	return func(w http.ResponseWriter, r *http.Request) {
 		param := drx.FindParam(r, "key")
-		result, err := husk.ParseKey(param)
+		result, err := keys.ParseKey(param)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
