@@ -38,7 +38,8 @@ func PreparePage(title string, files *template.Template, tmplPath string) MixerF
 		model:    make(map[string]interface{}),
 	}
 
-	scriptName := fmt.Sprintf("%s.entry.dart.js", result.name)
+	baseName := strings.ToLower(strings.Replace(title, " ", "", -1))
+	scriptName := fmt.Sprintf("%s.entry.dart.js", baseName)
 	_, err = os.Stat(path.Join("dist/js", scriptName))
 
 	result.model["HasScript"] = err == nil
@@ -49,9 +50,7 @@ func PreparePage(title string, files *template.Template, tmplPath string) MixerF
 
 func fetchName(tmplPath string) string {
 	lastSlash := strings.LastIndex(tmplPath, "/")
-	lastDot := strings.LastIndex(tmplPath, ".")
-
-	return strings.ToLower(tmplPath[(lastSlash + 1):lastDot])
+	return strings.ToLower(tmplPath[(lastSlash + 1):])
 }
 
 type pgeFactory struct {
@@ -83,8 +82,7 @@ func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
 	}
 
 	pageBuff := bytes.Buffer{}
-	htmlName := fmt.Sprintf("%s.html", f.name)
-	err := f.template.ExecuteTemplate(&pageBuff, htmlName, f.model)
+	err := f.template.ExecuteTemplate(&pageBuff, f.name, f.model)
 
 	if err != nil {
 		panic(err)
