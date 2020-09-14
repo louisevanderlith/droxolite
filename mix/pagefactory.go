@@ -33,18 +33,25 @@ func PreparePage(title string, files *template.Template, tmplPath string) MixerF
 
 	result := &pgeFactory{
 		title:    title,
-		name:     strings.ToLower(strings.Replace(title, " ", "", -1)),
+		name:     fetchName(tmplPath),
 		template: tmpl,
 		model:    make(map[string]interface{}),
 	}
 
 	scriptName := fmt.Sprintf("%s.entry.dart.js", result.name)
-		_, err = os.Stat(path.Join("dist/js", scriptName))
+	_, err = os.Stat(path.Join("dist/js", scriptName))
 
 	result.model["HasScript"] = err == nil
 	result.model["ScriptName"] = scriptName
 
 	return result
+}
+
+func fetchName(tmplPath string) string {
+	lastSlash := strings.LastIndex(tmplPath, "/")
+	lastDot := strings.LastIndex(tmplPath, ".")
+
+	return strings.ToLower(tmplPath[(lastSlash + 1):lastDot])
 }
 
 type pgeFactory struct {
