@@ -20,7 +20,7 @@ func UpdateTemplate(clientId, clientSecret, securityUrl string) error {
 		"theme.assets.view":     true,
 	}
 
-	tkn, err := kong.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, scps)
+	tkn, err := kong.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, "", scps)
 
 	if err != nil {
 		panic(err)
