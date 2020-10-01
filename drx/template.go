@@ -3,7 +3,7 @@ package drx
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/louisevanderlith/kong"
+	"github.com/louisevanderlith/kong/middle"
 	"html/template"
 	"io"
 	"log"
@@ -20,13 +20,13 @@ func UpdateTemplate(clientId, clientSecret, securityUrl string) error {
 		"theme.assets.view":     true,
 	}
 
-	tkn, err := kong.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, "", scps)
+	tkn, err := middle.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, "", scps)
 
 	if err != nil {
 		panic(err)
 	}
 
-	claims, err := kong.FetchIdentity(http.DefaultClient, []byte(tkn), securityUrl+"/info", clientId, clientSecret)
+	claims, err := middle.FetchIdentity(http.DefaultClient, []byte(tkn), securityUrl+"/info", clientId, clientSecret)
 
 	if err != nil {
 		panic(err)
