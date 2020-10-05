@@ -6,8 +6,8 @@ github.com/gorilla/sessions v1.2.0 h1:S7P+1Hm5V/AT9cjEcUD5uDaQSX0OE577aCXgoaKpYb
 github.com/gorilla/sessions v1.2.0/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
 github.com/louisevanderlith/husk v1.7.4 h1:DlY2WmdK2LSb9OVgc5LTfFGedbeVralfiDoWBUr7HHc=
 github.com/louisevanderlith/husk v1.7.4/go.mod h1:iEFeOL3LmBuXlHl3lhiq8yDfob2CNbv+p23ZjP5DORU=
-github.com/louisevanderlith/kong v1.7.9 h1:6WypM40fTjwcrpWxmNgcwe2OvESgolImXBScX2jvxjA=
-github.com/louisevanderlith/kong v1.7.9/go.mod h1:dC7Ga7WpPynDESsQQTQfTuPkyzon+TNCV/1egRk+6iU=
+github.com/louisevanderlith/kong v1.8.0 h1:4CMbskjvK0W03HBKkODd8WxQUuZK+jTAhtt8Ui5Czco=
+github.com/louisevanderlith/kong v1.8.0/go.mod h1:dC7Ga7WpPynDESsQQTQfTuPkyzon+TNCV/1egRk+6iU=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79 h1:IaQbIIB2X/Mp/DKctl6ROxz1KyMlKp4uyvL6+kQ7C88=
 golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
