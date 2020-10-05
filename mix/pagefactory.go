@@ -3,7 +3,6 @@ package mix
 import (
 	"bytes"
 	"fmt"
-	"github.com/louisevanderlith/droxolite/drx"
 	"github.com/louisevanderlith/droxolite/menu"
 	"html/template"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 )
 
 type MixerFactory interface {
+	SetValue(name string, val interface{})
 	ChangeTitle(title string)
 	AddMenu(menu *menu.Menu)
 	Create(r *http.Request, data interface{}) Mixer
@@ -54,31 +54,18 @@ func fetchName(tmplPath string) string {
 }
 
 type pgeFactory struct {
-	title    string
-	name     string
-	template *template.Template
-	model    map[string]interface{}
+	title     string
+	name      string
+	template  *template.Template
+	model     map[string]interface{}
+	modifiers []func(f *pgeFactory)
 }
 
 func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
 	f.model["Data"] = data
 
-	claims := drx.GetIdentity(r)
-	f.model["Identity"] = claims
-
-	if claims != nil {
-		if !strings.Contains(f.title, " - ") {
-			profTitle := fmt.Sprintf("%s - %s", f.title, claims.GetProfile())
-			f.ChangeTitle(profTitle)
-		}
-
-		f.model["Token"] = drx.GetToken(r)
-
-		//User Details
-		if claims.HasUser() {
-			//never display the user's key on the front-end
-			f.model["Username"] = drx.GetUserIdentity(r).GetDisplayName()
-		}
+	for _, mod := range f.modifiers {
+		mod(f)
 	}
 
 	pageBuff := bytes.Buffer{}
@@ -95,9 +82,13 @@ func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
 }
 
 func (f *pgeFactory) ChangeTitle(title string) {
-	f.model["Title"] = title
+	f.SetValue("Title", title)
 }
 
 func (f *pgeFactory) AddMenu(m *menu.Menu) {
-	f.model["Menu"] = m
+	f.SetValue("Menu", m)
+}
+
+func (f *pgeFactory) SetValue(name string, val interface{}) {
+	f.model[name] = val
 }

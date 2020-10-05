@@ -3,7 +3,6 @@ package drx
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/louisevanderlith/kong/middle"
 	"html/template"
 	"io"
 	"log"
@@ -14,38 +13,15 @@ import (
 )
 
 //UpdateTemplate downloads the latest master templates from Theme.API
-func UpdateTemplate(clientId, clientSecret, securityUrl string) error {
-	scps := map[string]bool{
-		"theme.assets.download": true,
-		"theme.assets.view":     true,
-	}
-
-	tkn, err := middle.FetchToken(http.DefaultClient, securityUrl, clientId, clientSecret, "", scps)
-
-	if err != nil {
-		panic(err)
-	}
-
-	claims, err := middle.FetchIdentity(http.DefaultClient, []byte(tkn), securityUrl+"/info", clientId, clientSecret)
-
-	if err != nil {
-		panic(err)
-	}
-
-	url, err := claims.GetResourceURL("theme.assets.view")
-
-	if err != nil {
-		return err
-	}
-
-	lst, err := findTemplates(tkn, url)
+func UpdateTemplate(token, themeUrl string) error {
+	lst, err := findTemplates(token, themeUrl)
 
 	if err != nil {
 		return err
 	}
 
 	for _, v := range lst {
-		err = downloadTemplate(tkn, v, url)
+		err = downloadTemplate(token, v, themeUrl)
 
 		if err != nil {
 			return err
