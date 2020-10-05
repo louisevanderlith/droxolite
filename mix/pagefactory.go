@@ -13,6 +13,7 @@ import (
 
 type MixerFactory interface {
 	SetValue(name string, val interface{})
+	GetTitle() string
 	ChangeTitle(title string)
 	AddMenu(menu *menu.Menu)
 	Create(r *http.Request, data interface{}) Mixer
@@ -58,14 +59,18 @@ type pgeFactory struct {
 	name      string
 	template  *template.Template
 	model     map[string]interface{}
-	modifiers []func(f *pgeFactory)
+	modifiers []func(f *pgeFactory, r *http.Request)
+}
+
+func (f *pgeFactory) GetTitle() string {
+	return f.title
 }
 
 func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
 	f.model["Data"] = data
 
 	for _, mod := range f.modifiers {
-		mod(f)
+		mod(f, r)
 	}
 
 	pageBuff := bytes.Buffer{}
