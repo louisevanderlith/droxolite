@@ -17,6 +17,7 @@ type MixerFactory interface {
 	ChangeTitle(title string)
 	AddMenu(menu *menu.Menu)
 	Create(r *http.Request, data interface{}) Mixer
+	AddModifier(mod func(f *pgeFactory, r *http.Request))
 }
 
 func PreparePage(title string, files *template.Template, tmplPath string) MixerFactory {
@@ -64,6 +65,10 @@ type pgeFactory struct {
 
 func (f *pgeFactory) GetTitle() string {
 	return f.title
+}
+
+func (f *pgeFactory) AddModifier(mod func(f *pgeFactory, r *http.Request)) {
+	f.modifiers = append(f.modifiers, mod)
 }
 
 func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
