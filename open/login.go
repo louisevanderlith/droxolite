@@ -57,6 +57,10 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 	idcookie := http.Cookie{Name: "idtoken", Value: rawIDToken, Expires: oauth2Token.Expiry}
 	http.SetCookie(w, &idcookie)
 
+	state.Expires = time.Now().Add(time.Hour * -24)
+	state.Value = ""
+	http.SetCookie(w, state)
+
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
