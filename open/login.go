@@ -92,9 +92,9 @@ func LoginMiddleware(verifier *oidc.IDTokenVerifier, next http.HandlerFunc) http
 		}
 
 		rawaccToken, _ := r.Cookie("acctoken")
-		xidn := context.WithValue(r.Context(), "accToken", rawaccToken.Value)
+		xidn := context.WithValue(r.Context(), "Token", rawaccToken.Value)
 
-		idn := context.WithValue(xidn, "idToken", idToken)
+		idn := context.WithValue(xidn, "IDToken", idToken)
 
 		next.ServeHTTP(w, r.WithContext(idn))
 	}
