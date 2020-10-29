@@ -85,7 +85,7 @@ func LoginMiddleware(verifier *oidc.IDTokenVerifier, next http.HandlerFunc) http
 			return
 		}
 
-		idToken, err := verifier.Verify(context.Background(), rawIDToken.Value)
+		idToken, err := verifier.Verify(r.Context(), rawIDToken.Value)
 		if err != nil {
 			http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
 			return
