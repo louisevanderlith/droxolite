@@ -6,6 +6,7 @@ import (
 	"github.com/coreos/go-oidc"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
+	"log"
 	"net/http"
 	"time"
 )
@@ -51,16 +52,18 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acccookie := http.Cookie{Name: "acctoken", Value: oauth2Token.AccessToken, Expires: oauth2Token.Expiry}
+	acccookie := http.Cookie{Name: "acctoken", Value: oauth2Token.AccessToken, Expires: oauth2Token.Expiry, HttpOnly: true}
 	http.SetCookie(w, &acccookie)
 
-	idcookie := http.Cookie{Name: "idtoken", Value: rawIDToken, Expires: oauth2Token.Expiry}
+	idcookie := http.Cookie{Name: "idtoken", Value: rawIDToken, Expires: oauth2Token.Expiry, HttpOnly: true}
 	http.SetCookie(w, &idcookie)
 
 	state.Expires = time.Now().Add(time.Hour * -24)
 	state.Value = ""
+	state.HttpOnly = true
 	http.SetCookie(w, state)
 
+	//TODO: Callback
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -87,7 +90,8 @@ func LoginMiddleware(verifier *oidc.IDTokenVerifier, next http.HandlerFunc) http
 
 		idToken, err := verifier.Verify(r.Context(), rawIDToken.Value)
 		if err != nil {
-			http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
+			log.Println("Verify Error", err)
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 			return
 		}
 
