@@ -86,14 +86,14 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	return state
 }
 
-func (p uiprotector) Middleware(next http.HandlerFunc) http.HandlerFunc {
+func (p uiprotector) Middleware(next http.Handler) http.Handler {
 
 	oidcConfig := &oidc.Config{
 		ClientID: p.authConfig.ClientID,
 	}
 	v := p.provider.Verifier(oidcConfig)
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawIDToken, err := r.Cookie("idtoken")
 
 		if err != nil {
@@ -131,5 +131,5 @@ func (p uiprotector) Middleware(next http.HandlerFunc) http.HandlerFunc {
 		idn := context.WithValue(xidn, "IDToken", idToken)
 
 		next.ServeHTTP(w, r.WithContext(idn))
-	}
+	})
 }
