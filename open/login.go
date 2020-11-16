@@ -16,8 +16,8 @@ type uiprotector struct {
 	authConfig *oauth2.Config
 }
 
-func NewUILock(cfg *oauth2.Config) uiprotector {
-	return uiprotector{authConfig: cfg}
+func NewUILock(provider *oidc.Provider, cfg *oauth2.Config) uiprotector {
+	return uiprotector{authConfig: cfg, provider: provider}
 }
 
 func (p uiprotector) Login(w http.ResponseWriter, r *http.Request) {
