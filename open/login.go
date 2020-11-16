@@ -12,6 +12,7 @@ import (
 )
 
 type uiprotector struct {
+	provider   *oidc.Provider
 	authConfig *oauth2.Config
 }
 
@@ -24,9 +25,68 @@ func (p uiprotector) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, p.authConfig.AuthCodeURL(state), http.StatusTemporaryRedirect)
 }
 
-func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+func (p uiprotector) Callbackware(next http.Handler) http.Handler {
+	v := p.provider.Verifier(&oidc.Config{
+		ClientID: p.authConfig.ClientID,
+	})
 
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		state, err := r.Cookie("oauthstate")
+
+		if err != nil {
+			http.Error(w, "state not found", http.StatusInternalServerError)
+			return
+		}
+
+		if r.URL.Query().Get("state") != state.Value {
+			http.Error(w, "state did not match", http.StatusBadRequest)
+			return
+		}
+
+		state.Expires = time.Now().Add(time.Hour * -24)
+		state.Value = ""
+		state.HttpOnly = true
+		http.SetCookie(w, state)
+
+		oauth2Token, err := p.authConfig.Exchange(r.Context(), r.URL.Query().Get("code"))
+		if err != nil {
+			http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rawIDToken, ok := oauth2Token.Extra("id_token").(string)
+
+		if !ok {
+			http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
+			return
+		}
+
+		idToken, err := v.Verify(r.Context(), rawIDToken)
+
+		if err != nil {
+			log.Println("Verify Error", err)
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+			return
+		}
+
+		claims := make(map[string]interface{})
+		err = idToken.Claims(&claims)
+
+		if err != nil {
+			log.Println("Claims Bind Error", err)
+			http.Error(w, "", http.StatusInternalServerError)
+			return
+		}
+
+		xidn := context.WithValue(r.Context(), "Token", oauth2Token)
+		idn := context.WithValue(xidn, "Claims", claims)
+
+		next.ServeHTTP(w, r.WithContext(idn))
+	})
+}
+
+func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 	state, err := r.Cookie("oauthstate")
 
 	if err != nil {
@@ -39,7 +99,7 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oauth2Token, err := p.authConfig.Exchange(ctx, r.URL.Query().Get("code"))
+	oauth2Token, err := p.authConfig.Exchange(r.Context(), r.URL.Query().Get("code"))
 	if err != nil {
 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -77,29 +137,4 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	http.SetCookie(w, &cookie)
 
 	return state
-}
-
-func LoginMiddleware(verifier *oidc.IDTokenVerifier, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		rawIDToken, err := r.Cookie("idtoken")
-
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-			return
-		}
-
-		idToken, err := verifier.Verify(r.Context(), rawIDToken.Value)
-		if err != nil {
-			log.Println("Verify Error", err)
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-			return
-		}
-
-		rawaccToken, _ := r.Cookie("acctoken")
-		xidn := context.WithValue(r.Context(), "Token", rawaccToken.Value)
-
-		idn := context.WithValue(xidn, "IDToken", idToken)
-
-		next.ServeHTTP(w, r.WithContext(idn))
-	}
 }
