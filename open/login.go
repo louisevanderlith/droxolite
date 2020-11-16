@@ -31,6 +31,14 @@ func (p uiprotector) Callbackware(next http.Handler) http.Handler {
 	})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		urlCode := r.URL.Query().Get("code")
+		urlState := r.URL.Query().Get("state")
+
+		// not a callback, skip
+		if urlCode == "" && urlState == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		state, err := r.Cookie("oauthstate")
 
@@ -39,7 +47,7 @@ func (p uiprotector) Callbackware(next http.Handler) http.Handler {
 			return
 		}
 
-		if r.URL.Query().Get("state") != state.Value {
+		if urlState != state.Value {
 			http.Error(w, "state did not match", http.StatusBadRequest)
 			return
 		}
@@ -49,7 +57,7 @@ func (p uiprotector) Callbackware(next http.Handler) http.Handler {
 		state.HttpOnly = true
 		http.SetCookie(w, state)
 
-		oauth2Token, err := p.authConfig.Exchange(r.Context(), r.URL.Query().Get("code"))
+		oauth2Token, err := p.authConfig.Exchange(r.Context(), urlCode)
 		if err != nil {
 			http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 			return
