@@ -12,11 +12,12 @@ import (
 )
 
 type uiprotector struct {
+	provider   *oidc.Provider
 	authConfig *oauth2.Config
 }
 
-func NewUILock(cfg *oauth2.Config) uiprotector {
-	return uiprotector{authConfig: cfg}
+func NewUILock(p *oidc.Provider, cfg *oauth2.Config) uiprotector {
+	return uiprotector{authConfig: cfg, provider: p}
 }
 
 func (p uiprotector) Login(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +86,13 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	return state
 }
 
-func LoginMiddleware(verifier *oidc.IDTokenVerifier, next http.HandlerFunc) http.HandlerFunc {
+func (p uiprotector) Middleware(next http.HandlerFunc) http.HandlerFunc {
+
+	oidcConfig := &oidc.Config{
+		ClientID: p.authConfig.ClientID,
+	}
+	v := p.provider.Verifier(oidcConfig)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		rawIDToken, err := r.Cookie("idtoken")
 
@@ -103,7 +110,7 @@ func LoginMiddleware(verifier *oidc.IDTokenVerifier, next http.HandlerFunc) http
 			return
 		}
 
-		idToken, err := verifier.Verify(r.Context(), rawIDToken.Value)
+		idToken, err := v.Verify(r.Context(), rawIDToken.Value)
 		if err != nil {
 			log.Println("Verify Error", err)
 			http.SetCookie(w, &http.Cookie{
