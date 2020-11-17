@@ -97,6 +97,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 		rawIDToken, err := r.Cookie("idtoken")
 
 		if err != nil {
+			log.Println("Cookie Error", err)
 			http.SetCookie(w, &http.Cookie{
 				Name:     "location",
 				Value:    r.RequestURI,
@@ -105,7 +106,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 				HttpOnly: true,
 			})
 
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+			p.Login(w, r)
 			return
 		}
 
@@ -115,12 +116,12 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "location",
 				Value:    r.RequestURI,
-				Domain:   r.Host,
 				Expires:  time.Now().Add(5 * time.Minute),
 				Secure:   false,
 				HttpOnly: true,
 			})
-			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+
+			p.Login(w, r)
 			return
 		}
 
