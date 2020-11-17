@@ -100,7 +100,6 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "location",
 				Value:    r.RequestURI,
-				Domain:   r.Host,
 				Expires:  time.Now().Add(5 * time.Minute),
 				Secure:   false,
 				HttpOnly: true,
