@@ -3,8 +3,10 @@ module github.com/louisevanderlith/droxolite
 require (
 	github.com/auth0/go-jwt-middleware v0.0.0-20200810150920-a32d7af194d1
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/louisevanderlith/husk v1.7.6
 	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect
