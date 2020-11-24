@@ -40,7 +40,11 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oauth2Token, err := p.authConfig.Exchange(ctx, r.URL.Query().Get("code"))
+	accCode := r.URL.Query().Get("code")
+	acccookie := http.Cookie{Name: "acccode", Value: accCode, HttpOnly: true}
+	http.SetCookie(w, &acccookie)
+
+	oauth2Token, err := p.authConfig.Exchange(ctx, accCode)
 	if err != nil {
 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -53,12 +57,13 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acccookie := http.Cookie{Name: "acctoken", Value: oauth2Token.AccessToken, Expires: oauth2Token.Expiry, HttpOnly: true}
-	http.SetCookie(w, &acccookie)
+	tokencookie := http.Cookie{Name: "acctoken", Value: oauth2Token.AccessToken, Expires: oauth2Token.Expiry, HttpOnly: true}
+	http.SetCookie(w, &tokencookie)
 
 	idcookie := http.Cookie{Name: "idtoken", Value: rawIDToken, Expires: oauth2Token.Expiry, HttpOnly: true}
 	http.SetCookie(w, &idcookie)
 
+	state.MaxAge = -1
 	state.Expires = time.Now().Add(time.Hour * -24)
 	state.Value = ""
 	state.HttpOnly = true
@@ -74,6 +79,21 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, location.Value, http.StatusFound)
 }
 
+func (p uiprotector) Logout(w http.ResponseWriter, r *http.Request) {
+	acc, err := r.Cookie("acctoken")
+
+	if err != nil {
+		http.Error(w, "acctoken not found", http.StatusInternalServerError)
+		return
+	}
+
+	acc.MaxAge = -1
+	acc.Expires = time.Now().Add(time.Hour * -24)
+	acc.Value = ""
+	acc.HttpOnly = true
+	http.SetCookie(w, acc)
+}
+
 func generateStateOauthCookie(w http.ResponseWriter) string {
 	var expiration = time.Now().Add(365 * 24 * time.Hour)
 
@@ -86,8 +106,66 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	return state
 }
 
-func (p uiprotector) Middleware(next http.Handler) http.Handler {
+func (p uiprotector) LazyMiddleware(next http.Handler) http.Handler {
+	oidcConfig := &oidc.Config{
+		ClientID: p.authConfig.ClientID,
+	}
+	v := p.provider.Verifier(oidcConfig)
 
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		accCode, err := r.Cookie("acccode")
+
+		if err != nil {
+			log.Println("Access Code Cookie Error", err)
+			http.SetCookie(w, &http.Cookie{
+				Name:     "location",
+				Value:    r.RequestURI,
+				Expires:  time.Now().Add(5 * time.Minute),
+				Secure:   false,
+				HttpOnly: true,
+			})
+
+			p.Login(w, r)
+			return
+		}
+
+		oauth2Token, err := p.authConfig.Exchange(r.Context(), accCode.Value)
+		if err != nil {
+			http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rawIDToken, ok := oauth2Token.Extra("id_token").(string)
+
+		if !ok {
+			http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
+			return
+		}
+
+		idToken, err := v.Verify(r.Context(), rawIDToken)
+		if err != nil {
+			log.Println("Verify Error", err)
+			http.SetCookie(w, &http.Cookie{
+				Name:     "location",
+				Value:    r.RequestURI,
+				Expires:  time.Now().Add(5 * time.Minute),
+				Secure:   false,
+				HttpOnly: true,
+			})
+
+			p.Login(w, r)
+			return
+		}
+
+		xidn := context.WithValue(r.Context(), "Token", oauth2Token)
+
+		idn := context.WithValue(xidn, "IDToken", idToken)
+
+		next.ServeHTTP(w, r.WithContext(idn))
+	})
+}
+
+func (p uiprotector) Middleware(next http.Handler) http.Handler {
 	oidcConfig := &oidc.Config{
 		ClientID: p.authConfig.ClientID,
 	}
