@@ -58,7 +58,8 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokencookie := http.Cookie{Name: "acctoken", Value: string(jtoken), Expires: oauth2Token.Expiry, HttpOnly: true}
+	tkn64 := base64.StdEncoding.EncodeToString(jtoken)
+	tokencookie := http.Cookie{Name: "acctoken", Value: tkn64, Expires: oauth2Token.Expiry, HttpOnly: true}
 	http.SetCookie(w, &tokencookie)
 
 	idcookie := http.Cookie{Name: "idtoken", Value: rawIDToken, Expires: oauth2Token.Expiry, HttpOnly: true}
@@ -150,8 +151,14 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 		}
 
 		jtoken, _ := r.Cookie("acctoken")
+		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		accToken := oauth2.Token{}
-		err = json.Unmarshal([]byte(jtoken.Value), &accToken)
+		err = json.Unmarshal(tkn64, &accToken)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
