@@ -9,7 +9,6 @@ import (
 	"golang.org/x/oauth2"
 	"log"
 	"net/http"
-	"time"
 )
 
 type uiprotector struct {
@@ -59,16 +58,26 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tkn64 := base64.StdEncoding.EncodeToString(jtoken)
-	tokencookie := http.Cookie{Name: "acctoken", Value: tkn64, Expires: oauth2Token.Expiry, HttpOnly: true}
+	tokencookie := http.Cookie{
+		Name:     "acctoken",
+		Value:    tkn64,
+		MaxAge:   0,
+		Path:     "/",
+		HttpOnly: true,
+	}
 	http.SetCookie(w, &tokencookie)
 
-	idcookie := http.Cookie{Name: "idtoken", Value: rawIDToken, Expires: oauth2Token.Expiry, HttpOnly: true}
+	idcookie := http.Cookie{
+		Name:     "idtoken",
+		Value:    rawIDToken,
+		MaxAge:   0,
+		Path:     "/",
+		HttpOnly: true,
+	}
 	http.SetCookie(w, &idcookie)
 
 	state.MaxAge = -1
-	state.Expires = time.Now().Add(time.Hour * -24)
 	state.Value = ""
-	state.HttpOnly = true
 	http.SetCookie(w, state)
 
 	RedirectToLastLocation(w, r)
@@ -94,19 +103,23 @@ func (p uiprotector) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	acc.MaxAge = -1
-	acc.Expires = time.Now().Add(time.Hour * -24)
 	acc.Value = ""
-	acc.HttpOnly = true
 	http.SetCookie(w, acc)
 }
 
 func generateStateOauthCookie(w http.ResponseWriter) string {
-	var expiration = time.Now().Add(365 * 24 * time.Hour)
+	//var expiration = time.Now().Add(365 * 24 * time.Hour)
 
 	b := make([]byte, 16)
 	rand.Read(b)
 	state := base64.URLEncoding.EncodeToString(b)
-	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
+	cookie := http.Cookie{
+		Name:     "oauthstate",
+		Value:    state,
+		MaxAge:   0,
+		Path:     "/",
+		HttpOnly: true,
+	}
 	http.SetCookie(w, &cookie)
 
 	return state
@@ -126,7 +139,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "location",
 				Value:    r.RequestURI,
-				Expires:  time.Now().Add(5 * time.Minute),
+				MaxAge:   0,
 				Secure:   false,
 				HttpOnly: true,
 			})
@@ -141,7 +154,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "location",
 				Value:    r.RequestURI,
-				Expires:  time.Now().Add(5 * time.Minute),
+				MaxAge:   0,
 				Secure:   false,
 				HttpOnly: true,
 			})
