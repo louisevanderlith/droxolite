@@ -22,7 +22,7 @@ func (g ghostprotector) GhostMiddleware(next http.HandlerFunc) http.HandlerFunc 
 			panic(err)
 		}
 
-		acc := context.WithValue(r.Context(), "Token", tkn.AccessToken)
+		acc := context.WithValue(r.Context(), "Token", *tkn)
 		next.ServeHTTP(w, r.WithContext(acc))
 	}
 }
