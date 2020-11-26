@@ -87,8 +87,7 @@ func RedirectToLastLocation(w http.ResponseWriter, r *http.Request) {
 	location, err := r.Cookie("location")
 
 	if err != nil {
-		http.Error(w, "last location not found", http.StatusInternalServerError)
-		return
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 
 	http.Redirect(w, r, location.Value, http.StatusFound)
