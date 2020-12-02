@@ -136,12 +136,14 @@ func (p uiprotector) NoLoginMiddleware(next http.Handler) http.Handler {
 
 		if err != nil {
 			log.Println("Verify Error", err)
+			next.ServeHTTP(w, r)
 			return
 		}
 
 		idToken, err := v.Verify(r.Context(), rawIDToken.Value)
 		if err != nil {
 			log.Println("Verify Error", err)
+			next.ServeHTTP(w, r)
 			return
 		}
 
