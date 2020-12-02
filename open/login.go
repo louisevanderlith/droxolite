@@ -104,11 +104,11 @@ func (p uiprotector) Logout(w http.ResponseWriter, r *http.Request) {
 	acc.MaxAge = -1
 	acc.Value = ""
 	http.SetCookie(w, acc)
+
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
 func generateStateOauthCookie(w http.ResponseWriter) string {
-	//var expiration = time.Now().Add(365 * 24 * time.Hour)
-
 	b := make([]byte, 16)
 	rand.Read(b)
 	state := base64.URLEncoding.EncodeToString(b)
@@ -124,10 +124,63 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	return state
 }
 
+func (p uiprotector) NoLoginMiddleware(next http.Handler) http.Handler {
+	oidcConfig := &oidc.Config{
+		ClientID: p.authConfig.ClientID,
+	}
+
+	v := p.provider.Verifier(oidcConfig)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rawIDToken, err := r.Cookie("idtoken")
+
+		if err != nil {
+			log.Println("Verify Error", err)
+			return
+		}
+
+		idToken, err := v.Verify(r.Context(), rawIDToken.Value)
+		if err != nil {
+			log.Println("Verify Error", err)
+			return
+		}
+
+		jtoken, _ := r.Cookie("acctoken")
+		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		accToken := oauth2.Token{}
+		err = json.Unmarshal(tkn64, &accToken)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = idToken.VerifyAccessToken(accToken.AccessToken)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		xidn := context.WithValue(r.Context(), "Token", accToken)
+		idn := context.WithValue(xidn, "IDToken", idToken)
+		//TODO: Replace IDToken with Claims (User)
+
+		next.ServeHTTP(w, r.WithContext(idn))
+	})
+}
+
 func (p uiprotector) Middleware(next http.Handler) http.Handler {
 	oidcConfig := &oidc.Config{
 		ClientID: p.authConfig.ClientID,
 	}
+
 	v := p.provider.Verifier(oidcConfig)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -141,6 +194,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 				MaxAge:   0,
 				Secure:   false,
 				HttpOnly: true,
+				Path:     "/",
 			})
 
 			p.Login(w, r)
@@ -156,6 +210,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 				MaxAge:   0,
 				Secure:   false,
 				HttpOnly: true,
+				Path:     "/",
 			})
 
 			p.Login(w, r)
