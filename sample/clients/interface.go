@@ -13,7 +13,8 @@ import (
 
 func InterfaceGet(fact mix.MixerFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := mix.Write(w, fact.Create(r, "Index", "./views/index.html", "You are Home!"))
+		b := mix.NewDataBag("You are Home!")
+		err := mix.Write(w, fact.Create(r, "Index", "./views/index.html", b))
 
 		if err != nil {
 			log.Println(err)
@@ -32,7 +33,8 @@ func InterfaceSearch(fact mix.MixerFactory) http.HandlerFunc {
 			return
 		}
 
-		err = mix.Write(w, fact.Create(r, "Index", "./views/index.html", string(decoded)))
+		b := mix.NewDataBag(string(decoded))
+		err = mix.Write(w, fact.Create(r, "Index", "./views/index.html", b))
 
 		if err != nil {
 			log.Println(err)
@@ -50,9 +52,9 @@ func InterfaceView(fact mix.MixerFactory) http.HandlerFunc {
 			return
 		}
 
-		data := fmt.Sprintf("Viewing %s", result)
+		b := mix.NewDataBag(fmt.Sprintf("Viewing %s", result))
 
-		err = mix.Write(w, fact.Create(r, "Index", "./views/index.html", data))
+		err = mix.Write(w, fact.Create(r, "Index", "./views/index.html", b))
 
 		if err != nil {
 			log.Println(err)
@@ -62,7 +64,8 @@ func InterfaceView(fact mix.MixerFactory) http.HandlerFunc {
 
 func InterfaceCreate(fact mix.MixerFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := mix.Write(w, fact.Create(r, "Index", "./views/index.html", "Nothing Created"))
+		b := mix.NewDataBag("Nothing Created")
+		err := mix.Write(w, fact.Create(r, "Index", "./views/index.html", b))
 
 		if err != nil {
 			log.Println(err)

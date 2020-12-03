@@ -9,6 +9,13 @@ func NewBag() Bag {
 	return make(bag)
 }
 
+func NewDataBag(data interface{}) Bag {
+	b := NewBag()
+	b.SetValue("Data", data)
+
+	return b
+}
+
 type bag map[string]interface{}
 
 func (b bag) SetValue(name string, val interface{}) {
