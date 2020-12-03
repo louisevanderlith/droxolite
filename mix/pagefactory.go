@@ -1,7 +1,6 @@
 package mix
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/louisevanderlith/droxolite/menu"
 	"html/template"
@@ -12,42 +11,16 @@ import (
 )
 
 type MixerFactory interface {
-	SetValue(name string, val interface{})
-	GetTitle() string
-	ChangeTitle(title string)
 	AddMenu(menu *menu.Menu)
-	Create(r *http.Request, data interface{}) Mixer
+	Create(r *http.Request, title, path string, data interface{}) Mixer
 	AddModifier(mod ModFunc)
 }
 
-func PreparePage(title string, files *template.Template, tmplPath string) MixerFactory {
-	cpy, err := files.Clone()
-
-	if err != nil {
-		panic(err)
+func NewPageFactory(files *template.Template, mods ...ModFunc) MixerFactory {
+	return &pgeFactory{
+		files:     files,
+		modifiers: mods,
 	}
-
-	tmpl, err := cpy.ParseFiles(tmplPath)
-
-	if err != nil {
-		panic(err)
-	}
-
-	result := &pgeFactory{
-		title:    title,
-		name:     fetchName(tmplPath),
-		template: tmpl,
-		model:    make(map[string]interface{}),
-	}
-
-	baseName := strings.ToLower(strings.Replace(title, " ", "", -1))
-	scriptName := fmt.Sprintf("%s.entry.dart.js", baseName)
-	_, err = os.Stat(path.Join("dist/js", scriptName))
-
-	result.model["HasScript"] = err == nil
-	result.model["ScriptName"] = scriptName
-
-	return result
 }
 
 func fetchName(tmplPath string) string {
@@ -56,49 +29,52 @@ func fetchName(tmplPath string) string {
 }
 
 type pgeFactory struct {
-	title     string
-	name      string
-	template  *template.Template
-	model     map[string]interface{}
+	files     *template.Template
 	modifiers []ModFunc
-}
-
-func (f *pgeFactory) GetTitle() string {
-	return f.title
+	menu      *menu.Menu
 }
 
 func (f *pgeFactory) AddModifier(mod ModFunc) {
 	f.modifiers = append(f.modifiers, mod)
 }
 
-func (f *pgeFactory) Create(r *http.Request, data interface{}) Mixer {
-	f.model["Data"] = data
+func (f *pgeFactory) Create(r *http.Request, title, templatePath string, data interface{}) Mixer {
+	bag := NewBag()
+	bag.SetValue("Data", data)
 
 	for _, mod := range f.modifiers {
-		mod(f, r)
+		mod(bag, r)
 	}
 
-	pageBuff := bytes.Buffer{}
-	err := f.template.ExecuteTemplate(&pageBuff, f.name, f.model)
+	baseName := strings.ToLower(strings.Replace(title, " ", "", -1))
+	scriptName := fmt.Sprintf("%s.entry.dart.js", baseName)
+	_, err := os.Stat(path.Join("dist/js", scriptName))
+
+	bag.SetValue("HasScript", err == nil)
+	bag.SetValue("ScriptName", scriptName)
+
+	bag.SetValue("Menu", f.menu)
+
+	cpy, err := f.files.Clone()
+
+	if err != nil {
+		panic(err)
+	}
+
+	tmpl, err := cpy.ParseFiles(templatePath)
 
 	if err != nil {
 		panic(err)
 	}
 
 	return &pge{
-		data:        pageBuff,
-		contentPage: f.name,
+		template: tmpl,
+		title:    title,
+		name:     fetchName(templatePath),
+		model:    bag.Values(),
 	}
 }
 
-func (f *pgeFactory) ChangeTitle(title string) {
-	f.SetValue("Title", title)
-}
-
 func (f *pgeFactory) AddMenu(m *menu.Menu) {
-	f.SetValue("Menu", m)
-}
-
-func (f *pgeFactory) SetValue(name string, val interface{}) {
-	f.model[name] = val
+	f.menu = m
 }

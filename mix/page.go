@@ -2,13 +2,16 @@ package mix
 
 import (
 	"bytes"
+	"html/template"
 	"io"
 )
 
 //Page provides a io.Reader for serving html pages
 type pge struct {
-	data        bytes.Buffer
-	contentPage string
+	template    *template.Template
+	title       string
+	name        string
+	model       map[string]interface{}
 }
 
 func (r *pge) Headers() map[string]string {
@@ -26,5 +29,13 @@ func (r *pge) Headers() map[string]string {
 
 //Reader configures the response for reading
 func (r *pge) Reader() io.Reader {
-	return &r.data
+
+	pageBuff := bytes.Buffer{}
+	err := r.template.ExecuteTemplate(&pageBuff, r.name, r.model)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return &pageBuff
 }

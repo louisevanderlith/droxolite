@@ -5,17 +5,18 @@ import (
 	"net/http"
 )
 
-type ModFunc func(f MixerFactory, r *http.Request)
+//ModFunc can be used to add additional values to the view bag before rendering
+type ModFunc func(b Bag, r *http.Request)
 
 func EndpointMod(endpoints map[string]string) ModFunc {
-	return func(f MixerFactory, r *http.Request) {
-		f.SetValue("Endpoints", endpoints)
+	return func(b Bag, r *http.Request) {
+		b.SetValue("Endpoints", endpoints)
 	}
 }
 
 func IdentityMod(clientId string) ModFunc {
-	return func(f MixerFactory, r *http.Request) {
-		f.SetValue("ClientID", clientId)
+	return func(b Bag, r *http.Request) {
+		b.SetValue("ClientID", clientId)
 
 		tkn := r.Context().Value("Token")
 
@@ -23,7 +24,7 @@ func IdentityMod(clientId string) ModFunc {
 			return
 		}
 
-		f.SetValue("Token", tkn)
+		b.SetValue("Token", tkn)
 
 		tknVal := r.Context().Value("IDToken")
 
@@ -40,6 +41,6 @@ func IdentityMod(clientId string) ModFunc {
 			return
 		}
 
-		f.SetValue("User", claims)
+		b.SetValue("User", claims)
 	}
 }

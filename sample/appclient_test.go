@@ -3,6 +3,7 @@ package sample
 import (
 	"github.com/gorilla/mux"
 	"github.com/louisevanderlith/droxolite/drx"
+	"github.com/louisevanderlith/droxolite/mix"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -144,23 +145,24 @@ func appRoutes() http.Handler {
 	fs := http.FileServer(distPath)
 	r.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", fs))
 
-	r.HandleFunc("/", clients.InterfaceGet(tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.InterfaceSearch(tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/{pagesize:[A-Z][0-9]+}", clients.InterfaceSearch(tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/{key:[0-9]+\x60[0-9]+}", clients.InterfaceView(tmpl)).Methods(http.MethodGet)
-	r.HandleFunc("/create", clients.InterfaceCreate(tmpl)).Methods(http.MethodPost)
+	fact := mix.NewPageFactory(tmpl)
+	r.HandleFunc("/", clients.InterfaceGet(fact)).Methods(http.MethodGet)
+	r.HandleFunc("/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.InterfaceSearch(fact)).Methods(http.MethodGet)
+	r.HandleFunc("/{pagesize:[A-Z][0-9]+}", clients.InterfaceSearch(fact)).Methods(http.MethodGet)
+	r.HandleFunc("/{key:[0-9]+\x60[0-9]+}", clients.InterfaceView(fact)).Methods(http.MethodGet)
+	r.HandleFunc("/create", clients.InterfaceCreate(fact)).Methods(http.MethodPost)
 
 	stck := r.PathPrefix("/stock").Subrouter()
-	stck.HandleFunc("/parts", clients.PartsGet(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.PartsSearch(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}", clients.PartsSearch(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/{key:[0-9]+\x60[0-9]+}", clients.PartsView(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/parts/create", clients.PartsCreate(tmpl)).Methods(http.MethodPost)
-	stck.HandleFunc("/services", clients.ServicesGet(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.ServicesSearch(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}", clients.ServicesSearch(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/{key:[0-9]+\x60[0-9]+}", clients.ServicesView(tmpl)).Methods(http.MethodGet)
-	stck.HandleFunc("/services/create", clients.ServicesCreate(tmpl)).Methods(http.MethodPost)
+	stck.HandleFunc("/parts", clients.PartsGet(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.PartsSearch(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{pagesize:[A-Z][0-9]+}", clients.PartsSearch(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/{key:[0-9]+\x60[0-9]+}", clients.PartsView(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/parts/create", clients.PartsCreate(fact)).Methods(http.MethodPost)
+	stck.HandleFunc("/services", clients.ServicesGet(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}/{hash:[a-zA-Z0-9]+={0,2}}", clients.ServicesSearch(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{pagesize:[A-Z][0-9]+}", clients.ServicesSearch(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/{key:[0-9]+\x60[0-9]+}", clients.ServicesView(fact)).Methods(http.MethodGet)
+	stck.HandleFunc("/services/create", clients.ServicesCreate(fact)).Methods(http.MethodPost)
 
 	return r
 }
