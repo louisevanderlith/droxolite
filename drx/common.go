@@ -1,10 +1,13 @@
 package drx
 
 import (
+	"crypto/md5"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 //JSONBody will bind JSON body to container
@@ -59,4 +62,14 @@ func ParsePageData(pageData string) (int, int) {
 	}
 
 	return page, pageSize
+}
+
+func GravatarHash(email string) string {
+	if len(email) == 0 {
+		return ""
+	}
+
+	gravatar := md5.Sum([]byte(strings.ToLower(strings.Trim(email, " "))))
+
+	return fmt.Sprintf("%x", gravatar)
 }

@@ -12,7 +12,7 @@ import (
 
 type MixerFactory interface {
 	AddMenu(menu *menu.Menu)
-	Create(r *http.Request, title, path string, data interface{}) Mixer
+	Create(r *http.Request, title, path string, data Bag) Mixer
 	AddModifier(mod ModFunc)
 }
 
@@ -38,12 +38,9 @@ func (f *pgeFactory) AddModifier(mod ModFunc) {
 	f.modifiers = append(f.modifiers, mod)
 }
 
-func (f *pgeFactory) Create(r *http.Request, title, templatePath string, data interface{}) Mixer {
-	bag := NewBag()
-	bag.SetValue("Data", data)
-
-	for _, mod := range f.modifiers {
-		mod(bag, r)
+func (f *pgeFactory) Create(r *http.Request, title, templatePath string, bag Bag) Mixer {
+	if bag == nil {
+		bag = NewBag()
 	}
 
 	baseName := strings.ToLower(strings.Replace(title, " ", "", -1))
@@ -53,7 +50,13 @@ func (f *pgeFactory) Create(r *http.Request, title, templatePath string, data in
 	bag.SetValue("HasScript", err == nil)
 	bag.SetValue("ScriptName", scriptName)
 
-	bag.SetValue("Menu", f.menu)
+	if f.menu != nil {
+		bag.SetValue("Menu", f.menu)
+	}
+
+	for _, mod := range f.modifiers {
+		mod(bag, r)
+	}
 
 	cpy, err := f.files.Clone()
 
