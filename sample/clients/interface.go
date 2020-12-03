@@ -5,17 +5,15 @@ import (
 	"fmt"
 	"github.com/louisevanderlith/droxolite/mix"
 	"github.com/louisevanderlith/husk/keys"
-	"html/template"
 	"log"
 	"net/http"
 
 	"github.com/louisevanderlith/droxolite/drx"
 )
 
-func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
+func InterfaceGet(fact mix.MixerFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := mix.Write(w, pge.Create(r, "You are Home!"))
+		err := mix.Write(w, fact.Create(r, "Index", "./views/index.html", "You are Home!"))
 
 		if err != nil {
 			log.Println(err)
@@ -23,8 +21,7 @@ func InterfaceGet(tmpl *template.Template) http.HandlerFunc {
 	}
 }
 
-func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
+func InterfaceSearch(fact mix.MixerFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hsh := drx.FindParam(r, "hash")
 
@@ -35,7 +32,7 @@ func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
 			return
 		}
 
-		err = mix.Write(w, pge.Create(r, string(decoded)))
+		err = mix.Write(w, fact.Create(r, "Index", "./views/index.html", string(decoded)))
 
 		if err != nil {
 			log.Println(err)
@@ -43,8 +40,7 @@ func InterfaceSearch(tmpl *template.Template) http.HandlerFunc {
 	}
 }
 
-func InterfaceView(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
+func InterfaceView(fact mix.MixerFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		param := drx.FindParam(r, "key")
 		result, err := keys.ParseKey(param)
@@ -56,7 +52,7 @@ func InterfaceView(tmpl *template.Template) http.HandlerFunc {
 
 		data := fmt.Sprintf("Viewing %s", result)
 
-		err = mix.Write(w, pge.Create(r, data))
+		err = mix.Write(w, fact.Create(r, "Index", "./views/index.html", data))
 
 		if err != nil {
 			log.Println(err)
@@ -64,10 +60,9 @@ func InterfaceView(tmpl *template.Template) http.HandlerFunc {
 	}
 }
 
-func InterfaceCreate(tmpl *template.Template) http.HandlerFunc {
-	pge := mix.PreparePage("Index", tmpl, "./views/index.html")
+func InterfaceCreate(fact mix.MixerFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := mix.Write(w, pge.Create(r, "Nothing Created"))
+		err := mix.Write(w, fact.Create(r, "Index", "./views/index.html", "Nothing Created"))
 
 		if err != nil {
 			log.Println(err)
