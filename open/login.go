@@ -88,6 +88,7 @@ func RedirectToLastLocation(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusFound)
+		return
 	}
 
 	http.Redirect(w, r, location.Value, http.StatusFound)
@@ -124,6 +125,17 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	return state
 }
 
+func setLastLocationCookie(w http.ResponseWriter, url string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "location",
+		Value:    url,
+		MaxAge:   0,
+		Secure:   false,
+		HttpOnly: true,
+		Path:     "/",
+	})
+}
+
 func (p uiprotector) NoLoginMiddleware(next http.Handler) http.Handler {
 	oidcConfig := &oidc.Config{
 		ClientID: p.authConfig.ClientID,
@@ -132,10 +144,11 @@ func (p uiprotector) NoLoginMiddleware(next http.Handler) http.Handler {
 	v := p.provider.Verifier(oidcConfig)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		setLastLocationCookie(w, r.URL.EscapedPath())
 		rawIDToken, err := r.Cookie("idtoken")
 
 		if err != nil {
-			log.Println("Verify Error", err)
+			log.Println("Cookie Error", err)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -190,15 +203,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 
 		if err != nil {
 			log.Println("Cookie Error", err)
-			http.SetCookie(w, &http.Cookie{
-				Name:     "location",
-				Value:    r.RequestURI,
-				MaxAge:   0,
-				Secure:   false,
-				HttpOnly: true,
-				Path:     "/",
-			})
-
+			setLastLocationCookie(w, r.URL.EscapedPath())
 			p.Login(w, r)
 			return
 		}
@@ -206,15 +211,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 		idToken, err := v.Verify(r.Context(), rawIDToken.Value)
 		if err != nil {
 			log.Println("Verify Error", err)
-			http.SetCookie(w, &http.Cookie{
-				Name:     "location",
-				Value:    r.RequestURI,
-				MaxAge:   0,
-				Secure:   false,
-				HttpOnly: true,
-				Path:     "/",
-			})
-
+			setLastLocationCookie(w, r.URL.EscapedPath())
 			p.Login(w, r)
 			return
 		}
