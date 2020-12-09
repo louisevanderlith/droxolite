@@ -6,25 +6,45 @@ import (
 	"github.com/coreos/go-oidc"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 	"log"
 	"net/http"
 )
 
-type uiprotector struct {
+func NewHybridLock(p *oidc.Provider, clntCfg *clientcredentials.Config, usrConfig *oauth2.Config) hybridprotector {
+	return hybridprotector{
+		provider:   p,
+		clntConfig: clntCfg,
+		usrConfig:  usrConfig,
+	}
+}
+
+type hybridprotector struct {
 	provider   *oidc.Provider
-	authConfig *oauth2.Config
+	clntConfig *clientcredentials.Config
+	usrConfig  *oauth2.Config
 }
 
-func NewUILock(p *oidc.Provider, cfg *oauth2.Config) uiprotector {
-	return uiprotector{authConfig: cfg, provider: p}
+func (p hybridprotector) Lock(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		idtkn := r.Context().Value("IDToken")
+
+		if idtkn == nil {
+			setLastLocationCookie(w, r.URL.EscapedPath())
+			p.Login(w, r)
+			return
+		}
+
+		handler.ServeHTTP(w, r)
+	})
 }
 
-func (p uiprotector) Login(w http.ResponseWriter, r *http.Request) {
+func (p hybridprotector) Login(w http.ResponseWriter, r *http.Request) {
 	state := generateStateOauthCookie(w)
-	http.Redirect(w, r, p.authConfig.AuthCodeURL(state), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, p.usrConfig.AuthCodeURL(state), http.StatusTemporaryRedirect)
 }
 
-func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
+func (p hybridprotector) Callback(w http.ResponseWriter, r *http.Request) {
 	state, err := r.Cookie("oauthstate")
 
 	if err != nil {
@@ -37,7 +57,7 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oauth2Token, err := p.authConfig.Exchange(r.Context(), r.URL.Query().Get("code"))
+	oauth2Token, err := p.usrConfig.Exchange(r.Context(), r.URL.Query().Get("code"))
 	if err != nil {
 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -82,7 +102,7 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 	RedirectToLastLocation(w, r)
 }
 
-func (p uiprotector) Logout(w http.ResponseWriter, r *http.Request) {
+func (p hybridprotector) Logout(w http.ResponseWriter, r *http.Request) {
 	acc, err := r.Cookie("acctoken")
 
 	if err != nil {
@@ -97,30 +117,14 @@ func (p uiprotector) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
-func (p uiprotector) NoLoginMiddleware(next http.Handler) http.Handler {
+func (p hybridprotector) Protect(next http.Handler) http.Handler {
 	oidcConfig := &oidc.Config{
-		ClientID: p.authConfig.ClientID,
+		ClientID: p.usrConfig.ClientID,
 	}
 
 	v := p.provider.Verifier(oidcConfig)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		setLastLocationCookie(w, r.URL.EscapedPath())
-		rawIDToken, err := r.Cookie("idtoken")
-
-		if err != nil {
-			log.Println("Cookie Error", err)
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		idToken, err := v.Verify(r.Context(), rawIDToken.Value)
-		if err != nil {
-			log.Println("Verify Error", err)
-			next.ServeHTTP(w, r)
-			return
-		}
-
 		jtoken, _ := r.Cookie("acctoken")
 		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
 
@@ -137,57 +141,18 @@ func (p uiprotector) NoLoginMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		err = idToken.VerifyAccessToken(accToken.AccessToken)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
 		xidn := context.WithValue(r.Context(), "Token", accToken)
-		idn := context.WithValue(xidn, "IDToken", idToken)
-		//TODO: Replace IDToken with Claims (User)
 
-		next.ServeHTTP(w, r.WithContext(idn))
-	})
-}
-
-func (p uiprotector) Middleware(next http.Handler) http.Handler {
-	oidcConfig := &oidc.Config{
-		ClientID: p.authConfig.ClientID,
-	}
-
-	v := p.provider.Verifier(oidcConfig)
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawIDToken, err := r.Cookie("idtoken")
 
 		if err != nil {
 			log.Println("Cookie Error", err)
-			setLastLocationCookie(w, r.URL.EscapedPath())
-			p.Login(w, r)
+			next.ServeHTTP(w, r.WithContext(xidn))
 			return
 		}
 
 		idToken, err := v.Verify(r.Context(), rawIDToken.Value)
 		if err != nil {
-			log.Println("Verify Error", err)
-			setLastLocationCookie(w, r.URL.EscapedPath())
-			p.Login(w, r)
-			return
-		}
-
-		jtoken, _ := r.Cookie("acctoken")
-		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		accToken := oauth2.Token{}
-		err = json.Unmarshal(tkn64, &accToken)
-
-		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -199,7 +164,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		xidn := context.WithValue(r.Context(), "Token", accToken)
+		//xidn := context.WithValue(r.Context(), "Token", accToken)
 		idn := context.WithValue(xidn, "IDToken", idToken)
 		//TODO: Replace IDToken with Claims (User)
 
