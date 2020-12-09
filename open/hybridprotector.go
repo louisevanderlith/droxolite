@@ -126,6 +126,19 @@ func (p hybridprotector) Protect(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jtoken, _ := r.Cookie("acctoken")
+
+		if jtoken == nil {
+			tkn, err := p.clntConfig.Token(r.Context())
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			acc := context.WithValue(r.Context(), "Token", *tkn)
+			next.ServeHTTP(w, r.WithContext(acc))
+		}
+
 		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
 
 		if err != nil {
@@ -153,7 +166,8 @@ func (p hybridprotector) Protect(next http.Handler) http.Handler {
 
 		idToken, err := v.Verify(r.Context(), rawIDToken.Value)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Println("ID Verify Error", err)
+			next.ServeHTTP(w, r.WithContext(xidn))
 			return
 		}
 
