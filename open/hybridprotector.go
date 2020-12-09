@@ -30,7 +30,6 @@ func (p hybridprotector) Lock(handler http.Handler) http.Handler {
 		idtkn := r.Context().Value("IDToken")
 
 		if idtkn == nil {
-			setLastLocationCookie(w, r.URL.EscapedPath())
 			p.Login(w, r)
 			return
 		}
@@ -125,6 +124,8 @@ func (p hybridprotector) Protect(next http.Handler) http.Handler {
 	v := p.provider.Verifier(oidcConfig)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		setLastLocationCookie(w, r.URL.EscapedPath())
+
 		jtoken, _ := r.Cookie("acctoken")
 
 		if jtoken == nil {
@@ -137,6 +138,7 @@ func (p hybridprotector) Protect(next http.Handler) http.Handler {
 
 			acc := context.WithValue(r.Context(), "Token", *tkn)
 			next.ServeHTTP(w, r.WithContext(acc))
+			return
 		}
 
 		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
