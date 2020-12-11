@@ -23,7 +23,7 @@ func StoreSearch(w http.ResponseWriter, r *http.Request) {
 	page, size := drx.GetPageData(r)
 	hsh := drx.FindParam(r, "hash")
 
-	decoded, err := base64.StdEncoding.DecodeString(hsh)
+	decoded, err := base64.URLEncoding.DecodeString(hsh)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

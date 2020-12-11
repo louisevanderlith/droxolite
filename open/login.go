@@ -56,7 +56,7 @@ func (p uiprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tkn64 := base64.StdEncoding.EncodeToString(jtoken)
+	tkn64 := base64.URLEncoding.EncodeToString(jtoken)
 	tokencookie := http.Cookie{
 		Name:     "acctoken",
 		Value:    tkn64,
@@ -122,7 +122,7 @@ func (p uiprotector) NoLoginMiddleware(next http.Handler) http.Handler {
 		}
 
 		jtoken, _ := r.Cookie("acctoken")
-		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
+		tkn64, err := base64.URLEncoding.DecodeString(jtoken.Value)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -178,7 +178,7 @@ func (p uiprotector) Middleware(next http.Handler) http.Handler {
 		}
 
 		jtoken, _ := r.Cookie("acctoken")
-		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
+		tkn64, err := base64.URLEncoding.DecodeString(jtoken.Value)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
