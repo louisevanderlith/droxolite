@@ -3,12 +3,16 @@ package open
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"github.com/coreos/go-oidc"
+	"github.com/louisevanderlith/droxolite/mix"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func NewHybridLock(p *oidc.Provider, clntCfg *clientcredentials.Config, usrConfig *oauth2.Config) hybridprotector {
@@ -23,6 +27,65 @@ type hybridprotector struct {
 	provider   *oidc.Provider
 	clntConfig *clientcredentials.Config
 	usrConfig  *oauth2.Config
+}
+
+func (p hybridprotector) Refresh(w http.ResponseWriter, r *http.Request) {
+	jtoken, _ := r.Cookie("acctoken")
+
+	if jtoken == nil {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	tkn64, err := base64.URLEncoding.DecodeString(jtoken.Value)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tknVal := oauth2.Token{}
+	err = json.Unmarshal(tkn64, &tknVal)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if tknVal.Valid() {
+		mix.Write(w, mix.JSON(jtoken.Value))
+		return
+	}
+
+	params := "grant_type=refresh_token&client_id=%s&client_secret=%s&refresh_token=%s"
+	payload := strings.NewReader(fmt.Sprintf(params, p.usrConfig.ClientID, p.usrConfig.ClientSecret, tknVal.RefreshToken))
+
+	req, _ := http.NewRequest("POST", p.provider.Endpoint().TokenURL, payload)
+
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		log.Println("ReadAll Error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = mix.Write(w, mix.JSON(body))
+
+	if err != nil {
+		log.Println("Serve Error", err)
+	}
 }
 
 func (p hybridprotector) Lock(handler http.Handler) http.Handler {
@@ -75,7 +138,7 @@ func (p hybridprotector) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tkn64 := base64.StdEncoding.EncodeToString(jtoken)
+	tkn64 := base64.URLEncoding.EncodeToString(jtoken)
 	tokencookie := http.Cookie{
 		Name:     "acctoken",
 		Value:    tkn64,
@@ -141,7 +204,7 @@ func (p hybridprotector) Protect(next http.Handler) http.Handler {
 			return
 		}
 
-		tkn64, err := base64.StdEncoding.DecodeString(jtoken.Value)
+		tkn64, err := base64.URLEncoding.DecodeString(jtoken.Value)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -180,7 +243,6 @@ func (p hybridprotector) Protect(next http.Handler) http.Handler {
 			return
 		}
 
-		//xidn := context.WithValue(r.Context(), "Token", accToken)
 		idn := context.WithValue(xidn, "IDToken", idToken)
 		//TODO: Replace IDToken with Claims (User)
 
